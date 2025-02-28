@@ -1,5 +1,6 @@
 import { immerable } from "immer";
 import { useRef } from "react";
+import { ConnectDropTarget } from "react-dnd";
 import ObserveSize from "react-observe-size";
 import { Updater } from "use-immer";
 import { ProjectionContext } from "./Contexts";
@@ -56,10 +57,12 @@ export function Canvas({
   projection,
   updateProjection,
   children,
+  drop,
 }: {
   projection: CanvasProjection;
   updateProjection: Updater<CanvasProjection>;
   children?: React.ReactNode;
+  drop?: ConnectDropTarget;
 }) {
   const dragState = useRef<
     | {
@@ -74,7 +77,12 @@ export function Canvas({
   const observerRef = useRef<any>(null);
 
   return (
-    <div className="editor">
+    <div
+      className="canvas"
+      ref={(e) => {
+        if (drop !== undefined) drop(e);
+      }}
+    >
       <ObserveSize
         ref={observerRef}
         observerFn={(rect) =>

@@ -139,7 +139,7 @@ export class Page {
   }
 }
 
-interface PageItemData {
+export interface PageItemData {
   id: number;
   type: string;
 
@@ -172,7 +172,7 @@ export class StringPageItemProperty extends PageItemProperty<string> {
   }
 }
 
-class PageItemPropertyValueAccessor {
+export class PageItemPropertyValueAccessor {
   constructor(
     private writeData: PageItemData,
     private updater: Updater<PageItemData>,
@@ -217,11 +217,15 @@ export class PageItem {
   hasOverrideableProperties() {
     return false;
   }
-  renderContent(): JSX.Element {
+  renderContent(args: RenderArgs): JSX.Element {
     return <></>;
   }
 
   renderProperties(): JSX.Element {
     return <></>;
   }
+}
+
+export interface RenderArgs {
+  interaction: boolean;
 }

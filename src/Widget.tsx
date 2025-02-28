@@ -1,6 +1,11 @@
 import { JSX } from "react";
-import { PageItem, PageItemProperty, StringPageItemProperty } from "./Project";
-import { ItemInteraction } from "./WidgetHelpers";
+import {
+  PageItem,
+  PageItemProperty,
+  RenderArgs,
+  StringPageItemProperty,
+} from "./Project";
+import { DraggableAndResizableBox } from "./WidgetHelpers";
 
 // class ItemGroup extends PageItem {}
 
@@ -15,7 +20,7 @@ export class ListWidget extends PageItem {
   box = new PageItemProperty<Rectangle>(this, "box");
   text = new StringPageItemProperty(this, "text");
 
-  override renderContent(): JSX.Element {
+  override renderContent({ interaction }: RenderArgs): JSX.Element {
     const box = this.get(this.box);
 
     return (
@@ -27,7 +32,12 @@ export class ListWidget extends PageItem {
           height={box.height}
           style={{ strokeWidth: 2, stroke: "blue", fill: "none" }}
         />
-        <ItemInteraction box={box} update={(x) => this.set(this.box, x)} />
+        {interaction && (
+          <DraggableAndResizableBox
+            box={box}
+            update={(box) => this.set(this.box, box)}
+          />
+        )}
       </>
     );
   }

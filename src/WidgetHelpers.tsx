@@ -5,16 +5,18 @@ import { Rectangle } from "./Widget";
 
 // class ItemGroup extends PageItem {}
 
-export function ItemInteraction({
+export function DraggableBox<T>({
   box,
+  current,
   update,
 }: {
   box: Rectangle;
-  update: (newBox: Rectangle) => void;
+  current: T;
+  update: (start: T, delta: Vec2d) => void;
 }) {
   const dragState = useRef<{
-    startBox: Rectangle;
-    startPos: Vec2d;
+    start: T;
+    startEventPos: Vec2d;
   }>(undefined);
 
   const projection = useContext(ProjectionContext);
@@ -31,17 +33,17 @@ export function ItemInteraction({
         e.stopPropagation();
         e.currentTarget.setPointerCapture(e.pointerId);
         dragState.current = {
-          startBox: box,
-          startPos: Vec2d.fromEvent(e),
+          start: current,
+          startEventPos: Vec2d.fromEvent(e),
         };
       }}
       onPointerMove={(e) => {
         const state = dragState.current;
         if (state) {
-          const newPos = Vec2d.from(state.startBox).add(
-            projection.scaleToWorld(Vec2d.fromEvent(e).sub(state.startPos))
+          update(
+            state.start,
+            projection.scaleToWorld(Vec2d.fromEvent(e).sub(state.startEventPos))
           );
-          update({ ...state.startBox, x: newPos.x, y: newPos.y });
         }
       }}
       onPointerUp={(e) => {
@@ -51,5 +53,94 @@ export function ItemInteraction({
         dragState.current = undefined;
       }}
     />
+  );
+}
+
+const handleSize = 10;
+export function DraggableAndResizableBox({
+  box,
+  update,
+}: {
+  box: Rectangle;
+  update: (newBox: Rectangle) => void;
+}) {
+  return (
+    <>
+      <DraggableBox
+        box={box}
+        current={box}
+        update={(start, delta) =>
+          update({
+            x: start.x + delta.x,
+            y: start.y + delta.y,
+            width: start.width,
+            height: start.height,
+          })
+        }
+      />
+      <DraggableBox
+        box={{ x: box.x, y: box.y, width: handleSize, height: handleSize }}
+        current={box}
+        update={(start, delta) =>
+          update({
+            x: start.x + delta.x,
+            y: start.y + delta.y,
+            width: start.width - delta.x,
+            height: start.height - delta.y,
+          })
+        }
+      />
+      <DraggableBox
+        box={{
+          x: box.x + box.width - handleSize,
+          y: box.y,
+          width: handleSize,
+          height: handleSize,
+        }}
+        current={box}
+        update={(start, delta) =>
+          update({
+            x: start.x,
+            y: start.y + delta.y,
+            width: start.width + delta.x,
+            height: start.height - delta.y,
+          })
+        }
+      />
+      <DraggableBox
+        box={{
+          x: box.x,
+          y: box.y + box.height - handleSize,
+          width: handleSize,
+          height: handleSize,
+        }}
+        current={box}
+        update={(start, delta) =>
+          update({
+            x: start.x + delta.x,
+            y: start.y,
+            width: start.width - delta.x,
+            height: start.height + delta.y,
+          })
+        }
+      />
+      <DraggableBox
+        box={{
+          x: box.x + box.width - handleSize,
+          y: box.y + box.height - handleSize,
+          width: handleSize,
+          height: handleSize,
+        }}
+        current={box}
+        update={(start, delta) =>
+          update({
+            x: start.x,
+            y: start.y,
+            width: start.width + delta.x,
+            height: start.height + delta.y,
+          })
+        }
+      />
+    </>
   );
 }

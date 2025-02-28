@@ -11,8 +11,10 @@ import {
 } from "./Project";
 
 import { useRef } from "react";
+import { useDrop } from "react-dnd";
 import { deepEquals } from "./deepEquals";
 import "./pageItemRegistry";
+import { Palette } from "./Palette";
 
 function useCache<I, O>(input: I, mapper: (cb: CacheBuilder) => O): O {
   const cache = useRef<Cache>(undefined);
@@ -29,7 +31,7 @@ function useCache<I, O>(input: I, mapper: (cb: CacheBuilder) => O): O {
 }
 
 function RenderItem({ item }: { item: PageItem }) {
-  return item.renderContent();
+  return item.renderContent({ interaction: true });
 }
 
 function RenderPage({ page }: { page: Page }) {
@@ -59,7 +61,7 @@ function App() {
             type: "list",
             propertyValues: {
               text: "foo",
-              box: { x: 10, y: 15, width: 10, height: 20 },
+              box: { x: 10, y: 15, width: 100, height: 200 },
             },
           },
         },
@@ -74,6 +76,19 @@ function App() {
   );
 
   const [projection, updateProjection] = useImmer(new CanvasProjection());
+
+  const [{ canDrop, isOver }, drop] = useDrop(() => ({
+    // The type (or types) to accept - strings or symbols
+    accept: "BOX",
+    // Props to collect
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+    drop: (item, monitor) => {
+      console.log(item, monitor.getClientOffset());
+    },
+  }));
 
   return (
     <div
@@ -106,13 +121,16 @@ function App() {
           defaultSize="40%"
           min="20%"
           max="70%"
-          style={{ overflowY: "auto" }}
+          className="palette"
+          style={{
+            // overflowY: "auto",
+            overflow: "visible",
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+          }}
         >
-          Left
-          <div style={{ minHeight: "1500px", background: "red" }}>
-            {" "}
-            long content
-          </div>
+          <Palette />
         </Splitter.Panel>
         <Splitter.Panel
           style={{
@@ -121,7 +139,11 @@ function App() {
             alignItems: "stretch",
           }}
         >
-          <Canvas projection={projection} updateProjection={updateProjection}>
+          <Canvas
+            projection={projection}
+            updateProjection={updateProjection}
+            drop={drop}
+          >
             <RenderProject project={project} />
           </Canvas>
           <div> Right</div>
