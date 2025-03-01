@@ -1,62 +1,21 @@
 import { Splitter } from "antd";
-import { useImmer } from "use-immer";
-import { Canvas, CanvasProjection } from "./Canvas";
-import {
-  Cache,
-  CacheBuilder,
-  Page,
-  PageItem,
-  Project,
-  ProjectData,
-} from "./Project";
+import { CanvasProjection } from "./Canvas";
+import { Page, ProjectData, useConst } from "./Project";
 
-import { useRef } from "react";
-import { useDrop } from "react-dnd";
-import { deepEquals } from "./deepEquals";
+import { useMemo } from "react";
+import { Editor } from "./Editor";
 import "./pageItemRegistry";
 import { Palette } from "./Palette";
 
-function useCache<I, O>(input: I, mapper: (cb: CacheBuilder) => O): O {
-  const cache = useRef<Cache>(undefined);
-  const lastInput = useRef<I>(undefined);
-  const result = useRef<O>(undefined);
-  if (!deepEquals(input, lastInput.current)) {
-    const newCache = new Cache();
-    const cb = new CacheBuilder(newCache, cache.current);
-    cache.current = newCache;
-    lastInput.current = input;
-    result.current = mapper(cb);
-  }
-  return result.current as O;
-}
-
-function RenderItem({ item }: { item: PageItem }) {
-  return item.renderContent({ interaction: true });
-}
-
-function RenderPage({ page }: { page: Page }) {
-  return page.items.map((item) => (
-    <RenderItem key={item.data.id} item={item} />
-  ));
-}
-
-function RenderProject({ project }: { project: Project }) {
-  return project.pages.map((page) => (
-    <RenderPage key={page.data.id} page={page} />
-  ));
-}
-
 function App() {
-  const [projectData, updateProjectData] = useImmer<ProjectData>(() => ({
+  const projectData = useConst<ProjectData>(() => ({
     nextId: 10,
-    currentPageId: 1,
-    pageOrder: [1],
-    pages: {
-      1: {
+    currentPageIndex: 0,
+    pages: [
+      {
         id: 1,
-        itemOrder: [2],
-        items: {
-          2: {
+        items: [
+          {
             id: 2,
             type: "list",
             propertyValues: {
@@ -64,31 +23,18 @@ function App() {
               box: { x: 10, y: 15, width: 100, height: 200 },
             },
           },
-        },
-        valueOverrides: {},
+        ],
+        propertyValues: {},
       },
-    },
+    ],
   }));
 
-  const project = useCache(
-    projectData,
-    (cb) => new Project(projectData, updateProjectData, cb)
+  const page = useMemo(
+    () => new Page(projectData.pages[0], projectData),
+    [projectData]
   );
 
-  const [projection, updateProjection] = useImmer(new CanvasProjection());
-
-  const [{ canDrop, isOver }, drop] = useDrop(() => ({
-    // The type (or types) to accept - strings or symbols
-    accept: "BOX",
-    // Props to collect
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop(),
-    }),
-    drop: (item, monitor) => {
-      console.log(item, monitor.getClientOffset());
-    },
-  }));
+  const projection = useConst(() => new CanvasProjection());
 
   return (
     <div
@@ -130,7 +76,7 @@ function App() {
             flexWrap: "wrap",
           }}
         >
-          <Palette />
+          <Palette editorProjection={projection} />
         </Splitter.Panel>
         <Splitter.Panel
           style={{
@@ -139,13 +85,7 @@ function App() {
             alignItems: "stretch",
           }}
         >
-          <Canvas
-            projection={projection}
-            updateProjection={updateProjection}
-            drop={drop}
-          >
-            <RenderProject project={project} />
-          </Canvas>
+          <Editor projection={projection} page={page} />
           <div> Right</div>
         </Splitter.Panel>
       </Splitter>

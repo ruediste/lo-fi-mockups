@@ -1,37 +1,38 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useDrag } from "react-dnd";
 import { CanvasProjection } from "./Canvas";
 import { ProjectionContext } from "./Contexts";
-import {
-  Cache,
-  CacheBuilder,
-  PageItemData,
-  PageItemPropertyValueAccessor,
-} from "./Project";
-import { ListWidget } from "./Widget";
+import { Page, ProjectData } from "./Project";
 
-export function Palette() {
+export function Palette({
+  editorProjection,
+}: {
+  editorProjection: CanvasProjection;
+}) {
   const widget = useMemo(() => {
-    const cache = new Cache();
-
-    const data: PageItemData = {
-      id: 1,
-      type: "list",
-      propertyValues: {
-        text: "foo",
-        box: { x: 0, y: 0, width: 20, height: 20 },
-      },
+    const data: ProjectData = {
+      nextId: 3,
+      currentPageIndex: 0,
+      pages: [
+        {
+          id: 1,
+          propertyValues: {},
+          items: [
+            {
+              id: 2,
+              type: "list",
+            },
+          ],
+        },
+      ],
     };
 
-    const accessor = new PageItemPropertyValueAccessor(data, (arg) => {}, []);
-    return new ListWidget(data, {
-      accessor,
-      ctx: { inMasterPage: false },
-      cb: new CacheBuilder(cache, undefined),
-    });
+    const page = new Page(data.pages[0], data);
+
+    return page.ownItems[0];
   }, []);
 
-  const projection = useMemo(() => new CanvasProjection(), []);
+  const [projection] = useState(() => new CanvasProjection());
 
   const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
     // "type" is required. It is used by the "accept" specification of drop targets.
@@ -47,10 +48,19 @@ export function Palette() {
   return (
     <>
       <ProjectionContext.Provider value={projection}>
-        <div className="widget" ref={(e) => drag(e)}>
-          <svg style={{ top: 0, left: 0 }}>
-            {widget.renderContent({ interaction: false })}
-          </svg>
+        <div
+          className="widget"
+          ref={(e) => {
+            drag(e);
+          }}
+        >
+          <svg style={{ top: 0, left: 0 }}>{widget.renderContent()}</svg>
+        </div>
+        <div
+          ref={dragPreview as any}
+          style={{ visibility: isDragging ? undefined : "hidden" }}
+        >
+          Foo
         </div>
       </ProjectionContext.Provider>
     </>

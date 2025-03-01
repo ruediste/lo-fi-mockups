@@ -1,4 +1,4 @@
-import { pageItemRegistry } from "./Project";
+import { pageItemTypeRegistry } from "./Project";
 import { ListWidget } from "./Widget";
 
-pageItemRegistry.itemTypes.set("list", ListWidget);
+pageItemTypeRegistry.itemTypes.set("list", ListWidget);

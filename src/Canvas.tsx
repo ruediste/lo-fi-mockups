@@ -1,13 +1,12 @@
-import { immerable } from "immer";
 import { useRef } from "react";
 import { ConnectDropTarget } from "react-dnd";
 import ObserveSize from "react-observe-size";
-import { Updater } from "use-immer";
 import { ProjectionContext } from "./Contexts";
+import { DomEvent, useRedrawOnEvent } from "./Project";
 import { Vec2d } from "./Vec2d";
 
 export class CanvasProjection {
-  [immerable] = true;
+  onChange = new DomEvent();
 
   scale = 1;
 
@@ -30,6 +29,7 @@ export class CanvasProjection {
     this.offset = this.offset
       .add(eventPositionWorld)
       .sub(newEventPositionWorld);
+    this.onChange.notify();
   }
 
   lengthToWorld(viewLength: number) {
@@ -55,12 +55,10 @@ const scaleFactor = 1.1;
 
 export function Canvas({
   projection,
-  updateProjection,
   children,
   drop,
 }: {
   projection: CanvasProjection;
-  updateProjection: Updater<CanvasProjection>;
   children?: React.ReactNode;
   drop?: ConnectDropTarget;
 }) {
@@ -72,8 +70,8 @@ export function Canvas({
     | undefined
   >(undefined);
 
+  useRedrawOnEvent(projection.onChange);
   const worldViewSize = projection.worldViewSize;
-
   const observerRef = useRef<any>(null);
 
   return (
@@ -85,14 +83,16 @@ export function Canvas({
     >
       <ObserveSize
         ref={observerRef}
-        observerFn={(rect) =>
-          updateProjection((s) => {
-            const elementRect: DOMRect =
-              observerRef.current.element.getBoundingClientRect();
-            s.viewPortSize = new Vec2d(rect.width, rect.height);
-            s.viewPortPosition = new Vec2d(elementRect.left, elementRect.top);
-          })
-        }
+        observerFn={(rect) => {
+          const elementRect: DOMRect =
+            observerRef.current.element.getBoundingClientRect();
+          projection.viewPortSize = new Vec2d(rect.width, rect.height);
+          projection.viewPortPosition = new Vec2d(
+            elementRect.left,
+            elementRect.top
+          );
+          projection.onChange.notify();
+        }}
       >
         <ProjectionContext.Provider value={projection}>
           <svg
@@ -108,11 +108,10 @@ export function Canvas({
               if (state) {
                 const pointerPos = Vec2d.fromEvent(e);
 
-                updateProjection((draft) => {
-                  draft.offset = state.startOffset.sub(
-                    draft.scaleToWorld(pointerPos.sub(state.startPointerPos))
-                  );
-                });
+                projection.offset = state.startOffset.sub(
+                  projection.scaleToWorld(pointerPos.sub(state.startPointerPos))
+                );
+                projection.onChange.notify();
               }
             }}
             onPointerUp={() => {
@@ -126,13 +125,15 @@ export function Canvas({
 
               const eventPositionView = Vec2d.fromEvent(event);
               if (event.deltaY > 0) {
-                updateProjection((x) =>
-                  x.changeScale(x.scale / scaleFactor, eventPositionView)
+                projection.changeScale(
+                  projection.scale / scaleFactor,
+                  eventPositionView
                 );
               }
               if (event.deltaY < 0) {
-                updateProjection((x) =>
-                  x.changeScale(x.scale * scaleFactor, eventPositionView)
+                projection.changeScale(
+                  projection.scale * scaleFactor,
+                  eventPositionView
                 );
               }
             }}

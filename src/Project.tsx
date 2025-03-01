@@ -1,141 +1,103 @@
-import { Draft } from "immer";
-import { JSX } from "react";
-import { DraftFunction, Updater } from "use-immer";
-import { DeepKeyMap } from "./DeepKeyMap";
-import { markImmutable } from "./deepEquals";
+import { JSX, useEffect, useRef, useState } from "react";
 
-export class PageItemRegistry {
+export class PageItemTypeRegistry {
   itemTypes = new Map<
     string,
-    new (data: PageItemData, args: PageItemArgs) => PageItem
+    new (data: PageItemData, page: Page) => PageItem
   >();
 
-  create(data: PageItemData, args: PageItemArgs) {
+  create(data: PageItemData, page: Page) {
     const ctor = this.itemTypes.get(data.type)!;
-    return new ctor(data, args);
+    return new ctor(data, page);
   }
 }
 
-export const pageItemRegistry = new PageItemRegistry();
+export const pageItemTypeRegistry = new PageItemTypeRegistry();
 
-export class Cache {
-  items = new DeepKeyMap<any, any>();
+export class DomEvent<T = void> {
+  private listeners = new Set<{ value: (arg: T) => void }>();
+  subscribe(listener: (arg: T) => void): () => void {
+    const entry = { value: listener };
+    this.listeners.add(entry);
+    return () => this.listeners.delete(entry);
+  }
+
+  notify(arg: T) {
+    this.listeners.forEach((l) => l.value(arg));
+  }
 }
 
-export class CacheBuilder {
-  constructor(private newCache: Cache, private oldCache?: Cache) {}
-  get<T, D>(data: D, factory: (data: D) => T): T {
-    let result = this.oldCache?.items.get(data);
-    if (result === undefined) {
-      result = factory(data);
-    }
-    this.newCache.items.set(data, result);
-    return result;
+export function useRedrawOnEvent(event: DomEvent<any>) {
+  const [, trigger] = useState({});
+  useEffect(() => event.subscribe(() => trigger({})), [event]);
+}
+
+export function useConst<T>(valueFactory: () => T): T {
+  const result = useRef<{ value?: T; initialized: boolean }>({
+    initialized: false,
+  });
+  if (!result.current.initialized) {
+    result.current.value = valueFactory();
+    result.current.initialized = true;
   }
+  return result.current.value!;
 }
 
 export interface ProjectData {
   nextId: number;
-  pages: { [id: number]: PageData };
-  pageOrder: number[];
-  currentPageId: number | undefined;
+  pages: PageData[];
+  currentPageIndex: number;
 }
 
-export class Project {
-  pages: Page[] = [];
-  pageMap = new Map<number, Page>();
-  pageDataMap = new Map<number, PageData>();
-
-  constructor(
-    public data: ProjectData,
-    updater: Updater<ProjectData>,
-    cb: CacheBuilder
-  ) {
-    Object.values(data.pages).forEach((page) =>
-      this.pageDataMap.set(page.id, page)
-    );
-
-    // determine master pages
-    const activePageDatas: PageData[] = [];
-    {
-      const seen = new Set();
-      let id = data.currentPageId;
-      while (id !== undefined) {
-        if (seen.has(id)) break;
-        seen.add(id);
-        const page = this.pageDataMap.get(id)!;
-        activePageDatas.unshift(page);
-        id = page?.masterPageId;
-      }
-    }
-
-    for (const pageData of activePageDatas) {
-      const page = cb.get(
-        [pageData.id !== data.currentPageId, markImmutable(pageData)] as const,
-        ([isMaster]) =>
-          new Page(
-            pageData,
-            isMaster,
-            mapUpdater(updater, (p) => p.pages, pageData.id),
-            cb
-          )
-      );
-      this.pages.push(page);
-      this.pageMap.set(pageData.id, page);
-    }
-  }
-}
-
-interface PageData {
+export interface PageData {
   id: number;
-  items: { [id: number]: PageItemData };
-  itemOrder: number[];
+  items: PageItemData[];
   masterPageId?: number;
-  valueOverrides: { [itemId: number]: { [propertyKey: string]: any } };
-}
-
-function mapUpdater<D, K extends string | number | symbol, V>(
-  updater: Updater<D>,
-  mapAccessor: (draft: Draft<D>) => { [key in K]: V },
-  key: K
-): Updater<V> {
-  return (arg) => {
-    updater((draft) => {
-      const map = mapAccessor(draft);
-      if (typeof arg === "function") {
-        (arg as DraftFunction<V>)(map[key] as Draft<V>);
-      } else map[key] = arg;
-    });
-  };
+  propertyValues: { [itemId: number]: { [propertyKey: string]: any } };
 }
 
 export class Page {
-  items: PageItem[] = [];
-  itemMap = new Map<number, PageItem>();
+  masterItems: PageItem[];
+  ownItems: PageItem[];
 
-  constructor(
-    public data: PageData,
-    isMasterPage: boolean,
-    updater: Updater<PageData>,
-    cb: CacheBuilder
-  ) {
-    const itemContext = { inMasterPage: isMasterPage };
-    for (const itemData of Object.values(data.items)) {
-      const itemUpdater = mapUpdater(updater, (p) => p.items, itemData.id);
-      const item = cb.get([itemData, itemContext], () =>
-        pageItemRegistry.create(itemData, {
-          ctx: itemContext,
-          accessor: new PageItemPropertyValueAccessor(
-            itemData,
-            itemUpdater,
-            []
-          ),
-          cb,
-        })
-      );
-      this.items.push(item);
-      this.itemMap.set(itemData.id, item);
+  // master from closest to furthest away
+  masterPages: PageData[] = [];
+  pageDataMap: { [id: number]: PageData } = {};
+  onChange = new DomEvent();
+
+  constructor(public data: PageData, public project: ProjectData) {
+    this.project.pages.forEach((page) => (this.pageDataMap[page.id] = page));
+
+    const seen = new Set();
+    let id = this.data.masterPageId;
+    while (id !== undefined) {
+      if (seen.has(id)) break;
+      seen.add(id);
+      const page = this.project.pages[id];
+      this.masterPages.push(page);
+      id = page?.masterPageId;
     }
+
+    this.ownItems = this.data.items.map((item) => this.toPageItem(item));
+
+    this.masterItems = [];
+    for (let index = this.masterPages.length - 1; index >= 0; index--) {
+      const masterPage = this.masterPages[index];
+      this.masterItems.push(...masterPage.items.map((i) => this.toPageItem(i)));
+    }
+  }
+
+  addItem(data: PageItemData) {
+    this.data.propertyValues[data.id] = {};
+    this.data.items.push(data);
+    this.ownItems.push(this.toPageItem(data));
+    this.onChange.notify();
+  }
+
+  private toPageItem(data: PageItemData) {
+    const result = pageItemTypeRegistry.create(data, this);
+    result.initialize();
+    return result;
   }
 }
 
@@ -143,89 +105,117 @@ export interface PageItemData {
   id: number;
   type: string;
 
-  propertyValues?: { [key: string]: any };
   children?: PageItemData[];
 }
 
-class ItemContext {
-  inMasterPage = false;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export class PageItemProperty<T extends {} | null> {
+  private masterValue?: T;
+  private value: T;
+  isOverrideable = false;
 
-export class PageItemProperty<T> {
-  constructor(item: PageItem, public id: string) {
+  constructor(
+    private item: PageItem,
+    public id: string,
+    private defaultValue: T
+  ) {
     item.properties.push(this);
     item.propertyMap.set(id, this);
+
+    // find the first master value
+    for (const values of item.masterDataPropertyValues) {
+      this.masterValue = values[id];
+      if (this.masterValue !== undefined) {
+        break;
+      }
+    }
+
+    let value = item.propertyValues?.[id];
+    if (value === undefined) {
+      value = this.masterValue;
+    }
+    if (value === undefined) {
+      value = defaultValue;
+    }
+    this.value = value;
   }
 
-  get(accessor: PageItemPropertyValueAccessor): T {
-    return accessor.get(this.id);
+  get(): T {
+    return this.value;
   }
 
-  set<T>(accessor: PageItemPropertyValueAccessor, value: T): void {
-    accessor.set(this.id, value);
+  set(value: T): void {
+    if (this.item.propertyValues === undefined) {
+      this.item.propertyValues = {};
+      this.item.page.data.propertyValues[this.item.data.id] =
+        this.item.propertyValues;
+    }
+    this.item.propertyValues[this.id] = value;
+    this.value = value;
+    this.item.onChange.notify();
+  }
+
+  clear() {
+    if (this.item.propertyValues !== undefined) {
+      delete this.item.propertyValues[this.id];
+      if (Object.keys(this.item.propertyValues).length == 0) {
+        this.item.propertyValues = undefined;
+        delete this.item.page.data.propertyValues[this.item.data.id];
+      }
+    }
+
+    let value = this.masterValue;
+    if (value === undefined) {
+      value = this.defaultValue;
+    }
+    this.value = value;
+  }
+
+  overrideable() {
+    this.isOverrideable = true;
+    return this;
   }
 }
 
 export class StringPageItemProperty extends PageItemProperty<string> {
-  constructor(item: PageItem, public id: string) {
-    super(item, id);
+  constructor(item: PageItem, id: string, defaultValue: string) {
+    super(item, id, defaultValue);
   }
-}
-
-export class PageItemPropertyValueAccessor {
-  constructor(
-    private writeData: PageItemData,
-    private updater: Updater<PageItemData>,
-    private fallbacks: PageItemData[]
-  ) {}
-
-  get(key: string): any {
-    for (const data of [this.writeData, ...this.fallbacks]) {
-      const values = data.propertyValues;
-      if (values && Object.prototype.hasOwnProperty.call(values, key)) {
-        return values[key];
-      }
-    }
-    return undefined;
-  }
-
-  set(key: string, value: any): void {
-    this.updater((draft) => (draft.propertyValues![key] = value));
-  }
-}
-
-export interface PageItemArgs {
-  accessor: PageItemPropertyValueAccessor;
-  ctx: ItemContext;
-  cb: CacheBuilder;
 }
 
 export class PageItem {
   properties: PageItemProperty<any>[] = [];
   propertyMap = new Map<string, PageItemProperty<any>>();
+  masterDataPropertyValues: { [propertyId: string]: any }[] = [];
+  propertyValues?: { [propertyId: string]: any };
+  onChange = new DomEvent();
 
-  constructor(public data: PageItemData, public args: PageItemArgs) {}
+  // do not provide a custom constructor in derived types. use initialize() instead
+  constructor(public data: PageItemData, public page: Page) {
+    for (const masterPage of page.masterPages) {
+      const values = masterPage.propertyValues[this.data.id];
+      if (values !== undefined) {
+        this.masterDataPropertyValues.push(values);
+      }
+    }
 
-  get<T>(property: PageItemProperty<T>): T {
-    return property.get(this.args.accessor);
-  }
-
-  set<T>(property: PageItemProperty<T>, value: T): void {
-    property.set(this.args.accessor, value);
+    this.propertyValues = page.data.propertyValues[data.id];
   }
 
   hasOverrideableProperties() {
-    return false;
+    return this.properties.some((x) => x.isOverrideable);
   }
-  renderContent(args: RenderArgs): JSX.Element {
+  renderContent(): JSX.Element {
+    return <></>;
+  }
+  renderEditorInteraction(): JSX.Element {
     return <></>;
   }
 
   renderProperties(): JSX.Element {
     return <></>;
   }
-}
 
-export interface RenderArgs {
-  interaction: boolean;
+  // invoked after construction
+  initialize() {}
 }
