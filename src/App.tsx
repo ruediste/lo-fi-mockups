@@ -1,13 +1,14 @@
 import { Splitter } from "antd";
 import { CanvasProjection } from "./Canvas";
-import { Page, ProjectData, useConst } from "./Project";
+import { Page, PageItem, ProjectData, useConst } from "./Project";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Editor } from "./Editor";
+import { ItemProperties } from "./ItemProperties";
 import "./PageItemTypeRegistry";
 import { Palette } from "./Palette";
 
-function App() {
+export default function App() {
   const projectData = useConst<ProjectData>(() => ({
     nextId: 10,
     currentPageIndex: 0,
@@ -33,6 +34,8 @@ function App() {
   const projection = useConst(() => new CanvasProjection());
 
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const [selectedItem, setSelectedItem] = useState<PageItem>();
 
   return (
     <div
@@ -84,12 +87,26 @@ function App() {
             alignItems: "stretch",
           }}
         >
-          <Editor projection={projection} page={page} dragOffset={dragOffset} />
-          <div> Right</div>
+          <Editor
+            projection={projection}
+            page={page}
+            dragOffset={dragOffset}
+            selectedItem={selectedItem}
+            setSelectedItem={(item) => setSelectedItem(item)}
+          />
+        </Splitter.Panel>
+        <Splitter.Panel
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "stretch",
+          }}
+        >
+          <div>
+            <ItemProperties item={selectedItem} />
+          </div>
         </Splitter.Panel>
       </Splitter>
     </div>
   );
 }
-
-export default App;

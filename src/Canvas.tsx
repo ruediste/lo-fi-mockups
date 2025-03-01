@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { MouseEventHandler, useRef } from "react";
 import ObserveSize from "react-observe-size";
 import { ProjectionContext } from "./Contexts";
 import { DomainEvent, useRerenderOnEvent } from "./Project";
@@ -56,10 +56,12 @@ export function Canvas({
   projection,
   children,
   ref,
+  onClick,
 }: {
   projection: CanvasProjection;
   children?: React.ReactNode;
   ref?: (element: HTMLElement | null) => void;
+  onClick?: MouseEventHandler;
 }) {
   const dragState = useRef<
     | {
@@ -74,7 +76,7 @@ export function Canvas({
   const observerRef = useRef<any>(null);
 
   return (
-    <div className="canvas" ref={ref}>
+    <div className="canvas" ref={ref} onClick={onClick}>
       <ObserveSize
         ref={observerRef}
         observerFn={(rect) => {

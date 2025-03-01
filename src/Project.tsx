@@ -1,3 +1,5 @@
+import { Input } from "antd";
+import TextArea from "antd/es/input/TextArea";
 import { JSX, useEffect, useRef, useState } from "react";
 
 export class DomainEvent<T = void> {
@@ -13,9 +15,12 @@ export class DomainEvent<T = void> {
   }
 }
 
-export function useRerenderOnEvent(event: DomainEvent<any>) {
+export function useRerenderOnEvent(event: DomainEvent<any> | undefined) {
   const [, trigger] = useState({});
-  useEffect(() => event.subscribe(() => trigger({})), [event]);
+  useEffect(() => {
+    if (event === undefined) return;
+    return event.subscribe(() => trigger({}));
+  }, [event]);
 }
 
 export function useConst<T>(valueFactory: () => T): T {
@@ -107,10 +112,11 @@ export interface PageItemData {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export class PageItemProperty<T extends {} | null> {
+export abstract class PageItemProperty<T extends {} | null> {
   private masterValue?: T;
   private value: T;
   isOverrideable = false;
+  isHidden = false;
 
   constructor(
     private item: PageItem,
@@ -173,12 +179,56 @@ export class PageItemProperty<T extends {} | null> {
     this.isOverrideable = true;
     return this;
   }
+
+  hidden() {
+    this.isHidden = true;
+    return this;
+  }
+
+  render(): React.ReactNode {
+    return null;
+  }
 }
 
-export class StringPageItemProperty extends PageItemProperty<string> {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export class ObjectProperty<T extends {} | null> extends PageItemProperty<T> {
+  constructor(item: PageItem, id: string, defaultValue: T) {
+    super(item, id, defaultValue);
+    this.isHidden = true;
+  }
+
+  render(): JSX.Element {
+    throw new Error("Method not implemented.");
+  }
+}
+export class StringProperty extends PageItemProperty<string> {
+  isTextArea = false;
   constructor(item: PageItem, id: string, defaultValue: string) {
     super(item, id, defaultValue);
   }
+
+  render(): JSX.Element {
+    if (this.isTextArea)
+      return (
+        <TextArea
+          value={this.get()}
+          onChange={(e) => this.set(e.target.value)}
+        />
+      );
+    return (
+      <Input value={this.get()} onChange={(e) => this.set(e.target.value)} />
+    );
+  }
+
+  textArea() {
+    this.isTextArea = true;
+    return this;
+  }
+}
+
+export interface RenderEditorInteractionArgs {
+  isSelected: boolean;
+  setSelectedItem: (item: PageItem) => void;
 }
 
 export abstract class PageItem {
@@ -203,12 +253,14 @@ export abstract class PageItem {
   hasOverrideableProperties() {
     return this.properties.some((x) => x.isOverrideable);
   }
-  abstract renderContent(): JSX.Element;
-  renderEditorInteraction(): JSX.Element {
+  abstract renderContent(): React.ReactNode;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  renderEditorInteraction(args: RenderEditorInteractionArgs): React.ReactNode {
     return <></>;
   }
 
-  renderProperties(): JSX.Element {
+  renderProperties(): React.ReactNode {
     return <></>;
   }
 

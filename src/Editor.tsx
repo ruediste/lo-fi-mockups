@@ -5,25 +5,21 @@ import { Page, PageItem, useRerenderOnEvent } from "./Project";
 import { Vec2d } from "./Vec2d";
 import { Widget } from "./Widget";
 
-function RenderItem({ item }: { item: PageItem }) {
+function RenderItem({
+  item,
+  isSelected,
+  setSelectedItem,
+}: {
+  item: PageItem;
+  isSelected: boolean;
+  setSelectedItem: (item: PageItem) => void;
+}) {
   useRerenderOnEvent(item.onChange);
   return (
     <>
       {" "}
       {item.renderContent()}
-      {item.renderEditorInteraction()}
-    </>
-  );
-}
-
-export function RenderPage({ page }: { page: Page }) {
-  useRerenderOnEvent(page.onChange);
-  console.log(page.ownItems);
-  return (
-    <>
-      {page.ownItems.concat(page.masterItems).map((item) => (
-        <RenderItem key={item.data.id} item={item} />
-      ))}
+      {item.renderEditorInteraction({ setSelectedItem, isSelected })}
     </>
   );
 }
@@ -32,11 +28,16 @@ export function Editor({
   projection,
   page,
   dragOffset,
+  selectedItem,
+  setSelectedItem,
 }: {
   projection: CanvasProjection;
   page: Page;
   dragOffset: RefObject<{ x: number; y: number }>;
+  selectedItem?: PageItem;
+  setSelectedItem: (item: PageItem | undefined) => void;
 }) {
+  useRerenderOnEvent(page.onChange);
   const { setNodeRef } = useDroppable({
     id: "editor",
   });
@@ -56,8 +57,6 @@ export function Editor({
           droppableRect.top +
           dragOffset.current.y;
 
-        console.log(x, y, event.active!.data.current!);
-
         const item = page.addItem({
           id: page.project.nextId++,
           type: event.active!.data.current!.itemType,
@@ -72,8 +71,22 @@ export function Editor({
   });
 
   return (
-    <Canvas projection={projection} ref={setNodeRef}>
-      <RenderPage page={page} />
+    <Canvas
+      projection={projection}
+      ref={setNodeRef}
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelectedItem(undefined);
+      }}
+    >
+      {page.ownItems.concat(page.masterItems).map((item) => (
+        <RenderItem
+          key={item.data.id}
+          item={item}
+          isSelected={selectedItem === item}
+          setSelectedItem={setSelectedItem}
+        />
+      ))}
     </Canvas>
   );
 }
