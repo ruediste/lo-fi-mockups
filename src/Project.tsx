@@ -1,20 +1,6 @@
 import { JSX, useEffect, useRef, useState } from "react";
 
-export class PageItemTypeRegistry {
-  itemTypes = new Map<
-    string,
-    new (data: PageItemData, page: Page) => PageItem
-  >();
-
-  create(data: PageItemData, page: Page) {
-    const ctor = this.itemTypes.get(data.type)!;
-    return new ctor(data, page);
-  }
-}
-
-export const pageItemTypeRegistry = new PageItemTypeRegistry();
-
-export class DomEvent<T = void> {
+export class DomainEvent<T = void> {
   private listeners = new Set<{ value: (arg: T) => void }>();
   subscribe(listener: (arg: T) => void): () => void {
     const entry = { value: listener };
@@ -27,7 +13,7 @@ export class DomEvent<T = void> {
   }
 }
 
-export function useRedrawOnEvent(event: DomEvent<any>) {
+export function useRerenderOnEvent(event: DomainEvent<any>) {
   const [, trigger] = useState({});
   useEffect(() => event.subscribe(() => trigger({})), [event]);
 }
@@ -41,6 +27,18 @@ export function useConst<T>(valueFactory: () => T): T {
     result.current.initialized = true;
   }
   return result.current.value!;
+}
+
+export const pageItemTypeRegistryHolder: {
+  registry: {
+    create: (data: PageItemData, page: Page) => PageItem;
+  };
+} = {} as any;
+
+export function createPageItem(data: PageItemData, page: Page) {
+  const result = pageItemTypeRegistryHolder.registry.create(data, page);
+  result.initialize();
+  return result;
 }
 
 export interface ProjectData {
@@ -63,7 +61,7 @@ export class Page {
   // master from closest to furthest away
   masterPages: PageData[] = [];
   pageDataMap: { [id: number]: PageData } = {};
-  onChange = new DomEvent();
+  onChange = new DomainEvent();
 
   constructor(public data: PageData, public project: ProjectData) {
     this.project.pages.forEach((page) => (this.pageDataMap[page.id] = page));
@@ -90,14 +88,14 @@ export class Page {
   addItem(data: PageItemData) {
     this.data.propertyValues[data.id] = {};
     this.data.items.push(data);
-    this.ownItems.push(this.toPageItem(data));
+    const item = this.toPageItem(data);
+    this.ownItems.push(item);
     this.onChange.notify();
+    return item;
   }
 
   private toPageItem(data: PageItemData) {
-    const result = pageItemTypeRegistry.create(data, this);
-    result.initialize();
-    return result;
+    return createPageItem(data, this);
   }
 }
 
@@ -183,12 +181,12 @@ export class StringPageItemProperty extends PageItemProperty<string> {
   }
 }
 
-export class PageItem {
+export abstract class PageItem {
   properties: PageItemProperty<any>[] = [];
   propertyMap = new Map<string, PageItemProperty<any>>();
   masterDataPropertyValues: { [propertyId: string]: any }[] = [];
   propertyValues?: { [propertyId: string]: any };
-  onChange = new DomEvent();
+  onChange = new DomainEvent();
 
   // do not provide a custom constructor in derived types. use initialize() instead
   constructor(public data: PageItemData, public page: Page) {
@@ -205,9 +203,7 @@ export class PageItem {
   hasOverrideableProperties() {
     return this.properties.some((x) => x.isOverrideable);
   }
-  renderContent(): JSX.Element {
-    return <></>;
-  }
+  abstract renderContent(): JSX.Element;
   renderEditorInteraction(): JSX.Element {
     return <></>;
   }

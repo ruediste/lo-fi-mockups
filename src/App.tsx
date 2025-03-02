@@ -2,9 +2,9 @@ import { Splitter } from "antd";
 import { CanvasProjection } from "./Canvas";
 import { Page, ProjectData, useConst } from "./Project";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { Editor } from "./Editor";
-import "./pageItemRegistry";
+import "./PageItemTypeRegistry";
 import { Palette } from "./Palette";
 
 function App() {
@@ -18,10 +18,6 @@ function App() {
           {
             id: 2,
             type: "list",
-            propertyValues: {
-              text: "foo",
-              box: { x: 10, y: 15, width: 100, height: 200 },
-            },
           },
         ],
         propertyValues: {},
@@ -35,6 +31,8 @@ function App() {
   );
 
   const projection = useConst(() => new CanvasProjection());
+
+  const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   return (
     <div
@@ -60,6 +58,7 @@ function App() {
       <Splitter
         style={{
           minHeight: "0px",
+          flexGrow: 1,
           boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
         }}
       >
@@ -76,7 +75,7 @@ function App() {
             flexWrap: "wrap",
           }}
         >
-          <Palette editorProjection={projection} />
+          <Palette editorProjection={projection} dragOffset={dragOffset} />
         </Splitter.Panel>
         <Splitter.Panel
           style={{
@@ -85,7 +84,7 @@ function App() {
             alignItems: "stretch",
           }}
         >
-          <Editor projection={projection} page={page} />
+          <Editor projection={projection} page={page} dragOffset={dragOffset} />
           <div> Right</div>
         </Splitter.Panel>
       </Splitter>

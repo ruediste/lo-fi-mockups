@@ -11,13 +11,19 @@ export interface Rectangle {
   height: number;
 }
 
-export class Widget extends PageItem {
+export interface WidgetPaletteInfo {
+  boundingBox: Rectangle;
+}
+
+export abstract class Widget extends PageItem {
   box = new PageItemProperty<Rectangle>(this, "box", {
     x: 0,
     y: 0,
     width: 40,
-    height: 40,
+    height: 30,
   });
+
+  abstract label: string;
 
   override renderEditorInteraction(): JSX.Element {
     return (
@@ -27,8 +33,13 @@ export class Widget extends PageItem {
       />
     );
   }
+
+  // initialize this widget for the palette and return required information
+  abstract palette(): WidgetPaletteInfo;
 }
+
 export class ListWidget extends Widget {
+  label = "List";
   text = new StringPageItemProperty(this, "text", "");
 
   override renderContent(): JSX.Element {
@@ -45,5 +56,12 @@ export class ListWidget extends Widget {
         />
       </>
     );
+  }
+
+  override palette() {
+    this.text.set("Hello World");
+    return {
+      boundingBox: this.box.get(),
+    };
   }
 }

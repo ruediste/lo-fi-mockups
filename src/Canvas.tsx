@@ -1,12 +1,11 @@
 import { useRef } from "react";
-import { ConnectDropTarget } from "react-dnd";
 import ObserveSize from "react-observe-size";
 import { ProjectionContext } from "./Contexts";
-import { DomEvent, useRedrawOnEvent } from "./Project";
+import { DomainEvent, useRerenderOnEvent } from "./Project";
 import { Vec2d } from "./Vec2d";
 
 export class CanvasProjection {
-  onChange = new DomEvent();
+  onChange = new DomainEvent();
 
   scale = 1;
 
@@ -56,11 +55,11 @@ const scaleFactor = 1.1;
 export function Canvas({
   projection,
   children,
-  drop,
+  ref,
 }: {
   projection: CanvasProjection;
   children?: React.ReactNode;
-  drop?: ConnectDropTarget;
+  ref?: (element: HTMLElement | null) => void;
 }) {
   const dragState = useRef<
     | {
@@ -70,17 +69,12 @@ export function Canvas({
     | undefined
   >(undefined);
 
-  useRedrawOnEvent(projection.onChange);
+  useRerenderOnEvent(projection.onChange);
   const worldViewSize = projection.worldViewSize;
   const observerRef = useRef<any>(null);
 
   return (
-    <div
-      className="canvas"
-      ref={(e) => {
-        if (drop !== undefined) drop(e);
-      }}
-    >
+    <div className="canvas" ref={ref}>
       <ObserveSize
         ref={observerRef}
         observerFn={(rect) => {

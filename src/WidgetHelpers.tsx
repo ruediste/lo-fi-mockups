@@ -64,8 +64,10 @@ export function DraggableAndResizableBox({
   box: Rectangle;
   update: (newBox: Rectangle) => void;
 }) {
+  const minSize = { width: 2 * handleSize, height: 2 * handleSize };
   return (
     <>
+      {/* whole box */}
       <DraggableBox
         box={box}
         current={box}
@@ -78,17 +80,20 @@ export function DraggableAndResizableBox({
           })
         }
       />
+      {/* corners */}
       <DraggableBox
         box={{ x: box.x, y: box.y, width: handleSize, height: handleSize }}
         current={box}
-        update={(start, delta) =>
-          update({
-            x: start.x + delta.x,
-            y: start.y + delta.y,
-            width: start.width - delta.x,
-            height: start.height - delta.y,
-          })
-        }
+        update={(start, delta) => {
+          const x = Math.min(start.width - minSize.width, delta.x);
+          const y = Math.min(start.height - minSize.height, delta.y);
+          return update({
+            x: start.x + x,
+            y: start.y + y,
+            width: start.width - x,
+            height: start.height - y,
+          });
+        }}
       />
       <DraggableBox
         box={{
@@ -98,14 +103,16 @@ export function DraggableAndResizableBox({
           height: handleSize,
         }}
         current={box}
-        update={(start, delta) =>
-          update({
+        update={(start, delta) => {
+          const x = Math.max(minSize.width - start.width, delta.x);
+          const y = Math.min(start.height - minSize.height, delta.y);
+          return update({
             x: start.x,
-            y: start.y + delta.y,
-            width: start.width + delta.x,
-            height: start.height - delta.y,
-          })
-        }
+            y: start.y + y,
+            width: start.width + x,
+            height: start.height - y,
+          });
+        }}
       />
       <DraggableBox
         box={{
@@ -115,14 +122,16 @@ export function DraggableAndResizableBox({
           height: handleSize,
         }}
         current={box}
-        update={(start, delta) =>
-          update({
-            x: start.x + delta.x,
+        update={(start, delta) => {
+          const x = Math.min(start.width - minSize.width, delta.x);
+          const y = Math.max(minSize.height - start.height, delta.y);
+          return update({
+            x: start.x + x,
             y: start.y,
-            width: start.width - delta.x,
-            height: start.height + delta.y,
-          })
-        }
+            width: start.width - x,
+            height: start.height + y,
+          });
+        }}
       />
       <DraggableBox
         box={{
@@ -132,14 +141,16 @@ export function DraggableAndResizableBox({
           height: handleSize,
         }}
         current={box}
-        update={(start, delta) =>
-          update({
+        update={(start, delta) => {
+          const x = Math.max(minSize.width - start.width, delta.x);
+          const y = Math.max(minSize.height - start.height, delta.y);
+          return update({
             x: start.x,
             y: start.y,
-            width: start.width + delta.x,
-            height: start.height + delta.y,
-          })
-        }
+            width: start.width + x,
+            height: start.height + y,
+          });
+        }}
       />
     </>
   );
