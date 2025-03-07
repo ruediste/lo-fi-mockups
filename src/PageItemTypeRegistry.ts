@@ -4,7 +4,8 @@ import {
   PageItemData,
   pageItemTypeRegistryHolder,
 } from "./Project";
-import { ListWidget, Widget } from "./Widget";
+import { Widget } from "./Widget";
+import { ListWidget } from "./widgets/ListWidget";
 
 export class PageItemTypeRegistry {
   itemTypes = new Map<

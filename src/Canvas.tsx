@@ -76,7 +76,7 @@ export function Canvas({
   const observerRef = useRef<any>(null);
 
   return (
-    <div className="canvas" ref={ref} onClick={onClick}>
+    <div className="canvas" ref={ref}>
       <ObserveSize
         ref={observerRef}
         observerFn={(rect) => {
@@ -98,6 +98,7 @@ export function Canvas({
                 startPointerPos: Vec2d.fromEvent(e),
                 startOffset: projection.offset,
               };
+              e.currentTarget.setPointerCapture(e.pointerId);
             }}
             onPointerMove={(e) => {
               const state = dragState.current;
@@ -110,7 +111,17 @@ export function Canvas({
                 projection.onChange.notify();
               }
             }}
-            onPointerUp={() => {
+            onPointerUp={(e) => {
+              const state = dragState.current;
+              if (state) {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+                const pointerPos = Vec2d.fromEvent(e);
+                const delta = pointerPos.sub(state.startPointerPos);
+                if (delta.length < 10) {
+                  onClick?.(e);
+                }
+                e.nativeEvent.stopImmediatePropagation();
+              }
               dragState.current = undefined;
             }}
             onWheel={(event) => {

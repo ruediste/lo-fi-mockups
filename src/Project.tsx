@@ -43,13 +43,69 @@ export const pageItemTypeRegistryHolder: {
 export function createPageItem(data: PageItemData, page: Page) {
   const result = pageItemTypeRegistryHolder.registry.create(data, page);
   result.initialize();
+  result.recalculate();
   return result;
 }
 
 export interface ProjectData {
   nextId: number;
   pages: PageData[];
-  currentPageIndex: number;
+  currentPageId?: number;
+}
+
+export class Project {
+  pageDataMap: { [id: number]: PageData } = {};
+  onChange = new DomainEvent();
+
+  currentPage?: Page;
+  constructor(public data: ProjectData, public onDataChanged: () => void) {
+    data.pages.forEach((page) => (this.pageDataMap[page.id] = page));
+    this.recreateCurrentPage();
+  }
+
+  addPage() {
+    const page: PageData = {
+      id: this.data.nextId++,
+      items: [],
+      propertyValues: {},
+    };
+
+    this.data.pages.push(page);
+    this.pageDataMap[page.id] = page;
+    this.selectPage(page);
+  }
+
+  selectPage(page?: PageData) {
+    this.data.currentPageId = page?.id;
+    this.onDataChanged();
+    this.recreateCurrentPage();
+  }
+
+  removePage(id: number) {
+    this.data.pages = this.data.pages.filter((p) => p.id !== id);
+    delete this.pageDataMap[id];
+    if (this.data.currentPageId === id) this.data.currentPageId = undefined;
+
+    this.onDataChanged();
+    this.recreateCurrentPage();
+  }
+
+  setMasterPage(pageId: number, masterPageId?: number) {
+    this.pageDataMap[pageId].masterPageId = masterPageId;
+    this.recreateCurrentPage();
+  }
+
+  private recreateCurrentPage() {
+    this.currentPage =
+      this.data.currentPageId === undefined
+        ? undefined
+        : new Page(
+            this.pageDataMap[this.data.currentPageId],
+            this,
+            this.onDataChanged
+          );
+    this.onChange.notify();
+  }
 }
 
 export interface PageData {
@@ -65,18 +121,19 @@ export class Page {
 
   // master from closest to furthest away
   masterPages: PageData[] = [];
-  pageDataMap: { [id: number]: PageData } = {};
   onChange = new DomainEvent();
 
-  constructor(public data: PageData, public project: ProjectData) {
-    this.project.pages.forEach((page) => (this.pageDataMap[page.id] = page));
-
+  constructor(
+    public data: PageData,
+    public project: Project,
+    public onDataChanged: () => void
+  ) {
     const seen = new Set();
     let id = this.data.masterPageId;
     while (id !== undefined) {
       if (seen.has(id)) break;
       seen.add(id);
-      const page = this.project.pages[id];
+      const page = this.project.pageDataMap[id];
       this.masterPages.push(page);
       id = page?.masterPageId;
     }
@@ -95,6 +152,7 @@ export class Page {
     this.data.items.push(data);
     const item = this.toPageItem(data);
     this.ownItems.push(item);
+    this.onDataChanged();
     this.onChange.notify();
     return item;
   }
@@ -156,7 +214,8 @@ export abstract class PageItemProperty<T extends {} | null> {
     }
     this.item.propertyValues[this.id] = value;
     this.value = value;
-    this.item.onChange.notify();
+    this.item.page.onDataChanged();
+    this.item.notifyChange();
   }
 
   clear() {
@@ -173,6 +232,9 @@ export abstract class PageItemProperty<T extends {} | null> {
       value = this.defaultValue;
     }
     this.value = value;
+
+    this.item.page.onDataChanged();
+    this.item.notifyChange();
   }
 
   overrideable() {
@@ -250,6 +312,11 @@ export abstract class PageItem {
     this.propertyValues = page.data.propertyValues[data.id];
   }
 
+  notifyChange() {
+    this.recalculate();
+    this.onChange.notify();
+  }
+
   hasOverrideableProperties() {
     return this.properties.some((x) => x.isOverrideable);
   }
@@ -266,4 +333,7 @@ export abstract class PageItem {
 
   // invoked after construction
   initialize() {}
+
+  // invoked during construction after initialize() and after every change
+  recalculate() {}
 }

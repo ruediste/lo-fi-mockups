@@ -3,7 +3,6 @@ import {
   ObjectProperty,
   PageItem,
   RenderEditorInteractionArgs,
-  StringProperty,
 } from "./Project";
 import { DraggableAndResizableBox } from "./WidgetHelpers";
 
@@ -50,32 +49,4 @@ export abstract class Widget extends PageItem {
 
   // initialize this widget for the palette and return required information
   abstract palette(): WidgetPaletteInfo;
-}
-
-export class ListWidget extends Widget {
-  label = "List";
-  text = new StringProperty(this, "text", "").textArea();
-
-  override renderContent(): JSX.Element {
-    const box = this.box.get();
-
-    return (
-      <>
-        <rect
-          x={box.x}
-          y={box.y}
-          width={box.width}
-          height={box.height}
-          style={{ strokeWidth: 2, stroke: "black", fill: "none" }}
-        />
-      </>
-    );
-  }
-
-  override palette() {
-    this.text.set("Hello World");
-    return {
-      boundingBox: this.box.get(),
-    };
-  }
 }

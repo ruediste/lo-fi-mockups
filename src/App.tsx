@@ -1,35 +1,97 @@
-import { Splitter } from "antd";
+import { Splitter, Tabs } from "antd";
 import { CanvasProjection } from "./Canvas";
-import { Page, PageItem, ProjectData, useConst } from "./Project";
+import {
+  PageItem,
+  Project,
+  ProjectData,
+  useConst,
+  useRerenderOnEvent,
+} from "./Project";
 
+import { DBSchema, openDB } from "idb";
 import { useMemo, useRef, useState } from "react";
 import { Editor } from "./Editor";
 import { ItemProperties } from "./ItemProperties";
 import "./PageItemTypeRegistry";
+import { Pages } from "./Pages";
 import { Palette } from "./Palette";
 
-export default function App() {
-  const projectData = useConst<ProjectData>(() => ({
-    nextId: 10,
-    currentPageIndex: 0,
-    pages: [
-      {
-        id: 1,
-        items: [
-          {
-            id: 2,
-            type: "list",
-          },
-        ],
-        propertyValues: {},
-      },
-    ],
-  }));
+function throttle<T extends (...args: any[]) => void>(
+  func: T,
+  limit: number
+): (...args: [...Parameters<T>]) => void {
+  let timeout: NodeJS.Timeout | undefined;
+  let currentArgs: [...Parameters<T>] | undefined;
+  return (...args: [...Parameters<T>]) => {
+    currentArgs = args;
+    if (!timeout) {
+      timeout = setTimeout(function () {
+        func(...currentArgs!);
+        timeout = undefined;
+      }, limit);
+    }
+  };
+}
 
-  const page = useMemo(
-    () => new Page(projectData.pages[0], projectData),
-    [projectData]
-  );
+interface MyDB extends DBSchema {
+  project: {
+    key: string;
+    value: ProjectData;
+  };
+  images: {
+    key: number;
+    value: Blob;
+  };
+}
+
+const db = await openDB<MyDB>("test", 1, {
+  upgrade(db, oldVersion, newVersion, transaction, event) {
+    db.createObjectStore("project");
+    db.createObjectStore("images");
+  },
+  blocked(currentVersion, blockedVersion, event) {
+    // …
+  },
+  blocking(currentVersion, blockedVersion, event) {
+    // …
+  },
+  terminated() {
+    // …
+  },
+});
+
+const save = throttle(async (data: ProjectData) => {
+  console.log("save");
+  await db.put("project", data, "default");
+}, 1000);
+
+const projectData = await (async () => {
+  console.log("load");
+  let result = await db.get("project", "default");
+  if (result === undefined) {
+    result = {
+      nextId: 2,
+      currentPageId: 1,
+      pages: [
+        {
+          id: 1,
+          items: [],
+          propertyValues: {},
+        },
+      ],
+    };
+  }
+  return result;
+})();
+
+export default function App() {
+  const project = useMemo(() => {
+    console.log("memo", projectData);
+    const result = new Project(projectData, () => save(projectData));
+    return result;
+  }, []);
+
+  useRerenderOnEvent(project.onChange);
 
   const projection = useConst(() => new CanvasProjection());
 
@@ -78,7 +140,26 @@ export default function App() {
             flexWrap: "wrap",
           }}
         >
-          <Palette editorProjection={projection} dragOffset={dragOffset} />
+          <Tabs
+            type="card"
+            items={[
+              {
+                key: "palette",
+                label: "Palette",
+                children: (
+                  <Palette
+                    editorProjection={projection}
+                    dragOffset={dragOffset}
+                  />
+                ),
+              },
+              {
+                key: "pages",
+                label: "Pages",
+                children: <Pages project={project} />,
+              },
+            ]}
+          />
         </Splitter.Panel>
         <Splitter.Panel
           style={{
@@ -87,13 +168,15 @@ export default function App() {
             alignItems: "stretch",
           }}
         >
-          <Editor
-            projection={projection}
-            page={page}
-            dragOffset={dragOffset}
-            selectedItem={selectedItem}
-            setSelectedItem={(item) => setSelectedItem(item)}
-          />
+          {project.currentPage === undefined ? null : (
+            <Editor
+              projection={projection}
+              page={project.currentPage}
+              dragOffset={dragOffset}
+              selectedItem={selectedItem}
+              setSelectedItem={(item) => setSelectedItem(item)}
+            />
+          )}
         </Splitter.Panel>
         <Splitter.Panel
           style={{

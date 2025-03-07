@@ -1,8 +1,8 @@
 import { DragOverlay, useDraggable } from "@dnd-kit/core";
-import { RefObject, useEffect, useMemo, useState } from "react";
+import { memo, RefObject, useEffect, useMemo, useState } from "react";
 import { CanvasProjection } from "./Canvas";
 import { pageItemTypeRegistry } from "./PageItemTypeRegistry";
-import { Page, ProjectData } from "./Project";
+import { Project, ProjectData } from "./Project";
 import { Rectangle, Widget, WidgetPaletteInfo } from "./Widget";
 
 export function calculateViewBox(
@@ -107,7 +107,7 @@ function PaletteEntry({
   );
 }
 
-export function Palette({
+export const Palette = memo(function Palette({
   editorProjection,
   dragOffset,
 }: {
@@ -117,7 +117,7 @@ export function Palette({
   const widgets = useMemo(() => {
     let nextId = 1;
     const projectData: ProjectData = {
-      currentPageIndex: 0,
+      currentPageId: nextId,
       pages: [
         {
           id: nextId++,
@@ -131,7 +131,8 @@ export function Palette({
       nextId: nextId++,
     };
 
-    const page = new Page(projectData.pages[0], projectData);
+    const project = new Project(projectData, () => {});
+    const page = project.currentPage!;
     return (page.ownItems as Widget[]).map((widget) => ({
       info: widget.palette(),
       widget,
@@ -153,4 +154,4 @@ export function Palette({
       ))}
     </>
   );
-}
+});

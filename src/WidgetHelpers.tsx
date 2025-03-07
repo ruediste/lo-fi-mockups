@@ -1,5 +1,6 @@
 import { MouseEventHandler, SVGAttributes, useContext, useRef } from "react";
 import { ProjectionContext } from "./Contexts";
+import { useRerenderOnEvent } from "./Project";
 import { Vec2d } from "./Vec2d";
 import { Rectangle } from "./Widget";
 
@@ -63,7 +64,7 @@ export function DraggableBox<T>({
   );
 }
 
-const handleSize = 10;
+const handleSizeView = 12;
 export function DraggableAndResizableBox({
   box,
   update,
@@ -77,10 +78,15 @@ export function DraggableAndResizableBox({
   onClick?: MouseEventHandler;
   onPointerDown?: MouseEventHandler;
 }) {
+  const projection = useContext(ProjectionContext);
+  useRerenderOnEvent(projection.onChange);
+  const handleSize = projection.lengthToWorld(handleSizeView);
+
   const minSize = { width: 2 * handleSize, height: 2 * handleSize };
   const cornerAttrs: SVGAttributes<SVGRectElement> = {
-    fill: "yellow",
-    opacity: 0.75,
+    fill: "#00ff00",
+    stroke: "#008800",
+    strokeWidth: projection.lengthToWorld(0.5),
   };
   return (
     <>
@@ -100,7 +106,11 @@ export function DraggableAndResizableBox({
         }
         attrs={
           showHandles
-            ? { fill: "transparent", stroke: "yellow", strokeWidth: 2 }
+            ? {
+                fill: "transparent",
+                stroke: "#008800",
+                strokeWidth: projection.lengthToWorld(0.5),
+              }
             : { fill: "transparent" }
         }
       />
@@ -108,7 +118,7 @@ export function DraggableAndResizableBox({
       {!showHandles ? null : (
         <>
           <DraggableBox
-            attrs={cornerAttrs}
+            attrs={{ ...cornerAttrs, cursor: "nw-resize" }}
             onClick={(e) => e.stopPropagation()}
             box={{ x: box.x, y: box.y, width: handleSize, height: handleSize }}
             current={box}
@@ -124,7 +134,7 @@ export function DraggableAndResizableBox({
             }}
           />
           <DraggableBox
-            attrs={cornerAttrs}
+            attrs={{ ...cornerAttrs, cursor: "ne-resize" }}
             onClick={(e) => e.stopPropagation()}
             box={{
               x: box.x + box.width - handleSize,
@@ -145,7 +155,7 @@ export function DraggableAndResizableBox({
             }}
           />
           <DraggableBox
-            attrs={cornerAttrs}
+            attrs={{ ...cornerAttrs, cursor: "sw-resize" }}
             onClick={(e) => e.stopPropagation()}
             box={{
               x: box.x,
@@ -166,7 +176,7 @@ export function DraggableAndResizableBox({
             }}
           />
           <DraggableBox
-            attrs={cornerAttrs}
+            attrs={{ ...cornerAttrs, cursor: "se-resize" }}
             onClick={(e) => e.stopPropagation()}
             box={{
               x: box.x + box.width - handleSize,
