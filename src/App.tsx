@@ -1,4 +1,3 @@
-import { Splitter, Tabs } from "antd";
 import { CanvasProjection } from "./Canvas";
 import {
   PageItem,
@@ -10,6 +9,8 @@ import {
 
 import { DBSchema, openDB } from "idb";
 import { useMemo, useRef, useState } from "react";
+import { Tab, Tabs } from "react-bootstrap";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Editor } from "./Editor";
 import { ItemProperties } from "./ItemProperties";
 import "./PageItemTypeRegistry";
@@ -61,12 +62,10 @@ const db = await openDB<MyDB>("test", 1, {
 });
 
 const save = throttle(async (data: ProjectData) => {
-  console.log("save");
   await db.put("project", data, "default");
 }, 1000);
 
 const projectData = await (async () => {
-  console.log("load");
   let result = await db.get("project", "default");
   if (result === undefined) {
     result = {
@@ -86,7 +85,6 @@ const projectData = await (async () => {
 
 export default function App() {
   const project = useMemo(() => {
-    console.log("memo", projectData);
     const result = new Project(projectData, () => save(projectData));
     return result;
   }, []);
@@ -120,48 +118,34 @@ export default function App() {
         <span style={{ fontSize: "24px" }}>LoFi Mockup</span>
       </div>
 
-      <Splitter
+      <PanelGroup
+        autoSaveId="main"
+        direction="horizontal"
         style={{
           minHeight: "0px",
           flexGrow: 1,
-          boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
         }}
       >
-        <Splitter.Panel
-          defaultSize="40%"
-          min="20%"
-          max="70%"
-          className="palette"
+        <Panel
           style={{
             // overflowY: "auto",
             overflow: "visible",
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
+            // display: "flex",
+            // flexDirection: "row",
+            // flexWrap: "wrap",
           }}
         >
-          <Tabs
-            type="card"
-            items={[
-              {
-                key: "palette",
-                label: "Palette",
-                children: (
-                  <Palette
-                    editorProjection={projection}
-                    dragOffset={dragOffset}
-                  />
-                ),
-              },
-              {
-                key: "pages",
-                label: "Pages",
-                children: <Pages project={project} />,
-              },
-            ]}
-          />
-        </Splitter.Panel>
-        <Splitter.Panel
+          <Tabs defaultActiveKey="palette">
+            <Tab title="Palette" style={{}} eventKey="palette">
+              <Palette editorProjection={projection} dragOffset={dragOffset} />
+            </Tab>
+            <Tab title="Pages" eventKey="pages">
+              <Pages project={project} />
+            </Tab>
+          </Tabs>
+        </Panel>
+        <PanelResizeHandle className="panel-resize-handle" />
+        <Panel
           style={{
             display: "flex",
             flexDirection: "row",
@@ -177,8 +161,9 @@ export default function App() {
               setSelectedItem={(item) => setSelectedItem(item)}
             />
           )}
-        </Splitter.Panel>
-        <Splitter.Panel
+        </Panel>
+        <PanelResizeHandle className="panel-resize-handle" />
+        <Panel
           style={{
             display: "flex",
             flexDirection: "row",
@@ -188,8 +173,8 @@ export default function App() {
           <div>
             <ItemProperties item={selectedItem} />
           </div>
-        </Splitter.Panel>
-      </Splitter>
+        </Panel>
+      </PanelGroup>
     </div>
   );
 }

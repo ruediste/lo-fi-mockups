@@ -1,6 +1,5 @@
-import { Input } from "antd";
-import TextArea from "antd/es/input/TextArea";
 import { JSX, useEffect, useRef, useState } from "react";
+import { Form } from "react-bootstrap";
 
 export class DomainEvent<T = void> {
   private listeners = new Set<{ value: (arg: T) => void }>();
@@ -66,6 +65,7 @@ export class Project {
   addPage() {
     const page: PageData = {
       id: this.data.nextId++,
+      name: "Page " + (this.data.pages.length + 1),
       items: [],
       propertyValues: {},
     };
@@ -90,6 +90,12 @@ export class Project {
     this.recreateCurrentPage();
   }
 
+  reorderPages(newPages: PageData[]) {
+    this.data.pages = newPages;
+    this.onDataChanged();
+    this.onChange.notify();
+  }
+
   setMasterPage(pageId: number, masterPageId?: number) {
     this.pageDataMap[pageId].masterPageId = masterPageId;
     this.recreateCurrentPage();
@@ -110,6 +116,7 @@ export class Project {
 
 export interface PageData {
   id: number;
+  name: string;
   items: PageItemData[];
   masterPageId?: number;
   propertyValues: { [itemId: number]: { [propertyKey: string]: any } };
@@ -265,20 +272,26 @@ export class ObjectProperty<T extends {} | null> extends PageItemProperty<T> {
 }
 export class StringProperty extends PageItemProperty<string> {
   isTextArea = false;
-  constructor(item: PageItem, id: string, defaultValue: string) {
+  constructor(
+    item: PageItem,
+    id: string,
+    private label: string,
+    defaultValue: string
+  ) {
     super(item, id, defaultValue);
   }
 
   render(): JSX.Element {
-    if (this.isTextArea)
-      return (
-        <TextArea
+    return (
+      <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+        <Form.Label>{this.label}</Form.Label>
+        <Form.Control
           value={this.get()}
           onChange={(e) => this.set(e.target.value)}
+          as={this.isTextArea ? "textarea" : undefined}
+          rows={5}
         />
-      );
-    return (
-      <Input value={this.get()} onChange={(e) => this.set(e.target.value)} />
+      </Form.Group>
     );
   }
 
