@@ -121,7 +121,9 @@ export const Palette = memo(function Palette({
       pages: [
         {
           id: nextId++,
+          name: "Page 1",
           propertyValues: {},
+          overrideableProperties: {},
           items: pageItemTypeRegistry.palette.map((type) => ({
             id: 2,
             type: type.key,

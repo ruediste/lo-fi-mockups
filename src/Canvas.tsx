@@ -1,11 +1,12 @@
 import { MouseEventHandler, useRef } from "react";
 import ObserveSize from "react-observe-size";
 import { ProjectionContext } from "./Contexts";
-import { DomainEvent, useRerenderOnEvent } from "./Project";
+import { ModelEvent } from "./Project";
 import { Vec2d } from "./Vec2d";
+import { useRerenderOnEvent } from "./hooks";
 
 export class CanvasProjection {
-  onChange = new DomainEvent();
+  onChange = new ModelEvent();
 
   scale = 1;
 

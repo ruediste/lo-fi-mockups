@@ -1,4 +1,6 @@
-import { PageItem, useRerenderOnEvent } from "./Project";
+import { Form } from "react-bootstrap";
+import { useRerenderOnEvent } from "./hooks";
+import { PageItem } from "./Project";
 import { Widget } from "./Widget";
 
 export function ItemProperties({ item }: { item: PageItem | undefined }) {
@@ -7,11 +9,13 @@ export function ItemProperties({ item }: { item: PageItem | undefined }) {
     return (
       <>
         <h1>{item.label}</h1>
-        {item.properties
-          .filter((p) => !p.isHidden)
-          .map((p) => (
-            <div key={p.id}>{p.render()}</div>
-          ))}
+        <Form>
+          {item.properties
+            .filter((p) => !p.isHidden)
+            .map((p) => (
+              <div key={p.id}>{p.render()}</div>
+            ))}
+        </Form>
       </>
     );
   }

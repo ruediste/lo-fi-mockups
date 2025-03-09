@@ -1,30 +1,185 @@
 import { JSX } from "react";
-import { StringProperty } from "../Project";
+import { Button, Form } from "react-bootstrap";
+import { FormCheck } from "../Inputs";
+import {
+  MemoValue,
+  NumberProperty,
+  PageItem,
+  PageItemProperty,
+} from "../Project";
+import { SortableList } from "../SortableList";
 import { Widget } from "../Widget";
+import { ItemListPropertyItem } from "../WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
+
+interface Item {
+  id: number;
+  label: string;
+}
+
+interface ItemListSelectionPropertyValue {
+  multiSelection: boolean;
+  selectedItems: { [id: number]: boolean };
+}
+
+export class ItemListSelectionProperty extends PageItemProperty<ItemListSelectionPropertyValue> {
+  constructor(
+    item: PageItem,
+    id: string,
+    defaultValue: ItemListSelectionPropertyValue = {
+      multiSelection: false,
+      selectedItems: {},
+    }
+  ) {
+    super(item, id, defaultValue);
+  }
+
+  render() {
+    return null;
+  }
+
+  setSelection(id: number, selected: boolean) {
+    const tmp = this.get();
+    if (tmp.multiSelection) {
+      tmp.selectedItems[id] = selected;
+    } else tmp.selectedItems = { [id]: selected };
+    this.set(tmp);
+  }
+}
+
+export class ItemListProperty extends PageItemProperty<Item[]> {
+  constructor(
+    item: PageItem,
+    id: string,
+    private label: string,
+    private selection?: ItemListSelectionProperty,
+    defaultValue: Item[] = []
+  ) {
+    super(item, id, defaultValue);
+  }
+
+  render() {
+    const items = this.get();
+    const selection = this.selection?.get();
+    return (
+      <>
+        <Form.Group className="mb-3">
+          <div style={{ display: "flex" }}>
+            <span>{this.label}</span>
+            <FormCheck
+              style={{ marginLeft: "auto", display: "inline-block" }}
+              label="Items Overrideable"
+              checked={this.isOverrideable}
+              onChange={() => this.setOverrideable(!this.isOverrideable)}
+            />
+            {this.selection && (
+              <FormCheck
+                style={{ marginLeft: "auto", display: "inline-block" }}
+                label="Selection Overrideable"
+                checked={this.selection.isOverrideable}
+                onChange={() =>
+                  this.selection!.setOverrideable(
+                    !this.selection!.isOverrideable
+                  )
+                }
+              />
+            )}
+          </div>
+          <SortableList<Item> items={items} setItems={(v) => this.set(v)}>
+            {(item, idx) => (
+              <ItemListPropertyItem
+                key={item.id}
+                item={item}
+                idx={idx}
+                setLabel={(value) => {
+                  item.label = value;
+                  this.notify();
+                }}
+                selected={
+                  selection === undefined
+                    ? undefined
+                    : selection.selectedItems[item.id] ?? false
+                }
+                setSelected={(value) =>
+                  this.selection?.setSelection(item.id, value)
+                }
+              />
+            )}
+          </SortableList>
+        </Form.Group>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <Button
+            onClick={() =>
+              this.set([
+                ...items,
+                { id: this.item.page.project.data.nextId++, label: "New Item" },
+              ])
+            }
+          >
+            Add
+          </Button>
+          {selection && (
+            <Form.Check
+              inline
+              style={{ marginLeft: "auto" }}
+              id={this.item.data.id + "-" + this.id + "-checkbox"}
+              type="checkbox"
+              checked={selection.multiSelection}
+              onChange={() => {
+                const value = !selection.multiSelection;
+                return this.selection!.set({
+                  selectedItems: value ? selection.selectedItems : {},
+                  multiSelection: value,
+                });
+              }}
+              label="Multi Select"
+            />
+          )}
+        </div>
+      </>
+    );
+  }
+}
 
 export class ListWidget extends Widget {
   label = "List";
-  text = new StringProperty(this, "text", "").textArea();
+  fontSize = new NumberProperty(this, "fontSize", "Font Size", 16);
+  gap = new NumberProperty(this, "gap", "Gap", 8);
 
-  items: { label: string; selected: boolean }[] = [];
+  itemListSelection = new ItemListSelectionProperty(this, "itemSelection");
+  itemList = new ItemListProperty(
+    this,
+    "items",
+    "Items",
+    this.itemListSelection
+  );
+
+  items = new MemoValue<{ label: string; selected: boolean }[]>(() => {
+    const selection = this.itemListSelection.get();
+    return this.itemList.get().map((item) => ({
+      label: item.label,
+      selected: selection.selectedItems[item.id] ?? false,
+    }));
+  }, [this.itemList, this.itemListSelection]);
 
   override renderContent(): JSX.Element {
     const box = this.box.get();
 
     const renderedItems: JSX.Element[] = [];
-    let y = box.y;
+    const fontSize = this.fontSize.get();
+    const gap = this.gap.get();
+    let y = box.y + fontSize + gap / 2;
     let id = 1;
-    for (const item of this.items) {
+    for (const item of this.items.value) {
       if (item.selected) {
         renderedItems.push(
           <rect
             key={id++}
             x={box.x}
-            y={y - 15}
+            y={y - fontSize - gap / 2}
             width={box.width}
-            height={15}
-            fill="blue"
+            height={fontSize + gap}
+            fill="lightBlue"
           />
         );
       }
@@ -33,7 +188,7 @@ export class ListWidget extends Widget {
           {item.label}
         </text>
       );
-      y += 15;
+      y += fontSize + gap;
     }
 
     return (
@@ -53,21 +208,6 @@ export class ListWidget extends Widget {
 
   initialize(): void {
     super.initialize();
-    this.text.set("Item 1\n Item 2*\nItem 3");
-  }
-  override recalculate(): void {
-    super.recalculate();
-    const parts = this.text.get().split("\n");
-
-    this.items = parts.map((t) => {
-      const selected = t.endsWith("*");
-
-      if (selected) {
-        return { label: t.substring(0, t.length - 1).trim(), selected };
-      } else {
-        return { label: t, selected: false };
-      }
-    });
   }
 
   override palette() {

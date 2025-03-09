@@ -1,6 +1,15 @@
-import { MouseEventHandler, SVGAttributes, useContext, useRef } from "react";
+import {
+  MouseEventHandler,
+  SVGAttributes,
+  useContext,
+  useRef,
+  useState,
+} from "react";
+import { Form } from "react-bootstrap";
+import { GripVertical } from "react-bootstrap-icons";
 import { ProjectionContext } from "./Contexts";
-import { useRerenderOnEvent } from "./Project";
+import { useRerenderOnEvent } from "./hooks";
+import { SortableListItem } from "./SortableList";
 import { Vec2d } from "./Vec2d";
 import { Rectangle } from "./Widget";
 
@@ -199,5 +208,72 @@ export function DraggableAndResizableBox({
         </>
       )}
     </>
+  );
+}
+
+export function ItemListPropertyItem({
+  item,
+  idx,
+  setLabel,
+  selected,
+  setSelected,
+}: {
+  item: {
+    id: number;
+    label: string;
+  };
+  idx: number;
+  setLabel: (value: string) => void;
+  selected?: boolean;
+  setSelected?: (value: boolean) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <SortableListItem
+      id={item.id}
+      idx={idx}
+      onClick={() => setEditing(true)}
+      style={{ display: "flex", alignItems: "center" }}
+    >
+      <GripVertical style={{ marginLeft: "-12px" }} />
+      {editing ? (
+        <Form.Control
+          autoFocus
+          value={item.label}
+          onChange={(e) => setLabel(e.target.value)}
+          onBlur={() => setEditing(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") setEditing(false);
+          }}
+        />
+      ) : (
+        item.label
+      )}
+      {selected !== undefined ? (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelected?.(!selected);
+          }}
+          style={{
+            marginLeft: "auto",
+            paddingLeft: "20px",
+            paddingRight: "10px",
+            marginRight: "-10px",
+            marginTop: "-8px",
+            paddingTop: "8px",
+            marginBottom: "-8px",
+            paddingBottom: "8px",
+          }}
+        >
+          <Form.Check
+            type="checkbox"
+            onClick={(e) => e.stopPropagation()}
+            checked={selected}
+            onChange={() => setSelected?.(!selected)}
+          />
+        </div>
+      ) : null}
+    </SortableListItem>
   );
 }

@@ -16,57 +16,12 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import classNames from "classnames";
-import React, { MouseEventHandler, useState } from "react";
-import { Button, Dropdown, Form, ListGroup, Modal } from "react-bootstrap";
-import { ThreeDotsVertical } from "react-bootstrap-icons";
+import { useState } from "react";
+import { Button, Form, ListGroup, Modal } from "react-bootstrap";
+import { GripVertical } from "react-bootstrap-icons";
+import { useRerenderTrigger } from "./hooks";
+import { ThreeDotMenu } from "./Inputs";
 import { PageData, Project } from "./Project";
-
-function IconButton({
-  children,
-  onClick,
-  style,
-  className,
-  ref,
-}: {
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-  className?: string;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
-  ref?: React.Ref<HTMLButtonElement>;
-}) {
-  return (
-    <button
-      ref={ref}
-      onClick={onClick}
-      className={classNames("icon-button", className)}
-      style={style}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ThreeDotMenuToggle({
-  onClick,
-  ref,
-}: {
-  onClick: MouseEventHandler<any>;
-  ref?: React.Ref<any>;
-}) {
-  return (
-    <IconButton
-      ref={ref}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick(e);
-      }}
-    >
-      <ThreeDotsVertical />
-    </IconButton>
-  );
-}
 
 function Page({
   page,
@@ -84,6 +39,8 @@ function Page({
 
   const [editName, setEditName] = useState(false);
   const [changeMasterPage, setChangeMasterPage] = useState(false);
+
+  const triggerRerender = useRerenderTrigger();
 
   const masterPageName =
     page.masterPageId === undefined
@@ -105,6 +62,7 @@ function Page({
         onClick={() => project.selectPage(page)}
         onDoubleClick={() => setEditName(true)}
       >
+        <GripVertical style={{ marginLeft: "-12px", marginTop: "4px" }} />
         <span onClick={() => selected && setEditName(true)}>{page.name}</span>
         <span
           style={{ marginLeft: "auto" }}
@@ -112,21 +70,17 @@ function Page({
         >
           {masterPageName}
         </span>
-        <Dropdown style={{ marginTop: "-5px", marginLeft: "8px" }}>
-          <Dropdown.Toggle as={ThreeDotMenuToggle} />
-          <Dropdown.Menu className="super-colors">
-            <Dropdown.Item onClick={() => setEditName(true)}>
-              Edit Name
-            </Dropdown.Item>
-            <Dropdown.Item onClick={() => setChangeMasterPage(true)}>
-              Change Master Page
-            </Dropdown.Item>
-            <Dropdown.Item></Dropdown.Item>
-            <Dropdown.Item onClick={() => project.removePage(page.id)}>
-              Delete
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
+        <ThreeDotMenu
+          style={{ marginTop: "-5px", marginLeft: "8px" }}
+          items={[
+            { label: "Edit Name", onClick: () => setEditName(true) },
+            {
+              label: "Change Master Page",
+              onClick: () => setChangeMasterPage(true),
+            },
+            { label: "Delete", onClick: () => project.removePage(page.id) },
+          ]}
+        />
       </ListGroup.Item>
       <Modal show={editName} onHide={() => setEditName(false)}>
         <Modal.Header closeButton>
@@ -145,7 +99,7 @@ function Page({
               onChange={(e) => {
                 page.name = e.target.value;
                 project.onDataChanged();
-                project.onChange.notify();
+                triggerRerender();
               }}
             />
           </form>
@@ -218,6 +172,7 @@ export function Pages({ project }: { project: Project }) {
       },
     })
   );
+
   return (
     <DndContext
       modifiers={[restrictToVerticalAxis, restrictToParentElement]}

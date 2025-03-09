@@ -1,18 +1,21 @@
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import { RefObject } from "react";
 import { Canvas, CanvasProjection } from "./Canvas";
-import { Page, PageItem, useRerenderOnEvent } from "./Project";
+import { Page, PageItem } from "./Project";
 import { Vec2d } from "./Vec2d";
 import { Widget } from "./Widget";
+import { useRerenderOnEvent } from "./hooks";
 
 function RenderItem({
   item,
   isSelected,
   setSelectedItem,
+  fromMaster,
 }: {
   item: PageItem;
   isSelected: boolean;
   setSelectedItem: (item: PageItem) => void;
+  fromMaster: boolean;
 }) {
   useRerenderOnEvent(item.onChange);
   return (
@@ -58,7 +61,7 @@ export function Editor({
           dragOffset.current.y;
 
         const item = page.addItem({
-          id: page.project.nextId++,
+          id: page.project.data.nextId++,
           type: event.active!.data.current!.itemType,
         }) as Widget;
 
@@ -85,6 +88,7 @@ export function Editor({
           item={item}
           isSelected={selectedItem === item}
           setSelectedItem={setSelectedItem}
+          fromMaster={false}
         />
       ))}
     </Canvas>

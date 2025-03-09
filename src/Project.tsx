@@ -1,7 +1,8 @@
-import { JSX, useEffect, useRef, useState } from "react";
+import { JSX } from "react";
 import { Form } from "react-bootstrap";
+import { NumberInput } from "./Inputs";
 
-export class DomainEvent<T = void> {
+export class ModelEvent<T = void> {
   private listeners = new Set<{ value: (arg: T) => void }>();
   subscribe(listener: (arg: T) => void): () => void {
     const entry = { value: listener };
@@ -14,25 +15,6 @@ export class DomainEvent<T = void> {
   }
 }
 
-export function useRerenderOnEvent(event: DomainEvent<any> | undefined) {
-  const [, trigger] = useState({});
-  useEffect(() => {
-    if (event === undefined) return;
-    return event.subscribe(() => trigger({}));
-  }, [event]);
-}
-
-export function useConst<T>(valueFactory: () => T): T {
-  const result = useRef<{ value?: T; initialized: boolean }>({
-    initialized: false,
-  });
-  if (!result.current.initialized) {
-    result.current.value = valueFactory();
-    result.current.initialized = true;
-  }
-  return result.current.value!;
-}
-
 export const pageItemTypeRegistryHolder: {
   registry: {
     create: (data: PageItemData, page: Page) => PageItem;
@@ -42,7 +24,6 @@ export const pageItemTypeRegistryHolder: {
 export function createPageItem(data: PageItemData, page: Page) {
   const result = pageItemTypeRegistryHolder.registry.create(data, page);
   result.initialize();
-  result.recalculate();
   return result;
 }
 
@@ -54,7 +35,7 @@ export interface ProjectData {
 
 export class Project {
   pageDataMap: { [id: number]: PageData } = {};
-  onChange = new DomainEvent();
+  onChange = new ModelEvent();
 
   currentPage?: Page;
   constructor(public data: ProjectData, public onDataChanged: () => void) {
@@ -68,6 +49,7 @@ export class Project {
       name: "Page " + (this.data.pages.length + 1),
       items: [],
       propertyValues: {},
+      overrideableProperties: {},
     };
 
     this.data.pages.push(page);
@@ -120,6 +102,7 @@ export interface PageData {
   items: PageItemData[];
   masterPageId?: number;
   propertyValues: { [itemId: number]: { [propertyKey: string]: any } };
+  overrideableProperties: { [itemId: number]: { [propertyId: string]: true } };
 }
 
 export class Page {
@@ -128,7 +111,7 @@ export class Page {
 
   // master from closest to furthest away
   masterPages: PageData[] = [];
-  onChange = new DomainEvent();
+  onChange = new ModelEvent();
 
   constructor(
     public data: PageData,
@@ -176,15 +159,16 @@ export interface PageItemData {
   children?: PageItemData[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export abstract class PageItemProperty<T extends {} | null> {
   private masterValue?: T;
   private value: T;
-  isOverrideable = false;
   isHidden = false;
 
+  isOverrideable: boolean;
+  valueChanged = new ModelEvent();
+
   constructor(
-    private item: PageItem,
+    protected item: PageItem,
     public id: string,
     private defaultValue: T
   ) {
@@ -207,6 +191,8 @@ export abstract class PageItemProperty<T extends {} | null> {
       value = defaultValue;
     }
     this.value = value;
+
+    this.isOverrideable = item.overrideableProperties?.[id] ?? false;
   }
 
   get(): T {
@@ -221,8 +207,22 @@ export abstract class PageItemProperty<T extends {} | null> {
     }
     this.item.propertyValues[this.id] = value;
     this.value = value;
-    this.item.page.onDataChanged();
-    this.item.notifyChange();
+
+    this.notify();
+  }
+
+  setOverrideable(value: boolean): void {
+    if (this.item.overrideableProperties === undefined) {
+      this.item.overrideableProperties = {};
+      this.item.page.data.overrideableProperties[this.item.data.id] =
+        this.item.overrideableProperties;
+    }
+    if (value) this.item.overrideableProperties[this.id] = true;
+    else delete this.item.overrideableProperties[this.id];
+
+    this.isOverrideable = value;
+
+    this.notify();
   }
 
   clear() {
@@ -239,14 +239,13 @@ export abstract class PageItemProperty<T extends {} | null> {
       value = this.defaultValue;
     }
     this.value = value;
-
-    this.item.page.onDataChanged();
-    this.item.notifyChange();
+    this.notify();
   }
 
-  overrideable() {
-    this.isOverrideable = true;
-    return this;
+  protected notify() {
+    this.item.page.onDataChanged();
+    this.valueChanged.notify();
+    this.item.notifyChange();
   }
 
   hidden() {
@@ -259,7 +258,44 @@ export abstract class PageItemProperty<T extends {} | null> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export class MemoValue<T> {
+  private _value?: T;
+  private valid = false;
+
+  invalidated = new ModelEvent();
+
+  constructor(
+    private factory: () => T,
+    events: (ModelEvent | PageItemProperty<any> | MemoValue<any>)[] = []
+  ) {
+    for (const e of events) {
+      if (e instanceof ModelEvent) {
+        e.subscribe(() => this.invalidate());
+      } else if (e instanceof MemoValue) {
+        e.invalidated.subscribe(() => this.invalidate());
+      } else {
+        e.valueChanged.subscribe(() => this.invalidate());
+      }
+    }
+  }
+
+  get value(): T {
+    if (!this.valid) {
+      this._value = this.factory();
+      this.valid = true;
+    }
+    return this._value!;
+  }
+
+  invalidate() {
+    if (this.valid) {
+      this.valid = false;
+      this._value = undefined;
+      this.invalidated.notify();
+    }
+  }
+}
+
 export class ObjectProperty<T extends {} | null> extends PageItemProperty<T> {
   constructor(item: PageItem, id: string, defaultValue: T) {
     super(item, id, defaultValue);
@@ -270,6 +306,7 @@ export class ObjectProperty<T extends {} | null> extends PageItemProperty<T> {
     throw new Error("Method not implemented.");
   }
 }
+
 export class StringProperty extends PageItemProperty<string> {
   isTextArea = false;
   constructor(
@@ -283,7 +320,7 @@ export class StringProperty extends PageItemProperty<string> {
 
   render(): JSX.Element {
     return (
-      <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+      <Form.Group className="mb-3">
         <Form.Label>{this.label}</Form.Label>
         <Form.Control
           value={this.get()}
@@ -301,6 +338,26 @@ export class StringProperty extends PageItemProperty<string> {
   }
 }
 
+export class NumberProperty extends PageItemProperty<number> {
+  constructor(
+    item: PageItem,
+    id: string,
+    private label: string,
+    defaultValue: number
+  ) {
+    super(item, id, defaultValue);
+  }
+
+  render(): JSX.Element {
+    return (
+      <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+        <Form.Label>{this.label}</Form.Label>
+        <NumberInput value={this.get()} onChange={(e) => this.set(e)} />
+      </Form.Group>
+    );
+  }
+}
+
 export interface RenderEditorInteractionArgs {
   isSelected: boolean;
   setSelectedItem: (item: PageItem) => void;
@@ -311,7 +368,8 @@ export abstract class PageItem {
   propertyMap = new Map<string, PageItemProperty<any>>();
   masterDataPropertyValues: { [propertyId: string]: any }[] = [];
   propertyValues?: { [propertyId: string]: any };
-  onChange = new DomainEvent();
+  overrideableProperties?: { [propertyId: string]: true };
+  onChange = new ModelEvent();
 
   // do not provide a custom constructor in derived types. use initialize() instead
   constructor(public data: PageItemData, public page: Page) {
@@ -323,15 +381,18 @@ export abstract class PageItem {
     }
 
     this.propertyValues = page.data.propertyValues[data.id];
+    this.overrideableProperties = page.data.overrideableProperties[data.id];
   }
 
   notifyChange() {
-    this.recalculate();
     this.onChange.notify();
   }
 
   hasOverrideableProperties() {
-    return this.properties.some((x) => x.isOverrideable);
+    return (
+      this.overrideableProperties &&
+      Object.keys(this.overrideableProperties).length > 0
+    );
   }
   abstract renderContent(): React.ReactNode;
 
@@ -346,7 +407,4 @@ export abstract class PageItem {
 
   // invoked after construction
   initialize() {}
-
-  // invoked during construction after initialize() and after every change
-  recalculate() {}
 }

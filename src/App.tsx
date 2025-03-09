@@ -1,14 +1,8 @@
 import { CanvasProjection } from "./Canvas";
-import {
-  PageItem,
-  Project,
-  ProjectData,
-  useConst,
-  useRerenderOnEvent,
-} from "./Project";
+import { PageItem, Project, ProjectData } from "./Project";
 
 import { DBSchema, openDB } from "idb";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Tab, Tabs } from "react-bootstrap";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Editor } from "./Editor";
@@ -16,6 +10,7 @@ import { ItemProperties } from "./ItemProperties";
 import "./PageItemTypeRegistry";
 import { Pages } from "./Pages";
 import { Palette } from "./Palette";
+import { useConst, useRerenderOnEvent } from "./hooks";
 
 function throttle<T extends (...args: any[]) => void>(
   func: T,
@@ -74,8 +69,10 @@ const projectData = await (async () => {
       pages: [
         {
           id: 1,
+          name: "Page 1",
           items: [],
           propertyValues: {},
+          overrideableProperties: {},
         },
       ],
     };
@@ -96,6 +93,9 @@ export default function App() {
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const [selectedItem, setSelectedItem] = useState<PageItem>();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setSelectedItem(undefined), [projectData.currentPageId]);
 
   return (
     <div
@@ -170,7 +170,7 @@ export default function App() {
             alignItems: "stretch",
           }}
         >
-          <div>
+          <div style={{ flexGrow: 1 }}>
             <ItemProperties item={selectedItem} />
           </div>
         </Panel>
