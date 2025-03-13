@@ -6,7 +6,6 @@ import { PageItemProperty } from "./PageItemProperty";
 export interface PageItemData {
   id: number;
   type: string;
-
   children?: PageItemData[];
 }
 
@@ -21,10 +20,15 @@ export abstract class PageItem {
   propertyMap = new Map<string, PageItemProperty<any>>();
   masterPropertyValues: { [propertyId: string]: any }[] = [];
   propertyValues?: { [propertyId: string]: any };
-  overrideableProperties?: { [propertyId: string]: true };
-  onChange = new ModelEvent();
 
+  // properties marked as overrideable in this page
+  overrideableProperties?: { [propertyId: string]: true };
+
+  // properties marked as overrideable on the master page, used to determine editability
   directMasterOverrideableProperties?: { [propertyId: string]: true };
+
+  // raised if something specific to this item changes, such as a property
+  onChange = new ModelEvent();
 
   // do not provide a custom constructor in derived types. use initialize() instead
   constructor(
@@ -43,6 +47,18 @@ export abstract class PageItem {
     this.overrideableProperties = page.data.overrideableProperties[data.id];
     this.directMasterOverrideableProperties =
       page.directMasterPageData?.overrideableProperties[data.id];
+  }
+
+  get editablePropertyValues() {
+    if (this.propertyValues === undefined) {
+      this.propertyValues = {};
+      this.page.data.propertyValues[this.data.id] = this.propertyValues;
+    }
+    return this.propertyValues;
+  }
+
+  get onDataChanged() {
+    return this.page.onDataChanged;
   }
 
   notifyChange() {

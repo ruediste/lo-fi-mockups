@@ -40,7 +40,11 @@ export abstract class PageItemProperty<T extends {} | null> {
       }
     }
 
-    let value = item.propertyValues?.[id];
+    if (item.fromMasterPage) {
+      this.isEditable = item.directMasterOverrideableProperties?.[id] ?? false;
+    } else this.isEditable = true;
+
+    let value = this.isEditable ? item.propertyValues?.[id] : undefined;
     if (value === undefined) {
       value = this.masterValue;
     }
@@ -50,10 +54,6 @@ export abstract class PageItemProperty<T extends {} | null> {
     this.value = value;
 
     this.isOverrideable = item.overrideableProperties?.[id] ?? false;
-
-    if (item.fromMasterPage) {
-      this.isEditable = item.directMasterOverrideableProperties?.[id] ?? false;
-    } else this.isEditable = true;
   }
 
   get(): T {
@@ -61,15 +61,28 @@ export abstract class PageItemProperty<T extends {} | null> {
   }
 
   set(value: T): void {
-    if (this.item.propertyValues === undefined) {
-      this.item.propertyValues = {};
-      this.item.page.data.propertyValues[this.item.data.id] =
-        this.item.propertyValues;
-    }
-    this.item.propertyValues[this.id] = value;
+    this.item.editablePropertyValues[this.id] = value;
     this.value = value;
+    this.notify();
+  }
+
+  // used for mutable values. clone() needs to be implemented to use this
+  modify(action: (value: T) => void): void {
+    const values = this.item.editablePropertyValues;
+
+    if (this.id in values) action(this.value);
+    else {
+      const newValue = this.clone(this.value);
+      action(newValue);
+      values[this.id] = newValue;
+      this.value = newValue;
+    }
 
     this.notify();
+  }
+
+  clone(_value: T): T {
+    throw new Error("Not Implemented");
   }
 
   setOverrideable(value: boolean): void {
@@ -87,13 +100,8 @@ export abstract class PageItemProperty<T extends {} | null> {
   }
 
   clear() {
-    if (this.item.propertyValues !== undefined) {
+    if (this.item.propertyValues !== undefined)
       delete this.item.propertyValues[this.id];
-      if (Object.keys(this.item.propertyValues).length == 0) {
-        this.item.propertyValues = undefined;
-        delete this.item.page.data.propertyValues[this.item.data.id];
-      }
-    }
 
     let value = this.masterValue;
     if (value === undefined) {
@@ -104,7 +112,7 @@ export abstract class PageItemProperty<T extends {} | null> {
   }
 
   protected notify() {
-    this.item.page.onDataChanged();
+    this.item.onDataChanged();
     this.valueChanged.notify();
     this.item.notifyChange();
   }

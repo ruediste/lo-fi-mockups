@@ -19,7 +19,7 @@ interface Item {
 
 interface ItemListSelectionPropertyValue {
   multiSelection: boolean;
-  selectedItems: { [id: number]: boolean };
+  selectedItems: { [id: number]: true };
 }
 
 export class ItemListSelectionProperty extends PageItemProperty<ItemListSelectionPropertyValue> {
@@ -39,11 +39,21 @@ export class ItemListSelectionProperty extends PageItemProperty<ItemListSelectio
   }
 
   setSelection(id: number, selected: boolean) {
-    const tmp = this.get();
-    if (tmp.multiSelection) {
-      tmp.selectedItems[id] = selected;
-    } else tmp.selectedItems = { [id]: selected };
-    this.set(tmp);
+    this.modify((value) => {
+      if (value.multiSelection) {
+        if (selected) {
+          value.selectedItems[id] = true;
+        } else {
+          delete value.selectedItems[id];
+        }
+      } else {
+        value.selectedItems = selected ? { [id]: true } : {};
+      }
+    });
+  }
+
+  clone(value: ItemListSelectionPropertyValue): ItemListSelectionPropertyValue {
+    return { ...value, selectedItems: { ...value.selectedItems } };
   }
 }
 
@@ -63,6 +73,10 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
       !this.isHidden &&
       (this.isEditable || (this.selection?.isEditable ?? false))
     );
+  }
+
+  clone(value: Item[]): Item[] {
+    return value.map((x) => ({ ...x }));
   }
 
   render() {
@@ -97,7 +111,7 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
           <SortableList<Item>
             items={items}
             setItems={(v) => this.set(v)}
-            disabled={this.isEditable}
+            disabled={!this.isEditable}
           >
             {(item, idx) => (
               <ItemListPropertyItem
@@ -106,10 +120,11 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
                 idx={idx}
                 itemEditable={this.isEditable}
                 selectionEditable={this.selection?.isEditable ?? false}
-                setLabel={(value) => {
-                  item.label = value;
-                  this.notify();
-                }}
+                setLabel={(value) =>
+                  this.modify((v) => {
+                    v[idx].label = value;
+                  })
+                }
                 selected={
                   selection === undefined
                     ? undefined

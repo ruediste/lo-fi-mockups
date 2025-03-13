@@ -68,6 +68,7 @@ export function SortableList<
   ...others
 }: {
   items: T[];
+  // always invoked with a new array
   setItems: (newItems: T[]) => void;
   children: (item: T, idx: number) => ReactNode;
   disabled?: boolean;

@@ -1,6 +1,7 @@
 import { DragOverlay, useDraggable } from "@dnd-kit/core";
 import { memo, RefObject, useEffect, useMemo, useState } from "react";
 import { CanvasProjection } from "./Canvas";
+import { PageItemData } from "./model/PageItem";
 import { Project, ProjectData } from "./model/Project";
 import { Rectangle, Widget, WidgetPaletteInfo } from "./Widget";
 import { pageItemTypeRegistry } from "./widgets/PageItemTypeRegistry";
@@ -116,6 +117,12 @@ export const Palette = memo(function Palette({
 }) {
   const widgets = useMemo(() => {
     let nextId = 1;
+
+    const items: PageItemData[] = pageItemTypeRegistry.palette.map((type) => ({
+      id: nextId,
+      type: type.key,
+    }));
+
     const projectData: ProjectData = {
       currentPageId: nextId,
       pages: [
@@ -124,10 +131,7 @@ export const Palette = memo(function Palette({
           name: "Page 1",
           propertyValues: {},
           overrideableProperties: {},
-          items: pageItemTypeRegistry.palette.map((type) => ({
-            id: 2,
-            type: type.key,
-          })),
+          items,
         },
       ],
       nextId: nextId++,

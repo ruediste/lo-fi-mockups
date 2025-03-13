@@ -3,6 +3,15 @@ import { PageItem, PageItemData } from "./PageItem";
 import { Project } from "./Project";
 import { createPageItem } from "./createPageItem";
 
+export interface PageData {
+  id: number;
+  name: string;
+  items: PageItemData[];
+  masterPageId?: number;
+  propertyValues: { [itemId: number]: { [propertyKey: string]: any } };
+  overrideableProperties: { [itemId: number]: { [propertyId: string]: true } };
+}
+
 export class Page {
   masterItems: PageItem[];
   ownItems: PageItem[];
@@ -10,6 +19,8 @@ export class Page {
   // master from closest to furthest away
   directMasterPageData?: PageData;
   masterPages: PageData[] = [];
+
+  // raised when something on the page changes, mainly if items are added or removed
   onChange = new ModelEvent();
 
   constructor(
@@ -43,7 +54,6 @@ export class Page {
   }
 
   addItem(data: PageItemData) {
-    this.data.propertyValues[data.id] = {};
     this.data.items.push(data);
     const item = this.toPageItem(data, false);
     this.ownItems.push(item);
@@ -55,12 +65,4 @@ export class Page {
   private toPageItem(data: PageItemData, fromMasterPage: boolean) {
     return createPageItem({ data, page: this, fromMasterPage });
   }
-}
-export interface PageData {
-  id: number;
-  name: string;
-  items: PageItemData[];
-  masterPageId?: number;
-  propertyValues: { [itemId: number]: { [propertyKey: string]: any } };
-  overrideableProperties: { [itemId: number]: { [propertyId: string]: true } };
 }
