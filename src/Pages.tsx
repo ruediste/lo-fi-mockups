@@ -21,7 +21,8 @@ import { Button, Form, ListGroup, Modal } from "react-bootstrap";
 import { GripVertical } from "react-bootstrap-icons";
 import { useRerenderTrigger } from "./hooks";
 import { ThreeDotMenu } from "./Inputs";
-import { PageData, Project } from "./Project";
+import { PageData } from "./model/Page";
+import { Project } from "./model/Project";
 
 function Page({
   page,
@@ -126,10 +127,10 @@ function Page({
               value={page.masterPageId}
               onChange={(e) => {
                 const index = e.target.selectedIndex;
-                page.masterPageId =
-                  index == 0 ? undefined : project.data.pages[index - 1].id;
-                project.onDataChanged();
-                project.onChange.notify();
+                project.setMasterPage(
+                  page.id,
+                  index == 0 ? undefined : project.data.pages[index - 1].id
+                );
               }}
             >
               <option value=""></option>

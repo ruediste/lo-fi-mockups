@@ -1,5 +1,5 @@
 import { CanvasProjection } from "./Canvas";
-import { PageItem, Project, ProjectData } from "./Project";
+import { Project, ProjectData } from "./model/Project";
 
 import { DBSchema, openDB } from "idb";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -7,10 +7,11 @@ import { Tab, Tabs } from "react-bootstrap";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Editor } from "./Editor";
 import { ItemProperties } from "./ItemProperties";
-import "./PageItemTypeRegistry";
 import { Pages } from "./Pages";
 import { Palette } from "./Palette";
 import { useConst, useRerenderOnEvent } from "./hooks";
+import { PageItem } from "./model/PageItem";
+import "./widgets/PageItemTypeRegistry";
 
 function throttle<T extends (...args: any[]) => void>(
   func: T,
@@ -41,18 +42,9 @@ interface MyDB extends DBSchema {
 }
 
 const db = await openDB<MyDB>("test", 1, {
-  upgrade(db, oldVersion, newVersion, transaction, event) {
+  upgrade(db) {
     db.createObjectStore("project");
     db.createObjectStore("images");
-  },
-  blocked(currentVersion, blockedVersion, event) {
-    // …
-  },
-  blocking(currentVersion, blockedVersion, event) {
-    // …
-  },
-  terminated() {
-    // …
   },
 });
 

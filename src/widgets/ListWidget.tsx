@@ -1,15 +1,15 @@
 import { JSX } from "react";
 import { Button, Form } from "react-bootstrap";
 import { FormCheck } from "../Inputs";
+import { PageItem } from "../model/PageItem";
 import {
   MemoValue,
   NumberProperty,
-  PageItem,
   PageItemProperty,
-} from "../Project";
+} from "../model/PageItemProperty";
 import { SortableList } from "../SortableList";
 import { Widget } from "../Widget";
-import { ItemListPropertyItem } from "../WidgetHelpers";
+import { ItemListPropertyItem } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 
 interface Item {
@@ -58,6 +58,13 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
     super(item, id, defaultValue);
   }
 
+  override shouldRender(): boolean {
+    return (
+      !this.isHidden &&
+      (this.isEditable || (this.selection?.isEditable ?? false))
+    );
+  }
+
   render() {
     const items = this.get();
     const selection = this.selection?.get();
@@ -66,13 +73,15 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
         <Form.Group className="mb-3">
           <div style={{ display: "flex" }}>
             <span>{this.label}</span>
-            <FormCheck
-              style={{ marginLeft: "auto", display: "inline-block" }}
-              label="Items Overrideable"
-              checked={this.isOverrideable}
-              onChange={() => this.setOverrideable(!this.isOverrideable)}
-            />
-            {this.selection && (
+            {this.isEditable && (
+              <FormCheck
+                style={{ marginLeft: "auto", display: "inline-block" }}
+                label="Items Overrideable"
+                checked={this.isOverrideable}
+                onChange={() => this.setOverrideable(!this.isOverrideable)}
+              />
+            )}
+            {this.selection?.isEditable && (
               <FormCheck
                 style={{ marginLeft: "auto", display: "inline-block" }}
                 label="Selection Overrideable"
@@ -85,12 +94,18 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
               />
             )}
           </div>
-          <SortableList<Item> items={items} setItems={(v) => this.set(v)}>
+          <SortableList<Item>
+            items={items}
+            setItems={(v) => this.set(v)}
+            disabled={this.isEditable}
+          >
             {(item, idx) => (
               <ItemListPropertyItem
                 key={item.id}
                 item={item}
                 idx={idx}
+                itemEditable={this.isEditable}
+                selectionEditable={this.selection?.isEditable ?? false}
                 setLabel={(value) => {
                   item.label = value;
                   this.notify();

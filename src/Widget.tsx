@@ -1,10 +1,14 @@
 import { JSX } from "react";
+
 import {
-  ObjectProperty,
   PageItem,
-  RenderEditorInteractionArgs,
-} from "./Project";
-import { DraggableAndResizableBox } from "./WidgetHelpers";
+  RenderEditorInteractionArgs as RenderInteractionArgs,
+} from "./model/PageItem";
+import { ObjectProperty } from "./model/PageItemProperty";
+import {
+  DraggableAndResizableBox,
+  SelectableBox,
+} from "./widgets/WidgetHelpers";
 
 // class ItemGroup extends PageItem {}
 
@@ -32,7 +36,7 @@ export abstract class Widget extends PageItem {
   override renderEditorInteraction({
     isSelected,
     setSelectedItem,
-  }: RenderEditorInteractionArgs): JSX.Element {
+  }: RenderInteractionArgs): JSX.Element {
     return (
       <DraggableAndResizableBox
         showHandles={isSelected}
@@ -43,6 +47,23 @@ export abstract class Widget extends PageItem {
         }}
         box={this.box.get()}
         update={(box) => this.box.set(box)}
+      />
+    );
+  }
+
+  override renderMasterInteraction({
+    isSelected,
+    setSelectedItem,
+  }: RenderInteractionArgs): React.ReactNode {
+    return (
+      <SelectableBox
+        box={this.box.get()}
+        showHandles={isSelected}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          setSelectedItem(this);
+        }}
       />
     );
   }

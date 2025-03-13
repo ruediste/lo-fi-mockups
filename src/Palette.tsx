@@ -1,9 +1,9 @@
 import { DragOverlay, useDraggable } from "@dnd-kit/core";
 import { memo, RefObject, useEffect, useMemo, useState } from "react";
 import { CanvasProjection } from "./Canvas";
-import { pageItemTypeRegistry } from "./PageItemTypeRegistry";
-import { Project, ProjectData } from "./Project";
+import { Project, ProjectData } from "./model/Project";
 import { Rectangle, Widget, WidgetPaletteInfo } from "./Widget";
+import { pageItemTypeRegistry } from "./widgets/PageItemTypeRegistry";
 
 export function calculateViewBox(
   targetAspectRatio: number,

@@ -7,11 +7,11 @@ import {
 } from "react";
 import { Form } from "react-bootstrap";
 import { GripVertical } from "react-bootstrap-icons";
-import { ProjectionContext } from "./Contexts";
-import { useRerenderOnEvent } from "./hooks";
-import { SortableListItem } from "./SortableList";
-import { Vec2d } from "./Vec2d";
-import { Rectangle } from "./Widget";
+import { ProjectionContext } from "../Contexts";
+import { useRerenderOnEvent } from "../hooks";
+import { SortableListItem } from "../SortableList";
+import { Vec2d } from "../Vec2d";
+import { Rectangle } from "../Widget";
 
 // class ItemGroup extends PageItem {}
 
@@ -217,6 +217,8 @@ export function ItemListPropertyItem({
   setLabel,
   selected,
   setSelected,
+  itemEditable,
+  selectionEditable,
 }: {
   item: {
     id: number;
@@ -226,13 +228,15 @@ export function ItemListPropertyItem({
   setLabel: (value: string) => void;
   selected?: boolean;
   setSelected?: (value: boolean) => void;
+  itemEditable: boolean;
+  selectionEditable: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   return (
     <SortableListItem
       id={item.id}
       idx={idx}
-      onClick={() => setEditing(true)}
+      onClick={() => itemEditable && setEditing(true)}
       style={{ display: "flex", alignItems: "center" }}
     >
       <GripVertical style={{ marginLeft: "-12px" }} />
@@ -253,7 +257,7 @@ export function ItemListPropertyItem({
         <div
           onClick={(e) => {
             e.stopPropagation();
-            setSelected?.(!selected);
+            if (selectionEditable) setSelected?.(!selected);
           }}
           style={{
             marginLeft: "auto",
@@ -271,9 +275,44 @@ export function ItemListPropertyItem({
             onClick={(e) => e.stopPropagation()}
             checked={selected}
             onChange={() => setSelected?.(!selected)}
+            disabled={!selectionEditable}
           />
         </div>
       ) : null}
     </SortableListItem>
+  );
+}
+
+export function SelectableBox({
+  box,
+  showHandles,
+  onClick,
+  onPointerDown,
+}: {
+  box: Rectangle;
+  showHandles: boolean;
+  onClick?: MouseEventHandler;
+  onPointerDown?: MouseEventHandler;
+}) {
+  const projection = useContext(ProjectionContext);
+  useRerenderOnEvent(projection.onChange);
+  const strokeWidth = showHandles ? projection.lengthToWorld(5) : 0;
+  return (
+    <>
+      <rect
+        x={box.x - strokeWidth / 2}
+        y={box.y - strokeWidth / 2}
+        width={box.width + strokeWidth}
+        height={box.height + strokeWidth}
+        {...{ onClick, onPointerDown }}
+        {...(showHandles
+          ? {
+              fill: "transparent",
+              stroke: "#00ff00",
+              strokeWidth,
+            }
+          : { fill: "transparent" })}
+      />
+    </>
   );
 }

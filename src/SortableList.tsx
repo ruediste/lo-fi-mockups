@@ -64,11 +64,13 @@ export function SortableList<
   items,
   setItems,
   children,
+  disabled,
   ...others
 }: {
   items: T[];
   setItems: (newItems: T[]) => void;
   children: (item: T, idx: number) => ReactNode;
+  disabled?: boolean;
 } & Omit<
   ReplaceProps<"div", BsPrefixProps<"div"> & ListGroupProps>,
   "children"
@@ -87,7 +89,11 @@ export function SortableList<
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
-      <SortableContext items={items} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        items={items}
+        strategy={verticalListSortingStrategy}
+        disabled={disabled}
+      >
         <ListGroup {...others}>
           {items.map((item, idx) => children(item, idx))}
         </ListGroup>
