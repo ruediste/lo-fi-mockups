@@ -3,32 +3,10 @@ import { memo, RefObject, useEffect, useMemo, useState } from "react";
 import { CanvasProjection } from "./Canvas";
 import { PageItemData } from "./model/PageItem";
 import { Project, ProjectData } from "./model/Project";
-import { Rectangle, Widget, WidgetPaletteInfo } from "./Widget";
+import { calculateViewBox } from "./paletteHelper";
+import { Widget, WidgetPaletteInfo } from "./Widget";
 import { pageItemTypeRegistry } from "./widgets/PageItemTypeRegistry";
 
-export function calculateViewBox(
-  targetAspectRatio: number,
-  widgetBox: Rectangle
-): Rectangle {
-  const boxRatio = widgetBox.width / widgetBox.height;
-
-  let width: number;
-  let height: number;
-  if (targetAspectRatio > boxRatio) {
-    height = widgetBox.height;
-    width = targetAspectRatio * height;
-  } else {
-    width = widgetBox.width;
-    height = width / targetAspectRatio;
-  }
-
-  return {
-    x: widgetBox.x + (widgetBox.width - width) / 2,
-    y: widgetBox.y + (widgetBox.height - height) / 2,
-    width,
-    height,
-  };
-}
 const paletteItemSize = { width: 80, height: 60 };
 
 function PaletteEntry({

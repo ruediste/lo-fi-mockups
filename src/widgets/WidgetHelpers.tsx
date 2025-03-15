@@ -2,18 +2,14 @@ import {
   MouseEventHandler,
   SVGAttributes,
   useContext,
+  useId,
   useRef,
-  useState,
 } from "react";
-import { Form } from "react-bootstrap";
-import { GripVertical } from "react-bootstrap-icons";
 import { ProjectionContext } from "../Contexts";
 import { useRerenderOnEvent } from "../hooks";
-import { SortableListItem } from "../SortableList";
 import { Vec2d } from "../Vec2d";
 import { Rectangle } from "../Widget";
-
-// class ItemGroup extends PageItem {}
+import { widgetTheme } from "./widgetTheme";
 
 export function DraggableBox<T>({
   box,
@@ -211,78 +207,6 @@ export function DraggableAndResizableBox({
   );
 }
 
-export function ItemListPropertyItem({
-  item,
-  idx,
-  setLabel,
-  selected,
-  setSelected,
-  itemEditable,
-  selectionEditable,
-}: {
-  item: {
-    id: number;
-    label: string;
-  };
-  idx: number;
-  setLabel: (value: string) => void;
-  selected?: boolean;
-  setSelected?: (value: boolean) => void;
-  itemEditable: boolean;
-  selectionEditable: boolean;
-}) {
-  const [editing, setEditing] = useState(false);
-  return (
-    <SortableListItem
-      id={item.id}
-      idx={idx}
-      onClick={() => itemEditable && setEditing(true)}
-      style={{ display: "flex", alignItems: "center" }}
-    >
-      <GripVertical style={{ marginLeft: "-12px" }} />
-      {editing ? (
-        <Form.Control
-          autoFocus
-          value={item.label}
-          onChange={(e) => setLabel(e.target.value)}
-          onBlur={() => setEditing(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") setEditing(false);
-          }}
-        />
-      ) : (
-        item.label
-      )}
-      {selected !== undefined ? (
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            if (selectionEditable) setSelected?.(!selected);
-          }}
-          style={{
-            marginLeft: "auto",
-            paddingLeft: "20px",
-            paddingRight: "10px",
-            marginRight: "-10px",
-            marginTop: "-8px",
-            paddingTop: "8px",
-            marginBottom: "-8px",
-            paddingBottom: "8px",
-          }}
-        >
-          <Form.Check
-            type="checkbox"
-            onClick={(e) => e.stopPropagation()}
-            checked={selected}
-            onChange={() => setSelected?.(!selected)}
-            disabled={!selectionEditable}
-          />
-        </div>
-      ) : null}
-    </SortableListItem>
-  );
-}
-
 export function SelectableBox({
   box,
   showHandles,
@@ -313,6 +237,43 @@ export function SelectableBox({
             }
           : { fill: "transparent" })}
       />
+    </>
+  );
+}
+
+export function WidgetBox({
+  box,
+  children,
+}: {
+  box: Rectangle;
+  children: React.ReactNode;
+}) {
+  const id = useId();
+  return (
+    <>
+      <defs>
+        <clipPath id={id}>
+          <rect
+            {...widgetTheme}
+            x={box.x - widgetTheme.strokeWidth / 2}
+            y={box.y - widgetTheme.strokeWidth / 2}
+            width={box.width + widgetTheme.strokeWidth}
+            height={box.height + widgetTheme.strokeWidth}
+          />
+        </clipPath>
+      </defs>
+
+      <g clip-path={`url(#${id})`}>
+        {children}
+        <rect
+          {...widgetTheme}
+          fill="none"
+          x={box.x}
+          y={box.y}
+          width={box.width}
+          height={box.height}
+        />
+      </g>
     </>
   );
 }

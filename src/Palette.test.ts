@@ -1,4 +1,4 @@
-import { calculateViewBox } from "./Palette";
+import { calculateViewBox } from "./paletteHelper";
 
 describe("Palette Scaling", () => {
   it("should work for tall widgets", () => {

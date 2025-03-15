@@ -29,7 +29,7 @@ export abstract class Widget extends PageItem {
     y: 0,
     width: 40,
     height: 30,
-  }).hidden();
+  }).hidden(() => true);
 
   abstract label: string;
 

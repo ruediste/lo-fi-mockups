@@ -18,7 +18,7 @@ if the direct master page defines the property as overrideable.
 export abstract class PageItemProperty<T extends {} | null> {
   private masterValue?: T;
   private value: T;
-  isHidden = false;
+  isHidden: () => boolean = () => false;
 
   isOverrideable: boolean;
   isEditable: boolean;
@@ -117,8 +117,8 @@ export abstract class PageItemProperty<T extends {} | null> {
     this.item.notifyChange();
   }
 
-  hidden() {
-    this.isHidden = true;
+  hidden(value: () => boolean) {
+    this.isHidden = value;
     return this;
   }
 
@@ -127,7 +127,7 @@ export abstract class PageItemProperty<T extends {} | null> {
   }
 
   shouldRender(): boolean {
-    return !this.isHidden && this.isEditable;
+    return !this.isHidden() && this.isEditable;
   }
 }
 
@@ -172,7 +172,7 @@ export class MemoValue<T> {
 export class ObjectProperty<T extends {} | null> extends PageItemProperty<T> {
   constructor(item: PageItem, id: string, defaultValue: T) {
     super(item, id, defaultValue);
-    this.isHidden = true;
+    this.isHidden = () => true;
   }
 
   render(): JSX.Element {
@@ -223,10 +223,33 @@ export class NumberProperty extends PageItemProperty<number> {
 
   render(): JSX.Element {
     return (
-      <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+      <Form.Group className="mb-3">
         <Form.Label>{this.label}</Form.Label>
         <NumberInput value={this.get()} onChange={(e) => this.set(e)} />
       </Form.Group>
+    );
+  }
+}
+
+export class CheckboxProperty extends PageItemProperty<boolean> {
+  constructor(
+    item: PageItem,
+    id: string,
+    private label: string,
+    defaultValue: boolean
+  ) {
+    super(item, id, defaultValue);
+  }
+
+  render(): JSX.Element {
+    return (
+      <Form.Check
+        type="checkbox"
+        id={this.item.data.id + "-" + this.id + "-checkbox"}
+        label={this.label}
+        checked={this.get()}
+        onChange={(e) => this.set(e.target.checked)}
+      />
     );
   }
 }

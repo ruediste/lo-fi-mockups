@@ -1,180 +1,35 @@
 import { JSX } from "react";
-import { Button, Form } from "react-bootstrap";
-import { FormCheck } from "../Inputs";
-import { PageItem } from "../model/PageItem";
 import {
+  ItemListProperty,
+  ItemListSelectionProperty,
+} from "../model/ItemListProperty";
+import {
+  CheckboxProperty,
   MemoValue,
   NumberProperty,
-  PageItemProperty,
 } from "../model/PageItemProperty";
-import { SortableList } from "../SortableList";
 import { Widget } from "../Widget";
-import { ItemListPropertyItem } from "./WidgetHelpers";
+import { WidgetBox } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
-
-interface Item {
-  id: number;
-  label: string;
-}
-
-interface ItemListSelectionPropertyValue {
-  multiSelection: boolean;
-  selectedItems: { [id: number]: true };
-}
-
-export class ItemListSelectionProperty extends PageItemProperty<ItemListSelectionPropertyValue> {
-  constructor(
-    item: PageItem,
-    id: string,
-    defaultValue: ItemListSelectionPropertyValue = {
-      multiSelection: false,
-      selectedItems: {},
-    }
-  ) {
-    super(item, id, defaultValue);
-  }
-
-  render() {
-    return null;
-  }
-
-  setSelection(id: number, selected: boolean) {
-    this.modify((value) => {
-      if (value.multiSelection) {
-        if (selected) {
-          value.selectedItems[id] = true;
-        } else {
-          delete value.selectedItems[id];
-        }
-      } else {
-        value.selectedItems = selected ? { [id]: true } : {};
-      }
-    });
-  }
-
-  clone(value: ItemListSelectionPropertyValue): ItemListSelectionPropertyValue {
-    return { ...value, selectedItems: { ...value.selectedItems } };
-  }
-}
-
-export class ItemListProperty extends PageItemProperty<Item[]> {
-  constructor(
-    item: PageItem,
-    id: string,
-    private label: string,
-    private selection?: ItemListSelectionProperty,
-    defaultValue: Item[] = []
-  ) {
-    super(item, id, defaultValue);
-  }
-
-  override shouldRender(): boolean {
-    return (
-      !this.isHidden &&
-      (this.isEditable || (this.selection?.isEditable ?? false))
-    );
-  }
-
-  clone(value: Item[]): Item[] {
-    return value.map((x) => ({ ...x }));
-  }
-
-  render() {
-    const items = this.get();
-    const selection = this.selection?.get();
-    return (
-      <>
-        <Form.Group className="mb-3">
-          <div style={{ display: "flex" }}>
-            <span>{this.label}</span>
-            {this.isEditable && (
-              <FormCheck
-                style={{ marginLeft: "auto", display: "inline-block" }}
-                label="Items Overrideable"
-                checked={this.isOverrideable}
-                onChange={() => this.setOverrideable(!this.isOverrideable)}
-              />
-            )}
-            {this.selection?.isEditable && (
-              <FormCheck
-                style={{ marginLeft: "auto", display: "inline-block" }}
-                label="Selection Overrideable"
-                checked={this.selection.isOverrideable}
-                onChange={() =>
-                  this.selection!.setOverrideable(
-                    !this.selection!.isOverrideable
-                  )
-                }
-              />
-            )}
-          </div>
-          <SortableList<Item>
-            items={items}
-            setItems={(v) => this.set(v)}
-            disabled={!this.isEditable}
-          >
-            {(item, idx) => (
-              <ItemListPropertyItem
-                key={item.id}
-                item={item}
-                idx={idx}
-                itemEditable={this.isEditable}
-                selectionEditable={this.selection?.isEditable ?? false}
-                setLabel={(value) =>
-                  this.modify((v) => {
-                    v[idx].label = value;
-                  })
-                }
-                selected={
-                  selection === undefined
-                    ? undefined
-                    : selection.selectedItems[item.id] ?? false
-                }
-                setSelected={(value) =>
-                  this.selection?.setSelection(item.id, value)
-                }
-              />
-            )}
-          </SortableList>
-        </Form.Group>
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          <Button
-            onClick={() =>
-              this.set([
-                ...items,
-                { id: this.item.page.project.data.nextId++, label: "New Item" },
-              ])
-            }
-          >
-            Add
-          </Button>
-          {selection && (
-            <Form.Check
-              inline
-              style={{ marginLeft: "auto" }}
-              id={this.item.data.id + "-" + this.id + "-checkbox"}
-              type="checkbox"
-              checked={selection.multiSelection}
-              onChange={() => {
-                const value = !selection.multiSelection;
-                return this.selection!.set({
-                  selectedItems: value ? selection.selectedItems : {},
-                  multiSelection: value,
-                });
-              }}
-              label="Multi Select"
-            />
-          )}
-        </div>
-      </>
-    );
-  }
-}
 
 export class ListWidget extends Widget {
   label = "List";
   fontSize = new NumberProperty(this, "fontSize", "Font Size", 16);
-  gap = new NumberProperty(this, "gap", "Gap", 8);
+  gap = new NumberProperty(this, "gap", "Gap", 8).hidden(() =>
+    this.justifyItems.get()
+  );
+  justifyItems = new CheckboxProperty(
+    this,
+    "justifyItems",
+    "Justify Items",
+    false
+  );
+  separatorLine = new CheckboxProperty(
+    this,
+    "separatorLine",
+    "Separator Line",
+    false
+  );
 
   itemListSelection = new ItemListSelectionProperty(this, "itemSelection");
   itemList = new ItemListProperty(
@@ -184,7 +39,7 @@ export class ListWidget extends Widget {
     this.itemListSelection
   );
 
-  items = new MemoValue<{ label: string; selected: boolean }[]>(() => {
+  itemsMemo = new MemoValue<{ label: string; selected: boolean }[]>(() => {
     const selection = this.itemListSelection.get();
     return this.itemList.get().map((item) => ({
       label: item.label,
@@ -196,43 +51,63 @@ export class ListWidget extends Widget {
     const box = this.box.get();
 
     const renderedItems: JSX.Element[] = [];
+    const lines: JSX.Element[] = [];
     const fontSize = this.fontSize.get();
+
     const gap = this.gap.get();
-    let y = box.y + fontSize + gap / 2;
+    const justify = this.justifyItems.get();
+    const separatorLine = this.separatorLine.get();
+    const items = this.itemsMemo.value;
+
+    const advance = justify ? box.height / items.length : fontSize + gap;
+    let y = box.y;
     let id = 1;
-    for (const item of this.items.value) {
+    items.forEach((item, idx) => {
+      if (separatorLine && (!justify || idx < items.length - 1)) {
+        lines.push(
+          <line
+            key={id++}
+            x1={box.x}
+            x2={box.x + box.width}
+            y1={y + advance}
+            y2={y + advance}
+            stroke={widgetTheme.stroke}
+            strokeWidth={widgetTheme.strokeWidth}
+          />
+        );
+      }
+
       if (item.selected) {
         renderedItems.push(
           <rect
             key={id++}
             x={box.x}
-            y={y - fontSize - gap / 2}
+            y={y}
             width={box.width}
-            height={fontSize + gap}
+            height={advance}
             fill="lightBlue"
           />
         );
       }
       renderedItems.push(
-        <text key={id++} x={box.x} y={y} fontSize={24}>
+        <text
+          key={id++}
+          x={box.x + 4}
+          y={y + (advance + fontSize) / 2}
+          fontSize={fontSize}
+          alignmentBaseline="baseline"
+        >
           {item.label}
         </text>
       );
-      y += fontSize + gap;
-    }
+      y += advance;
+    });
 
     return (
-      <>
-        <rect
-          {...widgetTheme}
-          fill="none"
-          x={box.x}
-          y={box.y}
-          width={box.width}
-          height={box.height}
-        />
+      <WidgetBox box={box}>
         {renderedItems}
-      </>
+        {lines}
+      </WidgetBox>
     );
   }
 
