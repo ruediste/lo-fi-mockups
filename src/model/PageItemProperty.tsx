@@ -117,6 +117,10 @@ export abstract class PageItemProperty<T extends {} | null> {
     this.item.notifyChange();
   }
 
+  nextId() {
+    return this.item.nextId();
+  }
+
   hidden(value: () => boolean) {
     this.isHidden = value;
     return this;

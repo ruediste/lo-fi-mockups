@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Form } from "react-bootstrap";
-import { GripVertical } from "react-bootstrap-icons";
+import { GripVertical, Trash } from "react-bootstrap-icons";
+import { IconButton } from "../Inputs";
 import { SortableListItem } from "../SortableList";
 export function ItemListPropertyItem({
   item,
@@ -10,6 +11,7 @@ export function ItemListPropertyItem({
   setSelected,
   itemEditable,
   selectionEditable,
+  removeItem,
 }: {
   item: {
     id: number;
@@ -21,6 +23,7 @@ export function ItemListPropertyItem({
   setSelected?: (value: boolean) => void;
   itemEditable: boolean;
   selectionEditable: boolean;
+  removeItem: (id: number) => void;
 }) {
   const [editing, setEditing] = useState(false);
   return (
@@ -70,6 +73,15 @@ export function ItemListPropertyItem({
           />
         </div>
       ) : null}
+
+      {itemEditable && (
+        <IconButton
+          style={{ marginLeft: "8px" }}
+          onClick={() => removeItem(item.id)}
+        >
+          <Trash />
+        </IconButton>
+      )}
     </SortableListItem>
   );
 }

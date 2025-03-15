@@ -57,6 +57,10 @@ export abstract class PageItem {
     return this.propertyValues;
   }
 
+  nextId() {
+    return this.page.nextId();
+  }
+
   get onDataChanged() {
     return this.page.onDataChanged;
   }

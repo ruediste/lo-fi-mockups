@@ -19,10 +19,6 @@ export interface Rectangle {
   height: number;
 }
 
-export interface WidgetPaletteInfo {
-  boundingBox: Rectangle;
-}
-
 export abstract class Widget extends PageItem {
   box = new ObjectProperty<Rectangle>(this, "box", {
     x: 0,
@@ -69,5 +65,9 @@ export abstract class Widget extends PageItem {
   }
 
   // initialize this widget for the palette and return required information
-  abstract palette(): WidgetPaletteInfo;
+  abstract initializePalette(): void;
+
+  boundingBox() {
+    return this.box.get();
+  }
 }

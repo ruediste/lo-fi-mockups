@@ -17,6 +17,10 @@ export class Project {
     this.recreateCurrentPage();
   }
 
+  nextId() {
+    return this.data.nextId++;
+  }
+
   addPage() {
     const page: PageData = {
       id: this.data.nextId++,
@@ -41,6 +45,10 @@ export class Project {
     this.data.pages = this.data.pages.filter((p) => p.id !== id);
     delete this.pageDataMap[id];
     if (this.data.currentPageId === id) this.data.currentPageId = undefined;
+
+    this.data.pages.forEach((p) => {
+      if (p.masterPageId === id) p.masterPageId = undefined;
+    });
 
     this.onDataChanged();
     this.recreateCurrentPage();

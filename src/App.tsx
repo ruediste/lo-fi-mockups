@@ -163,7 +163,10 @@ export default function App() {
           }}
         >
           <div style={{ flexGrow: 1 }}>
-            <ItemProperties item={selectedItem} />
+            <ItemProperties
+              item={selectedItem}
+              clearSelection={() => setSelectedItem(undefined)}
+            />
           </div>
         </Panel>
       </PanelGroup>

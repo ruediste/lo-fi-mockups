@@ -9,7 +9,7 @@ import { ProjectionContext } from "../Contexts";
 import { useRerenderOnEvent } from "../hooks";
 import { Vec2d } from "../Vec2d";
 import { Rectangle } from "../Widget";
-import { widgetTheme } from "./widgetTheme";
+import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 
 export function DraggableBox<T>({
   box,
@@ -212,11 +212,13 @@ export function SelectableBox({
   showHandles,
   onClick,
   onPointerDown,
+  onContextMenu,
 }: {
   box: Rectangle;
   showHandles: boolean;
   onClick?: MouseEventHandler;
   onPointerDown?: MouseEventHandler;
+  onContextMenu?: MouseEventHandler;
 }) {
   const projection = useContext(ProjectionContext);
   useRerenderOnEvent(projection.onChange);
@@ -228,7 +230,7 @@ export function SelectableBox({
         y={box.y - strokeWidth / 2}
         width={box.width + strokeWidth}
         height={box.height + strokeWidth}
-        {...{ onClick, onPointerDown }}
+        {...{ onClick, onPointerDown, onContextMenu }}
         {...(showHandles
           ? {
               fill: "transparent",
@@ -241,12 +243,12 @@ export function SelectableBox({
   );
 }
 
-export function WidgetBox({
+export function WidgetBounds({
   box,
   children,
 }: {
   box: Rectangle;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) {
   const id = useId();
   return (
@@ -254,7 +256,7 @@ export function WidgetBox({
       <defs>
         <clipPath id={id}>
           <rect
-            {...widgetTheme}
+            {...widgetRectAttrs}
             x={box.x - widgetTheme.strokeWidth / 2}
             y={box.y - widgetTheme.strokeWidth / 2}
             width={box.width + widgetTheme.strokeWidth}
@@ -263,10 +265,10 @@ export function WidgetBox({
         </clipPath>
       </defs>
 
-      <g clip-path={`url(#${id})`}>
+      <g clipPath={`url(#${id})`}>
         {children}
         <rect
-          {...widgetTheme}
+          {...widgetRectAttrs}
           fill="none"
           x={box.x}
           y={box.y}

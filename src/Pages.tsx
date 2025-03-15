@@ -79,7 +79,10 @@ function Page({
               label: "Change Master Page",
               onClick: () => setChangeMasterPage(true),
             },
-            { label: "Delete", onClick: () => project.removePage(page.id) },
+            {
+              label: "Delete",
+              onClick: () => project.removePage(page.id),
+            },
           ]}
         />
       </ListGroup.Item>

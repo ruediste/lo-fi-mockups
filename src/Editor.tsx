@@ -1,11 +1,61 @@
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import { RefObject } from "react";
+import { Dropdown } from "react-bootstrap";
 import { Canvas, CanvasProjection } from "./Canvas";
 import { useRerenderOnEvent } from "./hooks";
 import { Page } from "./model/Page";
 import { PageItem } from "./model/PageItem";
 import { Vec2d } from "./Vec2d";
 import { Widget } from "./Widget";
+
+function ContextMenu({
+  x,
+  y,
+  show,
+  onClose,
+}: {
+  x: number;
+  y: number;
+  show: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <Dropdown.Menu
+      style={{
+        position: "absolute",
+        top: y,
+        left: x,
+        display: show ? "block" : "none",
+      }}
+      onMouseLeave={onClose}
+    >
+      <Dropdown.Item
+        onClick={() => {
+          alert("Action 1");
+          onClose();
+        }}
+      >
+        Action 1
+      </Dropdown.Item>
+      <Dropdown.Item
+        onClick={() => {
+          alert("Action 2");
+          onClose();
+        }}
+      >
+        Action 2
+      </Dropdown.Item>
+      <Dropdown.Item
+        onClick={() => {
+          alert("Action 3");
+          onClose();
+        }}
+      >
+        Action 3
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  );
+}
 
 function RenderItem({
   item,
@@ -19,7 +69,6 @@ function RenderItem({
   useRerenderOnEvent(item.onChange);
   return (
     <>
-      {" "}
       {item.renderContent()}
       {item.fromMasterPage
         ? item.renderMasterInteraction({ setSelectedItem, isSelected })
@@ -65,6 +114,8 @@ export function Editor({
           id: page.project.data.nextId++,
           type: event.active!.data.current!.itemType,
         }) as Widget;
+
+        item.initializePalette();
 
         const worldPos = projection.offset.add(
           projection.scaleToWorld(new Vec2d(x, y))

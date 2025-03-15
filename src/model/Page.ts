@@ -62,6 +62,17 @@ export class Page {
     return item;
   }
 
+  removeItem(id: number) {
+    this.data.items = this.data.items.filter((x) => x.id != id);
+    this.ownItems = this.ownItems.filter((x) => x.data.id != id);
+    this.onDataChanged();
+    this.onChange.notify();
+  }
+
+  nextId() {
+    return this.project.nextId();
+  }
+
   private toPageItem(data: PageItemData, fromMasterPage: boolean) {
     return createPageItem({ data, page: this, fromMasterPage });
   }

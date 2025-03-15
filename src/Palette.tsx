@@ -4,20 +4,18 @@ import { CanvasProjection } from "./Canvas";
 import { PageItemData } from "./model/PageItem";
 import { Project, ProjectData } from "./model/Project";
 import { calculateViewBox } from "./paletteHelper";
-import { Widget, WidgetPaletteInfo } from "./Widget";
+import { Widget } from "./Widget";
 import { pageItemTypeRegistry } from "./widgets/PageItemTypeRegistry";
 
-const paletteItemSize = { width: 80, height: 60 };
+const paletteItemSize = { width: 120, height: 90 };
 
 function PaletteEntry({
   widget,
-  info,
   editorProjection,
   idx,
   dragOffset,
 }: {
   widget: Widget;
-  info: WidgetPaletteInfo;
   editorProjection: CanvasProjection;
   idx: number;
   dragOffset: RefObject<{ x: number; y: number }>;
@@ -34,9 +32,10 @@ function PaletteEntry({
     data: { itemType: widget.data.type },
   });
 
+  const boundingBox = widget.boundingBox();
   const viewBox = calculateViewBox(
     paletteItemSize.width / paletteItemSize.height,
-    info.boundingBox
+    boundingBox
   );
 
   const [overlayTransform, setOverlayTransform] = useState<string>();
@@ -52,11 +51,16 @@ function PaletteEntry({
     } else {
       setOverlayTransform(undefined);
     }
-  }, [isDragging, activatorEvent, node]);
+  }, [isDragging, activatorEvent, node, dragOffset]);
 
   return (
     <>
-      <div className="widget" ref={setNodeRef} {...listeners} {...attributes}>
+      <div
+        style={{ display: "inline-block", margin: "4px" }}
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
+      >
         <svg
           viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
           width={paletteItemSize.width + "px"}
@@ -72,11 +76,9 @@ function PaletteEntry({
         {!isDragging ? null : (
           <svg
             style={{ transform: overlayTransform }}
-            viewBox={`${info.boundingBox.x} ${info.boundingBox.y} ${info.boundingBox.width} ${info.boundingBox.height}`}
-            width={editorProjection.lengthToView(info.boundingBox.width) + "px"}
-            height={
-              editorProjection.lengthToView(info.boundingBox.height) + "px"
-            }
+            viewBox={`${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}`}
+            width={editorProjection.lengthToView(boundingBox.width) + "px"}
+            height={editorProjection.lengthToView(boundingBox.height) + "px"}
           >
             {widget.renderContent()}
           </svg>
@@ -117,24 +119,21 @@ export const Palette = memo(function Palette({
 
     const project = new Project(projectData, () => {});
     const page = project.currentPage!;
-    return (page.ownItems as Widget[]).map((widget) => ({
-      info: widget.palette(),
-      widget,
-    }));
+    const result = page.ownItems as Widget[];
+    result.forEach((w) => w.initializePalette());
+    return result;
   }, []);
 
   return (
     <>
-      {widgets.map(({ widget, info }, idx) => (
-        <div key={idx}>
-          <PaletteEntry
-            widget={widget}
-            info={info}
-            editorProjection={editorProjection}
-            idx={idx}
-            dragOffset={dragOffset}
-          />
-        </div>
+      {widgets.map((widget, idx) => (
+        <PaletteEntry
+          key={idx}
+          widget={widget}
+          editorProjection={editorProjection}
+          idx={idx}
+          dragOffset={dragOffset}
+        />
       ))}
     </>
   );

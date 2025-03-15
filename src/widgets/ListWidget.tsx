@@ -9,12 +9,11 @@ import {
   NumberProperty,
 } from "../model/PageItemProperty";
 import { Widget } from "../Widget";
-import { WidgetBox } from "./WidgetHelpers";
+import { WidgetBounds } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 
 export class ListWidget extends Widget {
   label = "List";
-  fontSize = new NumberProperty(this, "fontSize", "Font Size", 16);
   gap = new NumberProperty(this, "gap", "Gap", 8).hidden(() =>
     this.justifyItems.get()
   );
@@ -52,8 +51,7 @@ export class ListWidget extends Widget {
 
     const renderedItems: JSX.Element[] = [];
     const lines: JSX.Element[] = [];
-    const fontSize = this.fontSize.get();
-
+    const fontSize = widgetTheme.fontSize;
     const gap = this.gap.get();
     const justify = this.justifyItems.get();
     const separatorLine = this.separatorLine.get();
@@ -85,7 +83,7 @@ export class ListWidget extends Widget {
             y={y}
             width={box.width}
             height={advance}
-            fill="lightBlue"
+            fill={widgetTheme.selectedBlue}
           />
         );
       }
@@ -104,20 +102,35 @@ export class ListWidget extends Widget {
     });
 
     return (
-      <WidgetBox box={box}>
+      <WidgetBounds box={box}>
         {renderedItems}
         {lines}
-      </WidgetBox>
+      </WidgetBounds>
     );
   }
 
-  initialize(): void {
-    super.initialize();
-  }
+  override initializePalette() {
+    this.box.set({ x: 0, y: 0, width: 70, height: 100 });
+    const itemId = this.nextId();
+    this.itemList.set([
+      {
+        id: this.nextId(),
+        label: "Item 1",
+      },
+      {
+        id: this.nextId(),
+        label: "Item 2",
+      },
+      {
+        id: itemId,
+        label: "Item 3",
+      },
+      {
+        id: this.nextId(),
+        label: "Item 4",
+      },
+    ]);
 
-  override palette() {
-    return {
-      boundingBox: this.box.get(),
-    };
+    this.itemListSelection.setSelection(itemId, true);
   }
 }

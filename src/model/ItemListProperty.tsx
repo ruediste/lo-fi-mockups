@@ -31,16 +31,16 @@ export class ItemListSelectionProperty extends PageItemProperty<ItemListSelectio
     return null;
   }
 
-  setSelection(id: number, selected: boolean) {
+  setSelection(itemId: number, selected: boolean) {
     this.modify((value) => {
       if (value.multiSelection) {
         if (selected) {
-          value.selectedItems[id] = true;
+          value.selectedItems[itemId] = true;
         } else {
-          delete value.selectedItems[id];
+          delete value.selectedItems[itemId];
         }
       } else {
-        value.selectedItems = selected ? { [id]: true } : {};
+        value.selectedItems = selected ? { [itemId]: true } : {};
       }
     });
   }
@@ -126,6 +126,7 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
                 setSelected={(value) =>
                   this.selection?.setSelection(item.id, value)
                 }
+                removeItem={(id) => this.set(items.filter((x) => x.id !== id))}
               />
             )}
           </SortableList>
@@ -133,10 +134,7 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
         <div style={{ display: "flex", flexDirection: "row" }}>
           <Button
             onClick={() =>
-              this.set([
-                ...items,
-                { id: this.item.page.project.data.nextId++, label: "New Item" },
-              ])
+              this.set([...items, { id: this.nextId(), label: "New Item" }])
             }
           >
             Add

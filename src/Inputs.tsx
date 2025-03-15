@@ -46,7 +46,11 @@ export function IconButton({
   return (
     <button
       ref={ref}
-      onClick={onClick}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick?.(e);
+      }}
       className={classNames("icon-button", className)}
       style={style}
     >
@@ -91,7 +95,8 @@ export function ThreeDotMenu({
         {items.map((item, idx) => (
           <Dropdown.Item
             key={idx}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               if (item.checked === undefined) item.onClick();
             }}
           >
