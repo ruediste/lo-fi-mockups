@@ -1,15 +1,13 @@
-import { CheckboxProperty, StringProperty } from "../model/PageItemProperty";
+import { StringProperty } from "../model/PageItemProperty";
 import { PositionWidget, Rectangle } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
-
 const margin = widgetTheme.margin;
+export class TextInputWidget extends PositionWidget {
+  label = "Text Input";
 
-export class ButtonWidget extends PositionWidget {
-  label = "Button";
-
-  text = new StringProperty(this, "text", "Text", "OK");
-  secondary = new CheckboxProperty(this, "secondary", "Secondary", false);
+  labelText = new StringProperty(this, "label", "Label", "Name");
+  text = new StringProperty(this, "text", "Text", "Joe");
 
   get boundingBox(): Rectangle {
     return {
@@ -21,22 +19,24 @@ export class ButtonWidget extends PositionWidget {
 
   renderContent(): React.ReactNode {
     const box = this.boundingBox;
+    const label = this.labelText.get();
+    const hasLabel = label.length > 0;
 
     return (
       <>
-        <rect
-          {...widgetRectAttrs}
-          {...box}
-          fill={this.secondary.get() ? "white" : widgetTheme.selectedGray}
-        />
+        <rect {...widgetRectAttrs} {...box} fill={"white"} />
         <text
-          x={box.x + box.width / 2}
+          x={box.x + margin}
           y={box.y + box.height - margin - 2}
           fontSize={widgetTheme.fontSize}
-          textAnchor="middle"
         >
           {this.text.get()}
         </text>
+        {hasLabel && (
+          <text x={box.x} y={box.y - 4} fontSize={widgetTheme.fontSize}>
+            {label}
+          </text>
+        )}
       </>
     );
   }

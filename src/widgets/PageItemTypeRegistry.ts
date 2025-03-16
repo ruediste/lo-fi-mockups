@@ -2,8 +2,10 @@ import { pageItemTypeRegistryHolder } from "../model/createPageItem";
 import { Page } from "../model/Page";
 import { PageItem, PageItemData, PageItemsArgs } from "../model/PageItem";
 import { ButtonWidget } from "./ButtonWidget";
+import { LabelWidget } from "./LabelWidget";
 import { ListWidget } from "./ListWidget";
 import { TabsWidget } from "./TabsWidget";
+import { TextInputWidget } from "./TextInputWidget";
 import { Widget } from "./Widget";
 
 export class PageItemTypeRegistry {
@@ -45,3 +47,5 @@ function register(
 register("list", ListWidget);
 register("tabs", TabsWidget);
 register("button", ButtonWidget);
+register("label", LabelWidget);
+register("textInput", TextInputWidget);

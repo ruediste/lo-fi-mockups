@@ -72,6 +72,7 @@ export class BoxWidgetInteraction extends WidgetInteraction {
     );
   }
 }
+
 export class PositionWidgetInteraction extends WidgetInteraction {
   position = new ObjectProperty<Position>(this.widget, "position", {
     x: 0,

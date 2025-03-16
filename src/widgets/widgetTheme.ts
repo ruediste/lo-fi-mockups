@@ -6,6 +6,7 @@ export const widgetTheme = {
   fontSize: 16,
   selectedGray: "#f0f0f0",
   selectedBlue: "lightBlue",
+  margin: 8,
 };
 
 export const widgetRectAttrs = {

@@ -1,3 +1,4 @@
+import { arraySwapInPlace } from "../utils";
 import { ModelEvent } from "./ModelEvent";
 import { PageItem, PageItemData } from "./PageItem";
 import { Project } from "./Project";
@@ -65,6 +66,46 @@ export class Page {
   removeItem(id: number) {
     this.data.items = this.data.items.filter((x) => x.id != id);
     this.ownItems = this.ownItems.filter((x) => x.data.id != id);
+    this.onDataChanged();
+    this.onChange.notify();
+  }
+
+  moveBack(item: PageItem): void {
+    this.data.items = [
+      item.data,
+      ...this.data.items.filter((x) => x !== item.data),
+    ];
+    this.ownItems = [item, ...this.ownItems.filter((x) => x !== item)];
+    this.onDataChanged();
+    this.onChange.notify();
+  }
+
+  moveDown(item: PageItem): void {
+    const idx = this.ownItems.indexOf(item);
+    if (idx > 0) {
+      arraySwapInPlace(this.data.items, idx, idx - 1);
+      arraySwapInPlace(this.ownItems, idx, idx - 1);
+      this.onDataChanged();
+      this.onChange.notify();
+    }
+  }
+
+  moveUp(item: PageItem): void {
+    const idx = this.ownItems.indexOf(item);
+    if (idx >= 0 && idx < this.ownItems.length - 1) {
+      arraySwapInPlace(this.data.items, idx, idx + 1);
+      arraySwapInPlace(this.ownItems, idx, idx + 1);
+      this.onDataChanged();
+      this.onChange.notify();
+    }
+  }
+
+  moveFront(item: PageItem): void {
+    this.data.items = [
+      ...this.data.items.filter((x) => x !== item.data),
+      item.data,
+    ];
+    this.ownItems = [...this.ownItems.filter((x) => x !== item), item];
     this.onDataChanged();
     this.onChange.notify();
   }

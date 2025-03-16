@@ -302,15 +302,9 @@ export function WidgetBounds({
       </defs>
 
       <g clipPath={`url(#${id})`}>
+        <rect {...widgetRectAttrs} fill="white" {...box} />
         {children}
-        <rect
-          {...widgetRectAttrs}
-          fill="none"
-          x={box.x}
-          y={box.y}
-          width={box.width}
-          height={box.height}
-        />
+        <rect {...widgetRectAttrs} fill="none" {...box} />
       </g>
     </>
   );

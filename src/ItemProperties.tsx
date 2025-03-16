@@ -1,5 +1,5 @@
 import { Form } from "react-bootstrap";
-import { Trash } from "react-bootstrap-icons";
+import { ArrowDown, ArrowUp, Back, Front, Trash } from "react-bootstrap-icons";
 import { useRerenderOnEvent } from "./hooks";
 import { IconButton } from "./Inputs";
 import { PageItem } from "./model/PageItem";
@@ -36,6 +36,22 @@ export function ItemProperties({
             </IconButton>
           )}
         </div>
+        {!item.fromMasterPage && (
+          <>
+            <IconButton onClick={() => item.page.moveFront(item)}>
+              <Front />
+            </IconButton>
+            <IconButton onClick={() => item.page.moveUp(item)}>
+              <ArrowUp />
+            </IconButton>
+            <IconButton onClick={() => item.page.moveDown(item)}>
+              <ArrowDown />
+            </IconButton>
+            <IconButton onClick={() => item.page.moveBack(item)}>
+              <Back />
+            </IconButton>
+          </>
+        )}
         <Form>
           {item.properties
             .filter((p) => p.shouldRender())
