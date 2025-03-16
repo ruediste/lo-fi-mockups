@@ -8,11 +8,11 @@ import {
   MemoValue,
   NumberProperty,
 } from "../model/PageItemProperty";
-import { Widget } from "../Widget";
+import { BoxWidget } from "./Widget";
 import { WidgetBounds } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 
-export class ListWidget extends Widget {
+export class ListWidget extends BoxWidget {
   label = "List";
   gap = new NumberProperty(this, "gap", "Gap", 8).hidden(() =>
     this.justifyItems.get()
@@ -47,7 +47,7 @@ export class ListWidget extends Widget {
   }, [this.itemList, this.itemListSelection]);
 
   override renderContent(): JSX.Element {
-    const box = this.box.get();
+    const box = this.box;
 
     const renderedItems: JSX.Element[] = [];
     const lines: JSX.Element[] = [];
@@ -109,8 +109,8 @@ export class ListWidget extends Widget {
     );
   }
 
-  override initializePalette() {
-    this.box.set({ x: 0, y: 0, width: 70, height: 100 });
+  override initializeAfterAdd() {
+    this.box = { x: 0, y: 0, width: 70, height: 100 };
     const itemId = this.nextId();
     this.itemList.set([
       {

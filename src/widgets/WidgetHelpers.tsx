@@ -5,10 +5,11 @@ import {
   useId,
   useRef,
 } from "react";
+import { CanvasProjection } from "../Canvas";
 import { ProjectionContext } from "../Contexts";
 import { useRerenderOnEvent } from "../hooks";
 import { Vec2d } from "../Vec2d";
-import { Rectangle } from "../Widget";
+import { Position, Rectangle } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 
 export function DraggableBox<T>({
@@ -69,6 +70,46 @@ export function DraggableBox<T>({
   );
 }
 
+function dragPositionRectAttrs(
+  projection: CanvasProjection
+): SVGAttributes<SVGRectElement> {
+  return {
+    stroke: "#008800",
+    strokeWidth: projection.lengthToWorld(0.5),
+  };
+}
+
+export function DraggablePositionBox({
+  box,
+  update,
+  isSelected,
+  select,
+}: {
+  box: Rectangle;
+  isSelected: boolean;
+  update: (pos: Position) => void;
+  select?: () => void;
+}) {
+  const projection = useContext(ProjectionContext);
+  return (
+    <DraggableBox<Position>
+      current={box}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        select?.();
+      }}
+      box={box}
+      update={(start, delta) =>
+        update({ x: start.x + delta.x, y: start.y + delta.y })
+      }
+      attrs={{
+        fill: "transparent",
+        ...(isSelected ? dragPositionRectAttrs(projection) : {}),
+      }}
+    />
+  );
+}
+
 const handleSizeView = 12;
 export function DraggableAndResizableBox({
   box,
@@ -109,15 +150,10 @@ export function DraggableAndResizableBox({
             height: start.height,
           })
         }
-        attrs={
-          showHandles
-            ? {
-                fill: "transparent",
-                stroke: "#008800",
-                strokeWidth: projection.lengthToWorld(0.5),
-              }
-            : { fill: "transparent" }
-        }
+        attrs={{
+          fill: "transparent",
+          ...(showHandles ? dragPositionRectAttrs(projection) : {}),
+        }}
       />
       {/* corners */}
       {!showHandles ? null : (
@@ -234,7 +270,7 @@ export function SelectableBox({
         {...(showHandles
           ? {
               fill: "transparent",
-              stroke: "#00ff00",
+              stroke: "#00fff0",
               strokeWidth,
             }
           : { fill: "transparent" })}

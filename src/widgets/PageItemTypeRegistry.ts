@@ -1,9 +1,10 @@
 import { pageItemTypeRegistryHolder } from "../model/createPageItem";
 import { Page } from "../model/Page";
 import { PageItem, PageItemData, PageItemsArgs } from "../model/PageItem";
-import { Widget } from "../Widget";
+import { ButtonWidget } from "./ButtonWidget";
 import { ListWidget } from "./ListWidget";
 import { TabsWidget } from "./TabsWidget";
+import { Widget } from "./Widget";
 
 export class PageItemTypeRegistry {
   itemTypes = new Map<string, (args: PageItemsArgs) => PageItem>();
@@ -43,3 +44,4 @@ function register(
 
 register("list", ListWidget);
 register("tabs", TabsWidget);
+register("button", ButtonWidget);

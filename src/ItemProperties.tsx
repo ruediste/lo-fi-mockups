@@ -3,7 +3,7 @@ import { Trash } from "react-bootstrap-icons";
 import { useRerenderOnEvent } from "./hooks";
 import { IconButton } from "./Inputs";
 import { PageItem } from "./model/PageItem";
-import { Widget } from "./Widget";
+import { Widget } from "./widgets/Widget";
 
 export function ItemProperties({
   item,

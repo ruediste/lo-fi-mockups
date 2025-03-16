@@ -8,12 +8,22 @@ export default defineConfig({
   plugins: [
     react(),
     checker({
-      typescript: true,
+      typescript: {
+        tsconfigPath: "tsconfig.app.json",
+      },
     }),
   ],
   resolve: {
     alias: {
       "~bootstrap": path.resolve(__dirname, "node_modules/bootstrap"),
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        quietDeps: true,
+        silenceDeprecations: ["import"],
+      },
     },
   },
 });

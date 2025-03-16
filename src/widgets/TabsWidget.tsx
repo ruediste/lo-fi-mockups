@@ -3,26 +3,11 @@ import {
   ItemListProperty,
   ItemListSelectionProperty,
 } from "../model/ItemListProperty";
-import { Widget } from "../Widget";
+import { BoxWidget } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
+import { getTextWidth } from "./widgetUtils";
 
-let canvas: HTMLCanvasElement | undefined;
-
-function getTextWidth(
-  text: string,
-  size: number = 16,
-  font: string = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
-) {
-  if (!canvas) {
-    canvas = document.createElement("canvas");
-  }
-  const context = canvas.getContext("2d")!;
-  context.font = size + "px " + font;
-  const metrics = context.measureText(text);
-  return metrics.width;
-}
-
-export class TabsWidget extends Widget {
+export class TabsWidget extends BoxWidget {
   label = "Tabs";
 
   itemListSelection = new ItemListSelectionProperty(this, "itemSelection");
@@ -34,7 +19,7 @@ export class TabsWidget extends Widget {
   );
 
   renderContent(): React.ReactNode {
-    const box = this.box.get();
+    const box = this.box;
     const renderedItems: ReactNode[] = [];
     const overlay: ReactNode[] = [];
     let id = 0;
@@ -97,8 +82,8 @@ export class TabsWidget extends Widget {
       </>
     );
   }
-  override initializePalette() {
-    this.box.set({ x: 0, y: 0, width: 180, height: 115 });
+  override initializeAfterAdd() {
+    this.box = { x: 0, y: 0, width: 180, height: 115 };
     const itemId = this.nextId();
     this.itemList.set([
       {

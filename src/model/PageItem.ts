@@ -6,7 +6,6 @@ import { PageItemProperty } from "./PageItemProperty";
 export interface PageItemData {
   id: number;
   type: string;
-  children?: PageItemData[];
 }
 
 export interface PageItemsArgs {
@@ -77,11 +76,11 @@ export abstract class PageItem {
   }
   abstract renderContent(): React.ReactNode;
 
-  renderEditorInteraction(_args: RenderEditorInteractionArgs): React.ReactNode {
+  renderEditorInteraction(_args: RenderInteractionArgs): React.ReactNode {
     return null;
   }
 
-  renderMasterInteraction(_args: RenderEditorInteractionArgs): React.ReactNode {
+  renderMasterInteraction(_args: RenderInteractionArgs): React.ReactNode {
     return null;
   }
 
@@ -93,7 +92,7 @@ export abstract class PageItem {
   initialize() {}
 }
 
-export interface RenderEditorInteractionArgs {
+export interface RenderInteractionArgs {
   isSelected: boolean;
   setSelectedItem: (item: PageItem) => void;
 }

@@ -4,8 +4,8 @@ import { CanvasProjection } from "./Canvas";
 import { PageItemData } from "./model/PageItem";
 import { Project, ProjectData } from "./model/Project";
 import { calculateViewBox } from "./paletteHelper";
-import { Widget } from "./Widget";
 import { pageItemTypeRegistry } from "./widgets/PageItemTypeRegistry";
+import { Widget } from "./widgets/Widget";
 
 const paletteItemSize = { width: 120, height: 90 };
 
@@ -32,7 +32,7 @@ function PaletteEntry({
     data: { itemType: widget.data.type },
   });
 
-  const boundingBox = widget.boundingBox();
+  const boundingBox = widget.boundingBox;
   const viewBox = calculateViewBox(
     paletteItemSize.width / paletteItemSize.height,
     boundingBox
@@ -120,7 +120,7 @@ export const Palette = memo(function Palette({
     const project = new Project(projectData, () => {});
     const page = project.currentPage!;
     const result = page.ownItems as Widget[];
-    result.forEach((w) => w.initializePalette());
+    result.forEach((w) => w.initializeAfterAdd());
     return result;
   }, []);
 
