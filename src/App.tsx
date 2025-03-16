@@ -9,8 +9,8 @@ import { Editor } from "./Editor";
 import { ItemProperties } from "./ItemProperties";
 import { Pages } from "./Pages";
 import { Palette } from "./Palette";
+import { Selection } from "./Selection";
 import { useConst, useRerenderOnEvent } from "./hooks";
-import { PageItem } from "./model/PageItem";
 import "./widgets/PageItemTypeRegistry";
 
 function throttle<T extends (...args: any[]) => void>(
@@ -84,10 +84,13 @@ export default function App() {
 
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const [selectedItem, setSelectedItem] = useState<PageItem>();
+  const [selection, setSelection] = useState<Selection>(Selection.empty);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => setSelectedItem(undefined), [projectData.currentPageId]);
+  useEffect(
+    () => setSelection(Selection.empty),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [projectData.currentPageId]
+  );
 
   return (
     <div
@@ -120,11 +123,7 @@ export default function App() {
       >
         <Panel
           style={{
-            // overflowY: "auto",
             overflow: "visible",
-            // display: "flex",
-            // flexDirection: "row",
-            // flexWrap: "wrap",
           }}
         >
           <Tabs defaultActiveKey="palette">
@@ -149,8 +148,8 @@ export default function App() {
               projection={projection}
               page={project.currentPage}
               dragOffset={dragOffset}
-              selectedItem={selectedItem}
-              setSelectedItem={(item) => setSelectedItem(item)}
+              selection={selection}
+              setSelection={setSelection}
             />
           )}
         </Panel>
@@ -163,10 +162,14 @@ export default function App() {
           }}
         >
           <div style={{ flexGrow: 1 }}>
-            <ItemProperties
-              item={selectedItem}
-              clearSelection={() => setSelectedItem(undefined)}
-            />
+            {selection.size == 0 && <h1> No selected Item </h1>}
+            {selection.size == 1 && (
+              <ItemProperties
+                item={selection.single}
+                clearSelection={() => setSelection(Selection.empty)}
+              />
+            )}
+            {selection.size > 1 && <h1> Multiple selected Items </h1>}
           </div>
         </Panel>
       </PanelGroup>

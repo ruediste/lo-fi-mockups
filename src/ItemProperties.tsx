@@ -9,7 +9,7 @@ export function ItemProperties({
   item,
   clearSelection,
 }: {
-  item: PageItem | undefined;
+  item: PageItem;
   clearSelection: () => void;
 }) {
   useRerenderOnEvent(item?.onChange);
@@ -64,5 +64,5 @@ export function ItemProperties({
       </>
     );
   }
-  return <h1>No Item Selected</h1>;
+  return <></>;
 }

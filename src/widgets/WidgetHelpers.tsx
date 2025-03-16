@@ -19,13 +19,15 @@ export function DraggableBox<T>({
   onClick,
   attrs,
   onPointerDown,
+  onDragStart,
 }: {
   box: Rectangle;
-  current: T;
+  current: T | (() => T);
   update: (start: T, delta: Vec2d) => void;
   onClick?: MouseEventHandler;
   onPointerDown?: MouseEventHandler;
   attrs?: SVGAttributes<SVGRectElement>;
+  onDragStart?: () => void;
 }) {
   const dragState = useRef<{
     start: T;
@@ -46,10 +48,11 @@ export function DraggableBox<T>({
         e.stopPropagation();
         e.currentTarget.setPointerCapture(e.pointerId);
         dragState.current = {
-          start: current,
+          start: typeof current === "function" ? (current as any)() : current,
           startEventPos: Vec2d.fromEvent(e),
         };
         onPointerDown?.(e);
+        onDragStart?.();
       }}
       onPointerMove={(e) => {
         const state = dragState.current;
@@ -88,15 +91,15 @@ export function DraggablePositionBox({
   box: Rectangle;
   isSelected: boolean;
   update: (pos: Position) => void;
-  select?: () => void;
+  select?: (add: boolean) => void;
 }) {
   const projection = useContext(ProjectionContext);
   return (
     <DraggableBox<Position>
-      current={box}
+      current={() => box}
       onPointerDown={(e) => {
         e.stopPropagation();
-        select?.();
+        select?.(e.ctrlKey);
       }}
       box={box}
       update={(start, delta) =>
@@ -114,12 +117,14 @@ const handleSizeView = 12;
 export function DraggableAndResizableBox({
   box,
   update,
+  showBox,
   showHandles,
   onClick,
   onPointerDown,
 }: {
   box: Rectangle;
   update: (newBox: Rectangle) => void;
+  showBox: boolean;
   showHandles: boolean;
   onClick?: MouseEventHandler;
   onPointerDown?: MouseEventHandler;
@@ -152,7 +157,7 @@ export function DraggableAndResizableBox({
         }
         attrs={{
           fill: "transparent",
-          ...(showHandles ? dragPositionRectAttrs(projection) : {}),
+          ...(showBox ? dragPositionRectAttrs(projection) : {}),
         }}
       />
       {/* corners */}

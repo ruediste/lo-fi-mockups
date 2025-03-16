@@ -1,4 +1,6 @@
 import React from "react";
+import { Selection } from "../Selection";
+import { Position, Rectangle } from "../widgets/Widget";
 import { ModelEvent } from "./ModelEvent";
 import { Page } from "./Page";
 import { PageItemProperty } from "./PageItemProperty";
@@ -56,6 +58,10 @@ export abstract class PageItem {
     return this.propertyValues;
   }
 
+  get id() {
+    return this.data.id;
+  }
+
   nextId() {
     return this.page.nextId();
   }
@@ -76,6 +82,9 @@ export abstract class PageItem {
   }
   abstract renderContent(): React.ReactNode;
 
+  abstract get boundingBox(): Rectangle;
+  abstract moveBy(delta: Position): void;
+
   renderEditorInteraction(_args: RenderInteractionArgs): React.ReactNode {
     return null;
   }
@@ -93,6 +102,6 @@ export abstract class PageItem {
 }
 
 export interface RenderInteractionArgs {
-  isSelected: boolean;
-  setSelectedItem: (item: PageItem) => void;
+  selection: Selection;
+  setSelection: (value: Selection) => void;
 }

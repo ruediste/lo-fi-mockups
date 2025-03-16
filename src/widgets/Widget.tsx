@@ -29,10 +29,12 @@ export abstract class Widget extends PageItem {
     return this.interaction.renderMasterInteraction(args);
   }
 
+  override moveBy(delta: Position): void {
+    this.interaction.moveBy(delta);
+  }
+
   // initialize this widget for the palette and return required information
   abstract initializeAfterAdd(): void;
-
-  abstract get boundingBox(): Rectangle;
 }
 
 export abstract class BoxWidget extends Widget {

@@ -1,6 +1,7 @@
 import { JSX } from "react";
 import { RenderInteractionArgs } from "../model/PageItem";
 import { ObjectProperty } from "../model/PageItemProperty";
+import { Selection } from "../Selection";
 import { Position, Rectangle, Widget } from "./Widget";
 import {
   DraggableAndResizableBox,
@@ -21,6 +22,8 @@ export abstract class WidgetInteraction {
     return null;
   }
 
+  abstract moveBy(delta: Position): void;
+
   abstract setPosition(pos: Position): void;
 }
 
@@ -37,16 +40,19 @@ export class BoxWidgetInteraction extends WidgetInteraction {
   }
 
   override renderEditorInteraction({
-    isSelected,
-    setSelectedItem,
+    selection,
+    setSelection,
   }: RenderInteractionArgs): JSX.Element {
     return (
       <DraggableAndResizableBox
-        showHandles={isSelected}
-        onClick={(e) => e.stopPropagation()}
+        showHandles={selection.hasSingle(this.widget)}
+        showBox={selection.has(this.widget)}
         onPointerDown={(e) => {
-          e.stopPropagation();
-          setSelectedItem(this.widget);
+          setSelection(
+            e.ctrlKey
+              ? selection.toggle(this.widget)
+              : Selection.of(this.widget)
+          );
         }}
         box={this.box.get()}
         update={(box) => this.box.set(box)}
@@ -55,21 +61,26 @@ export class BoxWidgetInteraction extends WidgetInteraction {
   }
 
   override renderMasterInteraction({
-    isSelected,
-    setSelectedItem,
+    selection,
+    setSelection,
   }: RenderInteractionArgs): React.ReactNode {
     if (!this.widget.properties.some((x) => x.isEditable)) return null;
     return (
       <SelectableBox
         box={this.box.get()}
-        showHandles={isSelected}
+        showHandles={selection.hasSingle(this.widget)}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => {
           e.stopPropagation();
-          setSelectedItem(this.widget);
+          setSelection(Selection.of(this.widget));
         }}
       />
     );
+  }
+
+  override moveBy(delta: Position): void {
+    const box = this.box.get();
+    this.box.set({ ...box, x: box.x + delta.x, y: box.y + delta.y });
   }
 }
 
@@ -84,37 +95,44 @@ export class PositionWidgetInteraction extends WidgetInteraction {
   }
 
   override renderEditorInteraction({
-    isSelected,
-    setSelectedItem,
+    selection,
+    setSelection,
   }: RenderInteractionArgs): JSX.Element {
     return (
       <DraggablePositionBox
-        select={() => {
-          setSelectedItem(this.widget);
-        }}
+        select={(add) =>
+          setSelection(
+            add ? selection.toggle(this.widget) : Selection.of(this.widget)
+          )
+        }
         box={this.widget.boundingBox}
         update={(box) => this.position.set(box)}
-        isSelected={isSelected}
+        isSelected={selection.has(this.widget)}
       />
     );
   }
 
   override renderMasterInteraction({
-    isSelected,
-    setSelectedItem,
+    selection,
+    setSelection,
   }: RenderInteractionArgs): React.ReactNode {
     if (!this.widget.properties.some((x) => x.isEditable)) return null;
 
     return (
       <SelectableBox
         box={this.widget.boundingBox}
-        showHandles={isSelected}
+        showHandles={selection.hasSingle(this.widget)}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => {
           e.stopPropagation();
-          setSelectedItem(this.widget);
+          setSelection(Selection.of(this.widget));
         }}
       />
     );
+  }
+
+  override moveBy(delta: Position): void {
+    const position = this.position.get();
+    this.position.set({ x: position.x + delta.x, y: position.y + delta.y });
   }
 }
