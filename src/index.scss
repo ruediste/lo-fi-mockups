@@ -30,6 +30,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  user-select: none;
   & > div {
     min-height: 0px;
     flex-grow: 1;

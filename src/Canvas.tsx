@@ -1,4 +1,5 @@
-import { MouseEventHandler, useRef } from "react";
+import classNames from "classnames";
+import { MouseEventHandler, PointerEventHandler, useRef } from "react";
 import ObserveSize from "react-observe-size";
 import { ProjectionContext } from "./Contexts";
 import { useRerenderOnEvent } from "./hooks";
@@ -58,11 +59,19 @@ export function Canvas({
   children,
   ref,
   onClick,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  className,
 }: {
   projection: CanvasProjection;
   children?: React.ReactNode;
   ref?: (element: HTMLElement | null) => void;
   onClick?: MouseEventHandler;
+  onPointerDown?: PointerEventHandler<SVGElement>;
+  onPointerMove?: PointerEventHandler<SVGElement>;
+  onPointerUp?: PointerEventHandler<SVGElement>;
+  className?: string;
 }) {
   const dragState = useRef<
     | {
@@ -77,7 +86,7 @@ export function Canvas({
   const observerRef = useRef<any>(null);
 
   return (
-    <div className="canvas" ref={ref}>
+    <div className={classNames(className, "canvas")} ref={ref}>
       <ObserveSize
         ref={observerRef}
         observerFn={(rect) => {
@@ -95,11 +104,13 @@ export function Canvas({
           <svg
             viewBox={`${projection.offset.x} ${projection.offset.y} ${worldViewSize.x}  ${worldViewSize.y}`}
             onPointerDown={(e) => {
-              dragState.current = {
-                startPointerPos: Vec2d.fromEvent(e),
-                startOffset: projection.offset,
-              };
-              e.currentTarget.setPointerCapture(e.pointerId);
+              if (!e.ctrlKey) {
+                dragState.current = {
+                  startPointerPos: Vec2d.fromEvent(e),
+                  startOffset: projection.offset,
+                };
+                e.currentTarget.setPointerCapture(e.pointerId);
+              } else onPointerDown?.(e);
             }}
             onPointerMove={(e) => {
               const state = dragState.current;
@@ -110,7 +121,7 @@ export function Canvas({
                   projection.scaleToWorld(pointerPos.sub(state.startPointerPos))
                 );
                 projection.onChange.notify();
-              }
+              } else onPointerMove?.(e);
             }}
             onPointerUp={(e) => {
               const state = dragState.current;
@@ -122,8 +133,8 @@ export function Canvas({
                   onClick?.(e);
                 }
                 e.nativeEvent.stopImmediatePropagation();
-              }
-              dragState.current = undefined;
+                dragState.current = undefined;
+              } else onPointerUp?.(e);
             }}
             onWheel={(event) => {
               if (event.ctrlKey) {

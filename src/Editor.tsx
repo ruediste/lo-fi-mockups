@@ -1,4 +1,5 @@
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
+import Flatbush from "flatbush";
 import { RefObject, useEffect, useRef, useState } from "react";
 import { Canvas, CanvasProjection } from "./Canvas";
 import { useRerenderOnEvent } from "./hooks";
@@ -7,7 +8,7 @@ import { PageItem } from "./model/PageItem";
 import { Selection } from "./Selection";
 import { Vec2d } from "./Vec2d";
 import { Rectangle, Widget } from "./widgets/Widget";
-import { DraggableBox } from "./widgets/WidgetHelpers";
+import { DraggableBox, dragPositionRectAttrs } from "./widgets/WidgetHelpers";
 
 function RenderItem({
   item,
@@ -67,7 +68,6 @@ function MultiItemSelectionBox({
       current={null}
       onDragStart={() => (lastDelta.current = new Vec2d(0, 0))}
       update={(_start, delta) => {
-        console.log("drag", delta, lastDelta.current);
         const diff = delta.sub(lastDelta.current!);
         setDrawBox({
           ...drawBox,
@@ -138,19 +138,85 @@ export function Editor({
       }
     },
   });
+
+  const dragState = useRef<
+    { startPos: Vec2d; index: Flatbush; boundingBoxes: Rectangle[] } | undefined
+  >(undefined);
+
+  const [dragSelectionBox, setDragSelectionBox] = useState<Rectangle>();
+
+  const attrs = dragPositionRectAttrs(projection);
+
   return (
     <Canvas
       projection={projection}
       ref={setNodeRef}
-      onClick={(e) => {
-        e.stopPropagation();
-        setSelection(Selection.empty);
+      onClick={() => setSelection(Selection.empty)}
+      onPointerDown={(e) => {
+        if (e.ctrlKey) {
+          e.stopPropagation();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          const pos = projection.pointToWorld(Vec2d.fromEvent(e));
+          setDragSelectionBox({ x: pos.x, y: pos.y, width: 0, height: 0 });
+
+          const index = new Flatbush(page.ownItems.length);
+          const boundingBoxes = page.ownItems.map((item) => item.boundingBox);
+          boundingBoxes.map((box) => {
+            index.add(box.x, box.y, box.x + box.width, box.y + box.height);
+          });
+          index.finish();
+
+          dragState.current = { startPos: pos, index, boundingBoxes };
+          setSelection(Selection.empty);
+        }
+      }}
+      onPointerMove={(e) => {
+        if (dragState.current) {
+          const pos = projection.pointToWorld(Vec2d.fromEvent(e));
+          setDragSelectionBox(
+            Vec2d.boundingBox(pos, dragState.current.startPos)
+          );
+        }
+      }}
+      onPointerUp={() => {
+        if (dragState.current) {
+          setDragSelectionBox(undefined);
+          setSelection(
+            Selection.of(
+              ...dragState.current.index
+                .search(
+                  dragSelectionBox!.x,
+                  dragSelectionBox!.y,
+                  dragSelectionBox!.x + dragSelectionBox!.width,
+                  dragSelectionBox!.y + dragSelectionBox!.height
+                )
+                .map((idx) => page.ownItems[idx])
+            )
+          );
+          dragState.current = undefined;
+        }
       }}
     >
       <MultiItemSelectionBox {...{ selection, projection }} />
       {page.ownItems.concat(page.masterItems).map((item) => (
         <RenderItem key={item.data.id} {...{ selection, setSelection, item }} />
       ))}
+      {dragSelectionBox && (
+        <rect {...attrs} {...dragSelectionBox} fill="transparent" />
+      )}
+      {dragSelectionBox &&
+        dragState.current &&
+        dragState.current.index
+          .search(
+            dragSelectionBox.x,
+            dragSelectionBox.y,
+            dragSelectionBox.x + dragSelectionBox.width,
+            dragSelectionBox.y + dragSelectionBox.height
+          )
+          .map((idx) => {
+            const box = dragState.current?.boundingBoxes[idx];
+            return <rect key={idx} {...box} {...attrs} fill="transparent" />;
+          })}
     </Canvas>
   );
 }

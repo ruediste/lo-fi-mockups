@@ -1,3 +1,4 @@
+import { Rectangle } from "./widgets/Widget";
 
 export class Vec2d {
   readonly x: number;
@@ -7,10 +8,9 @@ export class Vec2d {
     this.y = y;
   }
 
-  static fromEvent(event:{clientX: number, clientY: number}): Vec2d {
+  static fromEvent(event: { clientX: number; clientY: number }): Vec2d {
     return new Vec2d(event.clientX, event.clientY);
   }
-
 
   static from(value: null | undefined): undefined;
   static from(value: { x: number; y: number }): Vec2d;
@@ -24,6 +24,20 @@ export class Vec2d {
 
   static fromWidthHeight(value: { width: number; height: number }) {
     return new Vec2d(value.width, value.height);
+  }
+
+  static boundingBox(...items: Vec2d[]): Rectangle {
+    let minX = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+    items.forEach((item) => {
+      if (minX > item.x) minX = item.x;
+      if (maxX < item.x) maxX = item.x;
+      if (minY > item.y) minY = item.y;
+      if (maxY < item.y) maxY = item.y;
+    });
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   }
 
   add(v: { x: number; y: number }) {

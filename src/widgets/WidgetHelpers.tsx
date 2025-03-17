@@ -73,7 +73,8 @@ export function DraggableBox<T>({
   );
 }
 
-function dragPositionRectAttrs(
+// eslint-disable-next-line react-refresh/only-export-components
+export function dragPositionRectAttrs(
   projection: CanvasProjection
 ): SVGAttributes<SVGRectElement> {
   return {
