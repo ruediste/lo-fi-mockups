@@ -22,9 +22,17 @@ export function MoveWidgetBox(
   );
 }
 
-type CursorValue = "sw-resize" | "nw-resize" | "se-resize" | "ne-resize";
+type CursorValue =
+  | "sw-resize"
+  | "nw-resize"
+  | "se-resize"
+  | "ne-resize"
+  | "n-resize"
+  | "s-resize"
+  | "w-resize"
+  | "e-resize";
 
-export function DraggableBox2<TState>({
+export function DraggableBox<TState>({
   box,
   update,
   onDragStart,
@@ -103,7 +111,7 @@ export function DraggableSnapBox({
   items: () => Set<PageItem>;
 }): JSX.Element {
   return (
-    <DraggableBox2<{
+    <DraggableBox<{
       snapIndex: SnapIndex;
       snapOffset: Vec2d;
     }>
@@ -157,12 +165,14 @@ export function DraggableSnapCornerBox({
   cursor?: CursorValue;
   h: HorizontalSnapPosition[];
   v: VerticalSnapPosition[];
-  update: (diff: Vec2d) => void;
+  update: (box: Rectangle, diff: Vec2d) => void;
 }): JSX.Element {
   return (
-    <DraggableBox2<{
+    <DraggableBox<{
       snapIndex: SnapIndex;
       snapOffset: Vec2d;
+      delta: Vec2d;
+      startBox: Rectangle;
     }>
       {...{
         box,
@@ -174,6 +184,8 @@ export function DraggableSnapCornerBox({
         onDragStart: () => ({
           snapIndex: new SnapIndex(item.page, projection, (i) => i != item),
           snapOffset: new Vec2d(0, 0),
+          delta: new Vec2d(0, 0),
+          startBox: item.boundingBox,
         }),
         update: (diff, state) => {
           const snapOffset = state.snapIndex.snapBoxes(
@@ -181,7 +193,9 @@ export function DraggableSnapCornerBox({
             v,
             state.snapOffset.sub(diff)
           );
-          update(diff.add(snapOffset).sub(state.snapOffset));
+          const snappedDiff = diff.add(snapOffset).sub(state.snapOffset);
+          state.delta = state.delta.add(snappedDiff);
+          update(state.startBox, state.delta);
           item.page.onItemPositionChange.notify();
           state.snapOffset = snapOffset;
         },
@@ -196,14 +210,17 @@ export function DraggableSnapResizeBox({
   select,
   item,
   update,
+  widthOnly,
 }: {
   projection: CanvasProjection;
   visible: boolean;
   select?: (toggle: boolean) => void;
   item: PageItem;
   update: (newBox: Rectangle) => void;
+  widthOnly: boolean;
 }): JSX.Element {
   const handleSize = projection.lengthToWorld(12);
+  const minSize = { width: 20, height: 20 };
   const box = item.boundingBox;
   return (
     <>
@@ -219,63 +236,140 @@ export function DraggableSnapResizeBox({
       />
       {visible && (
         <>
-          <DraggableSnapCornerBox
-            {...{
-              cursor: "nw-resize",
-              box: {
-                x: box.x,
-                y: box.y,
-                width: handleSize,
-                height: handleSize,
-              },
-              item,
-              projection,
-              h: [
-                {
+          {!widthOnly && (
+            <DraggableSnapCornerBox
+              {...{
+                cursor: "nw-resize",
+                box: {
                   x: box.x,
                   y: box.y,
-                  width: box.width,
-                  snapRange: 0,
+                  width: handleSize,
+                  height: handleSize,
                 },
-              ],
-              v: [
-                {
-                  x: box.x,
+                item,
+                projection,
+                h: [
+                  {
+                    x: box.x,
+                    y: box.y,
+                    width: box.width,
+                    snapRange: 0,
+                  },
+                ],
+                v: [
+                  {
+                    x: box.x,
+                    y: box.y,
+                    height: box.height,
+                    snapRange: 0,
+                  },
+                ],
+                update: (start, delta) => {
+                  const x = Math.min(start.width - minSize.width, delta.x);
+                  const y = Math.min(start.height - minSize.height, delta.y);
+                  return update({
+                    x: start.x + x,
+                    y: start.y + y,
+                    width: start.width - x,
+                    height: start.height - y,
+                  });
+                },
+              }}
+            />
+          )}
+          {!widthOnly && (
+            <DraggableSnapCornerBox
+              {...{
+                cursor: "n-resize",
+                box: {
+                  x: box.x + (box.width - handleSize) / 2,
                   y: box.y,
-                  height: box.height,
-                  snapRange: 0,
+                  width: handleSize,
+                  height: handleSize,
                 },
-              ],
-              update: (diff) => {
-                update({
-                  x: box.x + diff.x,
-                  y: box.y + diff.y,
-                  width: box.width - diff.x,
-                  height: box.height - diff.y,
-                });
-              },
-            }}
-          />
-
+                item,
+                projection,
+                h: [
+                  {
+                    x: box.x,
+                    y: box.y,
+                    width: box.width,
+                    snapRange: 0,
+                  },
+                ],
+                v: [
+                  {
+                    x: box.x,
+                    y: box.y,
+                    height: box.height,
+                    snapRange: 0,
+                  },
+                ],
+                update: (start, delta) => {
+                  const y = Math.min(start.height - minSize.height, delta.y);
+                  return update({
+                    x: start.x,
+                    y: start.y + y,
+                    width: start.width,
+                    height: start.height - y,
+                  });
+                },
+              }}
+            />
+          )}
+          {!widthOnly && (
+            <DraggableSnapCornerBox
+              {...{
+                cursor: "ne-resize",
+                box: {
+                  x: box.x + box.width - handleSize,
+                  y: box.y,
+                  width: handleSize,
+                  height: handleSize,
+                },
+                item,
+                projection,
+                h: [
+                  {
+                    x: box.x,
+                    y: box.y,
+                    width: box.width,
+                    snapRange: 0,
+                  },
+                ],
+                v: [
+                  {
+                    x: box.x + box.width,
+                    y: box.y,
+                    height: box.height,
+                    snapRange: 0,
+                  },
+                ],
+                update: (start, delta) => {
+                  const x = Math.max(minSize.width - start.width, delta.x);
+                  const y = Math.min(start.height - minSize.height, delta.y);
+                  return update({
+                    x: start.x,
+                    y: start.y + y,
+                    width: start.width + x,
+                    height: start.height - y,
+                  });
+                },
+              }}
+            />
+          )}
           <DraggableSnapCornerBox
             {...{
-              cursor: "ne-resize",
+              cursor: "e-resize",
               box: {
                 x: box.x + box.width - handleSize,
-                y: box.y,
+                y: box.y + (box.height - handleSize) / 2,
                 width: handleSize,
                 height: handleSize,
               },
               item,
               projection,
-              h: [
-                {
-                  x: box.x,
-                  y: box.y,
-                  width: box.width,
-                  snapRange: 0,
-                },
-              ],
+              h: [],
               v: [
                 {
                   x: box.x + box.width,
@@ -284,23 +378,138 @@ export function DraggableSnapResizeBox({
                   snapRange: 0,
                 },
               ],
-              update: (diff) => {
-                update({
-                  x: box.x,
-                  y: box.y + diff.y,
-                  width: box.width + diff.x,
-                  height: box.height - diff.y,
+              update: (start, delta) => {
+                const x = Math.max(minSize.width - start.width, delta.x);
+                return update({
+                  x: start.x,
+                  y: start.y,
+                  width: start.width + x,
+                  height: start.height,
                 });
               },
             }}
           />
-
+          {!widthOnly && (
+            <DraggableSnapCornerBox
+              {...{
+                cursor: "se-resize",
+                box: {
+                  x: box.x + box.width - handleSize,
+                  y: box.y + box.height - handleSize,
+                  width: handleSize,
+                  height: handleSize,
+                },
+                item,
+                projection,
+                h: [
+                  {
+                    x: box.x,
+                    y: box.y + box.height,
+                    width: box.width,
+                    snapRange: 0,
+                  },
+                ],
+                v: [
+                  {
+                    x: box.x + box.width,
+                    y: box.y,
+                    height: box.height,
+                    snapRange: 0,
+                  },
+                ],
+                update: (start, delta) => {
+                  const x = Math.max(minSize.width - start.width, delta.x);
+                  const y = Math.max(minSize.height - start.height, delta.y);
+                  return update({
+                    x: start.x,
+                    y: start.y,
+                    width: start.width + x,
+                    height: start.height + y,
+                  });
+                },
+              }}
+            />
+          )}
+          {!widthOnly && (
+            <DraggableSnapCornerBox
+              {...{
+                cursor: "s-resize",
+                box: {
+                  x: box.x + (box.width - handleSize) / 2,
+                  y: box.y + box.height - handleSize,
+                  width: handleSize,
+                  height: handleSize,
+                },
+                item,
+                projection,
+                h: [
+                  {
+                    x: box.x,
+                    y: box.y + box.height,
+                    width: box.width,
+                    snapRange: 0,
+                  },
+                ],
+                v: [],
+                update: (start, delta) => {
+                  const y = Math.max(minSize.height - start.height, delta.y);
+                  return update({
+                    x: start.x,
+                    y: start.y,
+                    width: start.width,
+                    height: start.height + y,
+                  });
+                },
+              }}
+            />
+          )}
+          {!widthOnly && (
+            <DraggableSnapCornerBox
+              {...{
+                cursor: "sw-resize",
+                box: {
+                  x: box.x,
+                  y: box.y + box.height - handleSize,
+                  width: handleSize,
+                  height: handleSize,
+                },
+                item,
+                projection,
+                h: [
+                  {
+                    x: box.x,
+                    y: box.y + box.height,
+                    width: box.width,
+                    snapRange: 0,
+                  },
+                ],
+                v: [
+                  {
+                    x: box.x,
+                    y: box.y,
+                    height: box.height,
+                    snapRange: 0,
+                  },
+                ],
+                update: (start, delta) => {
+                  const x = Math.min(start.width - minSize.width, delta.x);
+                  const y = Math.max(minSize.height - start.height, delta.y);
+                  return update({
+                    x: start.x + x,
+                    y: start.y,
+                    width: start.width - x,
+                    height: start.height + y,
+                  });
+                },
+              }}
+            />
+          )}
           <DraggableSnapCornerBox
             {...{
-              cursor: "sw-resize",
+              cursor: "w-resize",
               box: {
                 x: box.x,
-                y: box.y + box.height - handleSize,
+                y: box.y + (box.height - handleSize) / 2,
                 width: handleSize,
                 height: handleSize,
               },
@@ -322,54 +531,18 @@ export function DraggableSnapResizeBox({
                   snapRange: 0,
                 },
               ],
-              update: (diff) => {
-                update({
-                  x: box.x + diff.x,
-                  y: box.y,
-                  width: box.width - diff.x,
-                  height: box.height + diff.y,
+              update: (start, delta) => {
+                const x = Math.min(start.width - minSize.width, delta.x);
+                return update({
+                  x: start.x + x,
+                  y: start.y,
+                  width: start.width - x,
+                  height: start.height,
                 });
               },
             }}
           />
-
-          <DraggableSnapCornerBox
-            {...{
-              cursor: "se-resize",
-              box: {
-                x: box.x + box.width - handleSize,
-                y: box.y + box.height - handleSize,
-                width: handleSize,
-                height: handleSize,
-              },
-              item,
-              projection,
-              h: [
-                {
-                  x: box.x,
-                  y: box.y + box.height,
-                  width: box.width,
-                  snapRange: 0,
-                },
-              ],
-              v: [
-                {
-                  x: box.x + box.width,
-                  y: box.y,
-                  height: box.height,
-                  snapRange: 0,
-                },
-              ],
-              update: (diff) => {
-                update({
-                  x: box.x,
-                  y: box.y,
-                  width: box.width + diff.x,
-                  height: box.height + diff.y,
-                });
-              },
-            }}
-          />
+          )
         </>
       )}
     </>

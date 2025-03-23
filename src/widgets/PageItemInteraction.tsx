@@ -34,6 +34,8 @@ export class BoxWidgetInteraction extends PageItemInteraction {
     height: 30,
   }).hidden(() => true);
 
+  private _widthOnly = false;
+
   override setPosition(pos: Position): void {
     this.box.set({ ...this.box.get(), ...pos });
   }
@@ -70,6 +72,7 @@ export class BoxWidgetInteraction extends PageItemInteraction {
             this.box.set(value);
             this.item.page.onItemPositionChange.notify();
           },
+          widthOnly: this._widthOnly,
         }}
       />
     );
@@ -88,6 +91,11 @@ export class BoxWidgetInteraction extends PageItemInteraction {
         }}
       />
     );
+  }
+
+  widthOnly() {
+    this._widthOnly = true;
+    return this;
   }
 
   override moveBy(delta: Position): void {

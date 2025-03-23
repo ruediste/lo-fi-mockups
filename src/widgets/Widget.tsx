@@ -17,8 +17,6 @@ export interface Rectangle extends Position {
 
 export abstract class Widget extends PageItem {
   abstract label: string;
-
-  // initialize this widget for the palette and return required information
   abstract initializeAfterAdd(): void;
 }
 
@@ -45,5 +43,20 @@ export abstract class PositionWidget extends Widget {
   }
   set position(value: Position) {
     this.positionInteraction.position.set(value);
+  }
+}
+export abstract class WidthWidget extends Widget {
+  private boxInteraction = new BoxWidgetInteraction(this).widthOnly();
+
+  get box() {
+    return this.boxInteraction.box.get();
+  }
+
+  set box(value: Rectangle) {
+    this.boxInteraction.box.set(value);
+  }
+
+  override get boundingBox(): Rectangle {
+    return this.box;
   }
 }

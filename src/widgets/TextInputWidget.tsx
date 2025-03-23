@@ -1,21 +1,21 @@
 import { StringProperty } from "../model/PageItemProperty";
-import { PositionWidget, Rectangle } from "./Widget";
+import { WidthWidget } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
-import { getTextWidth } from "./widgetUtils";
 const margin = widgetTheme.margin;
-export class TextInputWidget extends PositionWidget {
+
+export class TextInputWidget extends WidthWidget {
   label = "Text Input";
 
   labelText = new StringProperty(this, "label", "Label", "Name");
   text = new StringProperty(this, "text", "Text", "Joe");
 
-  get boundingBox(): Rectangle {
-    return {
-      ...this.position,
-      width: Math.max(100, getTextWidth(this.text.get()) + 2 * margin),
-      height: widgetTheme.fontSize + 2 * margin,
-    };
-  }
+  // get boundingBox(): Rectangle {
+  //   return {
+  //     ...this.position,
+  //     width: Math.max(100, getTextWidth(this.text.get()) + 2 * margin),
+  //     height: widgetTheme.fontSize + 2 * margin,
+  //   };
+  // }
 
   renderContent(): React.ReactNode {
     const box = this.boundingBox;
@@ -40,5 +40,12 @@ export class TextInputWidget extends PositionWidget {
       </>
     );
   }
-  initializeAfterAdd(): void {}
+  override initializeAfterAdd(): void {
+    this.box = {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: widgetTheme.fontSize + 2 * margin,
+    };
+  }
 }
