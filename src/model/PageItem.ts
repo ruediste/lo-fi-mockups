@@ -1,6 +1,7 @@
 import React from "react";
-import { Selection } from "../Selection";
-import { Position, Rectangle } from "../widgets/Widget";
+import { CanvasProjection } from "../Canvas";
+import { PageItemInteraction } from "../widgets/PageItemInteraction";
+import { Rectangle } from "../widgets/Widget";
 import { ModelEvent } from "./ModelEvent";
 import { Page } from "./Page";
 import { PageItemProperty } from "./PageItemProperty";
@@ -17,6 +18,8 @@ export interface PageItemsArgs {
 }
 
 export abstract class PageItem {
+  public interaction!: PageItemInteraction;
+
   properties: PageItemProperty<any>[] = [];
   propertyMap = new Map<string, PageItemProperty<any>>();
   masterPropertyValues: { [propertyId: string]: any }[] = [];
@@ -83,15 +86,6 @@ export abstract class PageItem {
   abstract renderContent(): React.ReactNode;
 
   abstract get boundingBox(): Rectangle;
-  abstract moveBy(delta: Position): void;
-
-  renderEditorInteraction(_args: RenderInteractionArgs): React.ReactNode {
-    return null;
-  }
-
-  renderMasterInteraction(_args: RenderInteractionArgs): React.ReactNode {
-    return null;
-  }
 
   renderProperties(): React.ReactNode {
     return null;
@@ -135,8 +129,7 @@ export abstract class PageItem {
 }
 
 export interface RenderInteractionArgs {
-  selection: Selection;
-  setSelection: (value: Selection) => void;
+  projection: CanvasProjection;
 }
 
 export interface HorizontalSnapPosition {

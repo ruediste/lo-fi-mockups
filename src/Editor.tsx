@@ -1,106 +1,92 @@
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import Flatbush from "flatbush";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useRef, useState } from "react";
 import { Canvas, CanvasProjection } from "./Canvas";
 import { useRerenderOnEvent } from "./hooks";
 import { Page } from "./model/Page";
 import { PageItem } from "./model/PageItem";
 import { Selection } from "./Selection";
 import { Vec2d } from "./Vec2d";
+import { DraggableSnapBox } from "./widgets/PageItemInteractionHelpers";
 import { Rectangle, Widget } from "./widgets/Widget";
-import { DraggableBox, dragPositionRectAttrs } from "./widgets/WidgetHelpers";
+import { dragPositionRectAttrs } from "./widgets/WidgetHelpers";
 
 function RenderItem({
   item,
-  selection,
-  setSelection,
+  projection,
 }: {
   item: PageItem;
-  selection: Selection;
-  setSelection: (value: Selection) => void;
+  projection: CanvasProjection;
 }) {
   useRerenderOnEvent(item.onChange);
   return (
     <>
       {item.renderContent()}
       {item.fromMasterPage
-        ? item.renderMasterInteraction({ selection, setSelection })
-        : item.renderEditorInteraction({ selection, setSelection })}
+        ? item.interaction.renderMasterInteraction({
+            projection,
+          })
+        : item.interaction.renderEditorInteraction({
+            projection,
+          })}
     </>
   );
 }
 
 function MultiItemSelectionBox({
-  selection,
   projection,
+  page,
 }: {
-  selection: Selection;
   projection: CanvasProjection;
+  page: Page;
 }) {
-  const lastDelta = useRef<Vec2d | undefined>(undefined);
+  useRerenderOnEvent(page.onItemPositionChange);
 
-  const [drawBox, setDrawBox] = useState<Rectangle>();
+  let drawBox: Rectangle | undefined = undefined;
+  if (page.selection.size > 1) {
+    const margin = projection.lengthToWorld(32);
+    let minX = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+    page.selection.items.forEach((item) => {
+      const box = item.boundingBox;
+      if (minX > box.x) minX = box.x;
+      if (maxX < box.x + box.width) maxX = box.x + box.width;
+      if (minY > box.y) minY = box.y;
+      if (maxY < box.y + box.height) maxY = box.y + box.height;
+    });
+    drawBox = {
+      x: minX - margin,
+      y: minY - margin,
+      width: maxX - minX + 2 * margin,
+      height: maxY - minY + 2 * margin,
+    };
+  } else drawBox = undefined;
 
-  useEffect(() => {
-    if (selection.size > 1) {
-      const margin = projection.lengthToWorld(32);
-      let minX = Number.POSITIVE_INFINITY;
-      let maxX = Number.NEGATIVE_INFINITY;
-      let minY = Number.POSITIVE_INFINITY;
-      let maxY = Number.NEGATIVE_INFINITY;
-      selection.all().forEach((item) => {
-        const box = item.boundingBox;
-        if (minX > box.x) minX = box.x;
-        if (maxX < box.x + box.width) maxX = box.x + box.width;
-        if (minY > box.y) minY = box.y;
-        if (maxY < box.y + box.height) maxY = box.y + box.height;
-      });
-      setDrawBox({
-        x: minX - margin,
-        y: minY - margin,
-        width: maxX - minX + 2 * margin,
-        height: maxY - minY + 2 * margin,
-      });
-    } else setDrawBox(undefined);
-  }, [selection, projection]);
-  return drawBox ? (
-    <DraggableBox<any>
-      current={null}
-      onDragStart={() => {
-        lastDelta.current = new Vec2d(0, 0);
-      }}
-      update={(_start, delta) => {
-        const diff = delta.sub(lastDelta.current!);
-        setDrawBox({
-          ...drawBox,
-          x: drawBox.x + diff.x,
-          y: drawBox.y + diff.y,
-        });
-        selection.all().forEach((item) => item.moveBy(diff));
-        lastDelta.current = delta;
-      }}
-      box={drawBox}
-      attrs={{
-        stroke: "#008800",
-        strokeWidth: projection.lengthToWorld(0.5),
-        fill: "transparent",
-      }}
-    />
-  ) : null;
+  return (
+    drawBox && (
+      <DraggableSnapBox
+        {...{
+          box: drawBox,
+          items: () => page.selection.items,
+          projection,
+          visible: true,
+          page,
+        }}
+      />
+    )
+  );
 }
 
 export function Editor({
   projection,
   page,
   dragOffset,
-  selection,
-  setSelection,
 }: {
   projection: CanvasProjection;
   page: Page;
   dragOffset: RefObject<{ x: number; y: number }>;
-  selection: Selection;
-  setSelection: (value: Selection) => void;
 }) {
   useRerenderOnEvent(page.onChange);
   const { setNodeRef } = useDroppable({
@@ -153,7 +139,7 @@ export function Editor({
     <Canvas
       projection={projection}
       ref={setNodeRef}
-      onClick={() => setSelection(Selection.empty)}
+      onClick={() => page.setSelection(Selection.empty)}
       onPointerDown={(e) => {
         if (e.ctrlKey) {
           e.stopPropagation();
@@ -169,7 +155,7 @@ export function Editor({
           index.finish();
 
           dragState.current = { startPos: pos, index, boundingBoxes };
-          setSelection(Selection.empty);
+          page.setSelection(Selection.empty);
         }
       }}
       onPointerMove={(e) => {
@@ -183,7 +169,7 @@ export function Editor({
       onPointerUp={() => {
         if (dragState.current) {
           setDragSelectionBox(undefined);
-          setSelection(
+          page.setSelection(
             Selection.of(
               ...dragState.current.index
                 .search(
@@ -199,9 +185,9 @@ export function Editor({
         }
       }}
     >
-      <MultiItemSelectionBox {...{ selection, projection }} />
+      <MultiItemSelectionBox {...{ projection, page }} />
       {page.ownItems.concat(page.masterItems).map((item) => (
-        <RenderItem key={item.data.id} {...{ selection, setSelection, item }} />
+        <RenderItem key={item.data.id} {...{ item, projection }} />
       ))}
       {dragSelectionBox && (
         <rect {...attrs} {...dragSelectionBox} fill="transparent" />

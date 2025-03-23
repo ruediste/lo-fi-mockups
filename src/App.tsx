@@ -2,7 +2,7 @@ import { CanvasProjection } from "./Canvas";
 import { Project, ProjectData } from "./model/Project";
 
 import { DBSchema, openDB } from "idb";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { Tab, Tabs } from "react-bootstrap";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Editor } from "./Editor";
@@ -79,18 +79,13 @@ export default function App() {
   }, []);
 
   useRerenderOnEvent(project.onChange);
+  useRerenderOnEvent(project.currentPage?.onChange);
 
   const projection = useConst(() => new CanvasProjection());
 
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const [selection, setSelection] = useState<Selection>(Selection.empty);
-
-  useEffect(
-    () => setSelection(Selection.empty),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [projectData.currentPageId]
-  );
+  const selection = project.currentPage?.selection;
 
   return (
     <div
@@ -148,8 +143,6 @@ export default function App() {
               projection={projection}
               page={project.currentPage}
               dragOffset={dragOffset}
-              selection={selection}
-              setSelection={setSelection}
             />
           )}
         </Panel>
@@ -162,14 +155,18 @@ export default function App() {
           }}
         >
           <div style={{ flexGrow: 1 }}>
-            {selection.size == 0 && <h1> No selected Item </h1>}
-            {selection.size == 1 && (
+            {selection?.size === 0 && <h1> No selected Item </h1>}
+            {selection?.size === 1 && (
               <ItemProperties
                 item={selection.single}
-                clearSelection={() => setSelection(Selection.empty)}
+                clearSelection={() =>
+                  project.currentPage?.setSelection(Selection.empty)
+                }
               />
             )}
-            {selection.size > 1 && <h1> Multiple selected Items </h1>}
+            {selection !== undefined && selection.size > 1 && (
+              <h1> Multiple selected Items </h1>
+            )}
           </div>
         </Panel>
       </PanelGroup>

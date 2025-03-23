@@ -1,5 +1,7 @@
 import Flatbush from "flatbush";
 import { CanvasProjection } from "../Canvas";
+import { Selection } from "../Selection";
+import { Vec2d } from "../Vec2d";
 import { arraySwapInPlace } from "../utils";
 import { ModelEvent } from "./ModelEvent";
 import {
@@ -31,6 +33,11 @@ export class Page {
   // raised when something on the page changes, mainly if items are added or removed
   onChange = new ModelEvent();
 
+  // raised when only the position of an item changes. onChange is not raised in this case
+  onItemPositionChange = new ModelEvent();
+
+  selection = Selection.of();
+
   constructor(
     public data: PageData,
     public project: Project,
@@ -59,6 +66,11 @@ export class Page {
         ...masterPage.items.map((i) => this.toPageItem(i, true))
       );
     }
+  }
+
+  setSelection(value: Selection) {
+    this.selection = value;
+    this.onChange.notify();
   }
 
   addItem(data: PageItemData) {
@@ -129,8 +141,8 @@ export class Page {
 export class SnapIndex {
   horizontalPositions: HorizontalSnapPosition[] = [];
   verticalPositions: VerticalSnapPosition[] = [];
-  horizontal: Flatbush;
-  vertical: Flatbush;
+  horizontal?: Flatbush;
+  vertical?: Flatbush;
   constructor(
     page: Page,
     projection: CanvasProjection,
@@ -146,28 +158,34 @@ export class SnapIndex {
         )
       );
 
-    this.horizontal = new Flatbush(this.horizontalPositions.length);
-    this.vertical = new Flatbush(this.verticalPositions.length);
+    if (this.horizontalPositions.length > 0) {
+      const horizontal = new Flatbush(this.horizontalPositions.length);
 
-    this.horizontalPositions.forEach((p) =>
-      this.horizontal.add(
-        p.x - p.snapRange,
-        p.y - p.snapRange,
-        p.x + p.width + p.snapRange,
-        p.y + p.snapRange
-      )
-    );
-    this.verticalPositions.forEach((p) =>
-      this.vertical.add(
-        p.x - p.snapRange,
-        p.y - p.snapRange,
-        p.x + p.snapRange,
-        p.y + p.height + p.snapRange
-      )
-    );
+      this.horizontalPositions.forEach((p) =>
+        horizontal.add(
+          p.x - p.snapRange,
+          p.y - p.snapRange,
+          p.x + p.width + p.snapRange,
+          p.y + p.snapRange
+        )
+      );
+      horizontal.finish();
+      this.horizontal = horizontal;
+    }
 
-    this.horizontal.finish();
-    this.vertical.finish();
+    if (this.verticalPositions.length > 0) {
+      const vertical = new Flatbush(this.verticalPositions.length);
+      this.verticalPositions.forEach((p) =>
+        vertical.add(
+          p.x - p.snapRange,
+          p.y - p.snapRange,
+          p.x + p.snapRange,
+          p.y + p.height + p.snapRange
+        )
+      );
+      vertical.finish();
+      this.vertical = vertical;
+    }
   }
 
   snapItems(
@@ -179,17 +197,25 @@ export class SnapIndex {
     const v: VerticalSnapPosition[] = [];
     items.forEach((item) => item.getSnapBoxes(h, v, viewToWorld));
 
+    return this.snapBoxes(h, v, currentOffset);
+  }
+
+  snapBoxes(
+    h: HorizontalSnapPosition[],
+    v: VerticalSnapPosition[],
+    currentOffset: { x: number; y: number }
+  ) {
     let deltaY: number | undefined = undefined;
     let deltaX: number | undefined = undefined;
 
     for (const pos of h) {
-      const indices = this.horizontal.search(
+      const indices = this.horizontal?.search(
         pos.x - currentOffset.x,
         pos.y - currentOffset.y,
         pos.x + pos.width - currentOffset.x,
         pos.y - currentOffset.y
       );
-      for (const idx of indices) {
+      for (const idx of indices ?? []) {
         const otherPos = this.horizontalPositions[idx];
         const delta = otherPos.y - (pos.y - currentOffset.y);
         if (deltaY === undefined || Math.abs(deltaY) > Math.abs(delta))
@@ -198,19 +224,19 @@ export class SnapIndex {
     }
 
     for (const pos of v) {
-      const indices = this.vertical.search(
+      const indices = this.vertical?.search(
         pos.x - currentOffset.x,
         pos.y - currentOffset.y,
         pos.x - currentOffset.x,
         pos.y + pos.height - currentOffset.y
       );
-      for (const idx of indices) {
-        const otherPos = this.horizontalPositions[idx];
+      for (const idx of indices ?? []) {
+        const otherPos = this.verticalPositions[idx];
         const delta = otherPos.x - (pos.x - currentOffset.x);
         if (deltaX === undefined || Math.abs(deltaX) > Math.abs(delta))
           deltaX = delta;
       }
     }
-    return { x: deltaX ?? 0, y: deltaY ?? 0 };
+    return new Vec2d(deltaX ?? 0, deltaY ?? 0);
   }
 }

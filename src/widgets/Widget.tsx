@@ -1,9 +1,8 @@
-import { PageItem, RenderInteractionArgs } from "../model/PageItem";
+import { PageItem } from "../model/PageItem";
 import {
   BoxWidgetInteraction,
   PositionWidgetInteraction,
-  WidgetInteraction,
-} from "./WidgetInteraction";
+} from "./PageItemInteraction";
 
 // class ItemGroup extends PageItem {}
 
@@ -17,21 +16,7 @@ export interface Rectangle extends Position {
 }
 
 export abstract class Widget extends PageItem {
-  public interaction!: WidgetInteraction;
-
   abstract label: string;
-
-  override renderEditorInteraction(args: RenderInteractionArgs) {
-    return this.interaction.renderEditorInteraction(args);
-  }
-
-  override renderMasterInteraction(args: RenderInteractionArgs) {
-    return this.interaction.renderMasterInteraction(args);
-  }
-
-  override moveBy(delta: Position): void {
-    this.interaction.moveBy(delta);
-  }
 
   // initialize this widget for the palette and return required information
   abstract initializeAfterAdd(): void;
