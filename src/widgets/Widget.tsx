@@ -2,7 +2,7 @@ import { PageItem } from "../model/PageItem";
 import {
   BoxWidgetInteraction,
   PositionWidgetInteraction,
-} from "./PageItemInteraction";
+} from "../model/PageItemInteraction";
 
 // class ItemGroup extends PageItem {}
 

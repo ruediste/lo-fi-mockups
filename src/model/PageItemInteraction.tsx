@@ -2,12 +2,12 @@ import { JSX } from "react";
 import { PageItem, RenderInteractionArgs } from "../model/PageItem";
 import { ObjectProperty } from "../model/PageItemProperty";
 import { Selection } from "../Selection";
+import { Position, Rectangle } from "../widgets/Widget";
 import {
   DraggableSnapBox,
   DraggableSnapResizeBox,
   SelectableBox,
 } from "./PageItemInteractionHelpers";
-import { Position, Rectangle } from "./Widget";
 
 export abstract class PageItemInteraction {
   constructor(protected item: PageItem) {

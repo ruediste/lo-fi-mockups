@@ -1,9 +1,9 @@
 import React from "react";
 import { CanvasProjection } from "../Canvas";
-import { PageItemInteraction } from "../widgets/PageItemInteraction";
 import { Rectangle } from "../widgets/Widget";
 import { ModelEvent } from "./ModelEvent";
 import { Page } from "./Page";
+import { PageItemInteraction } from "./PageItemInteraction";
 import { PageItemProperty } from "./PageItemProperty";
 
 export interface PageItemData {

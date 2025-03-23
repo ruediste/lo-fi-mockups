@@ -5,9 +5,9 @@ import { Canvas, CanvasProjection } from "./Canvas";
 import { useRerenderOnEvent } from "./hooks";
 import { Page } from "./model/Page";
 import { PageItem } from "./model/PageItem";
+import { DraggableSnapBox } from "./model/PageItemInteractionHelpers";
 import { Selection } from "./Selection";
 import { Vec2d } from "./Vec2d";
-import { DraggableSnapBox } from "./widgets/PageItemInteractionHelpers";
 import { Rectangle, Widget } from "./widgets/Widget";
 import { dragPositionRectAttrs } from "./widgets/WidgetHelpers";
 

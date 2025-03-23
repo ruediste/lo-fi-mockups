@@ -10,8 +10,8 @@ import {
 } from "../model/PageItem";
 import { toSet } from "../utils";
 import { Vec2d } from "../Vec2d";
-import { Rectangle } from "./Widget";
-import { dragPositionRectAttrs } from "./WidgetHelpers";
+import { Rectangle } from "../widgets/Widget";
+import { dragPositionRectAttrs } from "../widgets/WidgetHelpers";
 
 export function MoveWidgetBox(
   props: { projection: CanvasProjection } & JSX.IntrinsicElements["rect"]
