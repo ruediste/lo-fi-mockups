@@ -66,7 +66,9 @@ function MultiItemSelectionBox({
   return drawBox ? (
     <DraggableBox<any>
       current={null}
-      onDragStart={() => (lastDelta.current = new Vec2d(0, 0))}
+      onDragStart={() => {
+        lastDelta.current = new Vec2d(0, 0);
+      }}
       update={(_start, delta) => {
         const diff = delta.sub(lastDelta.current!);
         setDrawBox({

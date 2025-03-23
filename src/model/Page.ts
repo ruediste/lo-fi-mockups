@@ -1,6 +1,13 @@
+import Flatbush from "flatbush";
+import { CanvasProjection } from "../Canvas";
 import { arraySwapInPlace } from "../utils";
 import { ModelEvent } from "./ModelEvent";
-import { PageItem, PageItemData } from "./PageItem";
+import {
+  HorizontalSnapPosition,
+  PageItem,
+  PageItemData,
+  VerticalSnapPosition,
+} from "./PageItem";
 import { Project } from "./Project";
 import { createPageItem } from "./createPageItem";
 
@@ -116,5 +123,94 @@ export class Page {
 
   private toPageItem(data: PageItemData, fromMasterPage: boolean) {
     return createPageItem({ data, page: this, fromMasterPage });
+  }
+}
+
+export class SnapIndex {
+  horizontalPositions: HorizontalSnapPosition[] = [];
+  verticalPositions: VerticalSnapPosition[] = [];
+  horizontal: Flatbush;
+  vertical: Flatbush;
+  constructor(
+    page: Page,
+    projection: CanvasProjection,
+    filter: (item: PageItem) => boolean
+  ) {
+    [...page.masterItems, ...page.ownItems]
+      .filter(filter)
+      .forEach((item) =>
+        item.getSnapBoxes(
+          this.horizontalPositions,
+          this.verticalPositions,
+          projection.scale
+        )
+      );
+
+    this.horizontal = new Flatbush(this.horizontalPositions.length);
+    this.vertical = new Flatbush(this.verticalPositions.length);
+
+    this.horizontalPositions.forEach((p) =>
+      this.horizontal.add(
+        p.x - p.snapRange,
+        p.y - p.snapRange,
+        p.x + p.width + p.snapRange,
+        p.y + p.snapRange
+      )
+    );
+    this.verticalPositions.forEach((p) =>
+      this.vertical.add(
+        p.x - p.snapRange,
+        p.y - p.snapRange,
+        p.x + p.snapRange,
+        p.y + p.height + p.snapRange
+      )
+    );
+
+    this.horizontal.finish();
+    this.vertical.finish();
+  }
+
+  snapItems(
+    items: PageItem[],
+    currentOffset: { x: number; y: number },
+    viewToWorld: number
+  ) {
+    const h: HorizontalSnapPosition[] = [];
+    const v: VerticalSnapPosition[] = [];
+    items.forEach((item) => item.getSnapBoxes(h, v, viewToWorld));
+
+    let deltaY: number | undefined = undefined;
+    let deltaX: number | undefined = undefined;
+
+    for (const pos of h) {
+      const indices = this.horizontal.search(
+        pos.x - currentOffset.x,
+        pos.y - currentOffset.y,
+        pos.x + pos.width - currentOffset.x,
+        pos.y - currentOffset.y
+      );
+      for (const idx of indices) {
+        const otherPos = this.horizontalPositions[idx];
+        const delta = otherPos.y - (pos.y - currentOffset.y);
+        if (deltaY === undefined || Math.abs(deltaY) > Math.abs(delta))
+          deltaY = delta;
+      }
+    }
+
+    for (const pos of v) {
+      const indices = this.vertical.search(
+        pos.x - currentOffset.x,
+        pos.y - currentOffset.y,
+        pos.x - currentOffset.x,
+        pos.y + pos.height - currentOffset.y
+      );
+      for (const idx of indices) {
+        const otherPos = this.horizontalPositions[idx];
+        const delta = otherPos.x - (pos.x - currentOffset.x);
+        if (deltaX === undefined || Math.abs(deltaX) > Math.abs(delta))
+          deltaX = delta;
+      }
+    }
+    return { x: deltaX ?? 0, y: deltaY ?? 0 };
   }
 }

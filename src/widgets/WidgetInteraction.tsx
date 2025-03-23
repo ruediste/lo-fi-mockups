@@ -1,13 +1,51 @@
-import { JSX } from "react";
+import { JSX, PointerEvent } from "react";
+import { CanvasProjection } from "../Canvas";
+import { Page } from "../model/Page";
 import { RenderInteractionArgs } from "../model/PageItem";
 import { ObjectProperty } from "../model/PageItemProperty";
 import { Selection } from "../Selection";
+import { Vec2d } from "../Vec2d";
 import { Position, Rectangle, Widget } from "./Widget";
 import {
   DraggableAndResizableBox,
   DraggablePositionBox,
   SelectableBox,
 } from "./WidgetHelpers";
+
+export class DragHandler {
+  private state?: {
+    lastPos: Vec2d;
+    startEventPos: Vec2d;
+    selection: Selection;
+  };
+
+  constructor(private projection: CanvasProjection, private page: Page) {}
+
+  onPointerDown(e: PointerEvent, selection: Selection) {
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const pos = Vec2d.fromEvent(e);
+    this.state = { startEventPos: pos, lastPos: pos, selection };
+  }
+
+  onPointerMove(e: PointerEvent) {
+    if (this.state) {
+      const pos = Vec2d.fromEvent(e);
+      const diff = this.projection.scaleToWorld(
+        Vec2d.fromEvent(e).sub(this.state.lastPos)
+      );
+      this.state.selection.all().forEach((item) => item.moveBy(diff));
+      this.state.lastPos = pos;
+    }
+  }
+
+  onPointerUp(e: PointerEvent) {
+    if (this.state) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+      this.state = undefined;
+    }
+  }
+}
 
 export abstract class WidgetInteraction {
   constructor(protected widget: Widget) {
@@ -100,14 +138,16 @@ export class PositionWidgetInteraction extends WidgetInteraction {
   }: RenderInteractionArgs): JSX.Element {
     return (
       <DraggablePositionBox
-        select={(add) =>
+        select={(toggle) =>
           setSelection(
-            add ? selection.toggle(this.widget) : Selection.of(this.widget)
+            toggle ? selection.toggle(this.widget) : Selection.of(this.widget)
           )
         }
         box={this.widget.boundingBox}
         update={(box) => this.position.set(box)}
         isSelected={selection.has(this.widget)}
+        page={this.widget.page}
+        selection={selection}
       />
     );
   }

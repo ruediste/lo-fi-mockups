@@ -99,9 +99,55 @@ export abstract class PageItem {
 
   // invoked after construction
   initialize() {}
+
+  getSnapBoxes(
+    horizontal: HorizontalSnapPosition[],
+    vertical: VerticalSnapPosition[],
+    viewToWorld: number
+  ) {
+    const snapRange = 16 * viewToWorld;
+    const box = this.boundingBox;
+    horizontal.push({
+      x: box.x,
+      y: box.y,
+      width: box.width,
+      snapRange,
+    });
+    horizontal.push({
+      x: box.x,
+      y: box.y + box.height,
+      width: box.width,
+      snapRange,
+    });
+    vertical.push({
+      x: box.x,
+      y: box.y,
+      height: box.height,
+      snapRange,
+    });
+    vertical.push({
+      x: box.x + box.width,
+      y: box.y,
+      height: box.height,
+      snapRange,
+    });
+  }
 }
 
 export interface RenderInteractionArgs {
   selection: Selection;
   setSelection: (value: Selection) => void;
+}
+
+export interface HorizontalSnapPosition {
+  y: number;
+  x: number;
+  width: number;
+  snapRange: number;
+}
+export interface VerticalSnapPosition {
+  x: number;
+  y: number;
+  height: number;
+  snapRange: number;
 }

@@ -8,11 +8,13 @@ import {
 import { CanvasProjection } from "../Canvas";
 import { ProjectionContext } from "../Contexts";
 import { useRerenderOnEvent } from "../hooks";
+import { Page, SnapIndex } from "../model/Page";
+import { Selection } from "../Selection";
 import { Vec2d } from "../Vec2d";
 import { Position, Rectangle } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 
-export function DraggableBox<T>({
+export function DraggableBox<T, TState = undefined>({
   box,
   current,
   update,
@@ -23,15 +25,16 @@ export function DraggableBox<T>({
 }: {
   box: Rectangle;
   current: T | (() => T);
-  update: (start: T, delta: Vec2d) => void;
+  update: (start: T, delta: Vec2d, state: TState) => void;
   onClick?: MouseEventHandler;
   onPointerDown?: MouseEventHandler;
   attrs?: SVGAttributes<SVGRectElement>;
-  onDragStart?: () => void;
+  onDragStart?: () => TState;
 }) {
   const dragState = useRef<{
     start: T;
     startEventPos: Vec2d;
+    state: TState | undefined;
   }>(undefined);
 
   const projection = useContext(ProjectionContext);
@@ -47,19 +50,23 @@ export function DraggableBox<T>({
       onPointerDown={(e) => {
         e.stopPropagation();
         e.currentTarget.setPointerCapture(e.pointerId);
+        onPointerDown?.(e);
+
         dragState.current = {
           start: typeof current === "function" ? (current as any)() : current,
           startEventPos: Vec2d.fromEvent(e),
+          state: onDragStart?.(),
         };
-        onPointerDown?.(e);
-        onDragStart?.();
       }}
       onPointerMove={(e) => {
         const state = dragState.current;
         if (state) {
           update(
             state.start,
-            projection.scaleToWorld(Vec2d.fromEvent(e).sub(state.startEventPos))
+            projection.scaleToWorld(
+              Vec2d.fromEvent(e).sub(state.startEventPos)
+            ),
+            state.state as any
           );
         }
       }}
@@ -86,26 +93,48 @@ export function dragPositionRectAttrs(
 export function DraggablePositionBox({
   box,
   update,
-  isSelected,
+  selection,
   select,
+  page,
+  isSelected,
 }: {
   box: Rectangle;
-  isSelected: boolean;
+  selection: Selection;
   update: (pos: Position) => void;
-  select?: (add: boolean) => void;
+  select?: (toggle: boolean) => void;
+  page: Page;
+  isSelected: boolean;
 }) {
   const projection = useContext(ProjectionContext);
   return (
-    <DraggableBox<Position>
+    <DraggableBox<
+      Position,
+      { snapIndex: SnapIndex; snapOffset: { x: number; y: number } }
+    >
       current={() => box}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        select?.(e.ctrlKey);
-      }}
+      onPointerDown={(e) => select?.(e.ctrlKey)}
+      onDragStart={() => ({
+        snapIndex: new SnapIndex(
+          page,
+          projection,
+          (item) => !selection.has(item)
+        ),
+        snapOffset: { x: 0, y: 0 },
+      })}
       box={box}
-      update={(start, delta) =>
-        update({ x: start.x + delta.x, y: start.y + delta.y })
-      }
+      update={(start, delta, state) => {
+        const snapOffset = state.snapIndex.snapItems(
+          selection.all(),
+          state.snapOffset,
+          1 / projection.scale
+        );
+        console.log(state.snapOffset, delta, snapOffset);
+        state.snapOffset = snapOffset;
+        return update({
+          x: start.x + delta.x + snapOffset.x,
+          y: start.y + delta.y + snapOffset.y,
+        });
+      }}
       attrs={{
         fill: "transparent",
         ...(isSelected ? dragPositionRectAttrs(projection) : {}),
