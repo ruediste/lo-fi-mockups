@@ -186,7 +186,7 @@ export function Editor({
       }}
     >
       <MultiItemSelectionBox {...{ projection, page }} />
-      {page.ownItems.concat(page.masterItems).map((item) => (
+      {page.masterItems.concat(page.ownItems).map((item) => (
         <RenderItem key={item.data.id} {...{ item, projection }} />
       ))}
       {dragSelectionBox && (

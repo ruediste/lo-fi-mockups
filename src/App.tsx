@@ -1,9 +1,8 @@
 import { CanvasProjection } from "./Canvas";
 import { Project, ProjectData } from "./model/Project";
 
-import { DBSchema, openDB } from "idb";
 import { useMemo, useRef } from "react";
-import { Tab, Tabs } from "react-bootstrap";
+import { Spinner, Tab, Tabs } from "react-bootstrap";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Editor } from "./Editor";
 import { ItemProperties } from "./ItemProperties";
@@ -11,6 +10,7 @@ import { Pages } from "./Pages";
 import { Palette } from "./Palette";
 import { Selection } from "./Selection";
 import { useConst, useRerenderOnEvent } from "./hooks";
+import { repository } from "./repository";
 import "./widgets/PageItemTypeRegistry";
 
 function throttle<T extends (...args: any[]) => void>(
@@ -30,51 +30,13 @@ function throttle<T extends (...args: any[]) => void>(
   };
 }
 
-interface MyDB extends DBSchema {
-  project: {
-    key: string;
-    value: ProjectData;
-  };
-  images: {
-    key: number;
-    value: Blob;
-  };
-}
-
-const db = await openDB<MyDB>("test", 1, {
-  upgrade(db) {
-    db.createObjectStore("project");
-    db.createObjectStore("images");
-  },
-});
-
-const save = throttle(async (data: ProjectData) => {
-  await db.put("project", data, "default");
+const save = throttle(async () => {
+  await repository.db!.put("project", repository.projectData!, "default");
 }, 1000);
 
-const projectData = await (async () => {
-  let result = await db.get("project", "default");
-  if (result === undefined) {
-    result = {
-      nextId: 2,
-      currentPageId: 1,
-      pages: [
-        {
-          id: 1,
-          name: "Page 1",
-          items: [],
-          propertyValues: {},
-          overrideableProperties: {},
-        },
-      ],
-    };
-  }
-  return result;
-})();
-
-export default function App() {
+function MainApp({ projectData }: { projectData: ProjectData }) {
   const project = useMemo(() => {
-    const result = new Project(projectData, () => save(projectData));
+    const result = new Project(projectData, () => save());
     return result;
   }, []);
 
@@ -172,4 +134,15 @@ export default function App() {
       </PanelGroup>
     </div>
   );
+}
+
+export default function App() {
+  useRerenderOnEvent(repository.onChange);
+  if (repository.projectData === undefined)
+    return (
+      <Spinner animation="border" role="status">
+        <span className="visually-hidden">Loading...</span>
+      </Spinner>
+    );
+  else return <MainApp projectData={repository.projectData} />;
 }

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "vite",
     "build": "tsc -b && vite build",
+    "build-pages": "tsc -b && vite build --base=/lo-fi-mockups/",
     "typecheck": "tsc --noEmit --watch --project tsconfig.app.json",
     "lint": "eslint .",
     "preview": "vite preview",
