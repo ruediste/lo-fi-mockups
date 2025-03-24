@@ -17,6 +17,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { css } from "@emotion/react";
 import { useState } from "react";
 import { Button, Form, ListGroup } from "react-bootstrap";
 import { GripVertical, Trash } from "react-bootstrap-icons";
@@ -84,6 +85,11 @@ function Page({
         ) : (
           <span
             style={{ minWidth: "50px" }}
+            css={css`
+              &:hover {
+                background: lightgray;
+              }
+            `}
             onClick={() => selected && setEditName(true)}
           >
             {page.name}
@@ -123,14 +129,19 @@ function Page({
           </span>
         ) : (
           <span
-            style={{ marginLeft: "auto", minWidth: "50px" }}
+            css={css`
+              margin-left: auto;
+              &:hover {
+                background: lightgray;
+              }
+            `}
             onClick={() => selected && setChangeMasterPage(true)}
           >
             {masterPageName}
           </span>
         )}
         <IconButton
-          style={{ marginLeft: "8px" }}
+          style={{ marginLeft: "8px", marginTop: "-6px" }}
           onClick={async (e) => {
             e.stopPropagation();
             if (

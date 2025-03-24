@@ -6,7 +6,12 @@ import checker from "vite-plugin-checker";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      jsxImportSource: "@emotion/react",
+      babel: {
+        plugins: ["@emotion/babel-plugin"],
+      },
+    }),
     checker({
       typescript: {
         tsconfigPath: "tsconfig.app.json",
