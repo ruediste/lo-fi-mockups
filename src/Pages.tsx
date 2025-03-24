@@ -1,3 +1,4 @@
+import { confirm } from "@/util/confirm";
 import {
   DndContext,
   DragEndEvent,
@@ -17,10 +18,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
-import { Button, Form, ListGroup, Modal } from "react-bootstrap";
-import { GripVertical } from "react-bootstrap-icons";
+import { Button, Form, ListGroup } from "react-bootstrap";
+import { GripVertical, Trash } from "react-bootstrap-icons";
 import { useRerenderTrigger } from "./hooks";
-import { ThreeDotMenu } from "./Inputs";
+import { IconButton } from "./Inputs";
 import { PageData } from "./model/Page";
 import { Project } from "./model/Project";
 
@@ -64,39 +65,8 @@ function Page({
         onDoubleClick={() => setEditName(true)}
       >
         <GripVertical style={{ marginLeft: "-12px", marginTop: "4px" }} />
-        <span onClick={() => selected && setEditName(true)}>{page.name}</span>
-        <span
-          style={{ marginLeft: "auto" }}
-          onClick={() => selected && setChangeMasterPage(true)}
-        >
-          {masterPageName}
-        </span>
-        <ThreeDotMenu
-          style={{ marginTop: "-5px", marginLeft: "8px" }}
-          items={[
-            { label: "Edit Name", onClick: () => setEditName(true) },
-            {
-              label: "Change Master Page",
-              onClick: () => setChangeMasterPage(true),
-            },
-            {
-              label: "Delete",
-              onClick: () => project.removePage(page.id),
-            },
-          ]}
-        />
-      </ListGroup.Item>
-      <Modal show={editName} onHide={() => setEditName(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Page Name</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setEditName(false);
-            }}
-          >
+        {editName ? (
+          <span onPointerDown={(e) => e.stopPropagation()}>
             <Form.Control
               autoFocus
               value={page.name}
@@ -105,52 +75,76 @@ function Page({
                 project.onDataChanged();
                 triggerRerender();
               }}
+              onBlur={() => setEditName(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") setEditName(false);
+              }}
             />
-          </form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={() => setEditName(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal show={changeMasterPage} onHide={() => setChangeMasterPage(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Master Page</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setChangeMasterPage(false);
-            }}
+          </span>
+        ) : (
+          <span
+            style={{ minWidth: "50px" }}
+            onClick={() => selected && setEditName(true)}
           >
-            <Form.Select
-              value={page.masterPageId}
-              onChange={(e) => {
-                const index = e.target.selectedIndex;
-                project.setMasterPage(
-                  page.id,
-                  index == 0 ? undefined : project.data.pages[index - 1].id
-                );
+            {page.name}
+          </span>
+        )}
+        {changeMasterPage ? (
+          <span
+            style={{ marginLeft: "auto" }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setChangeMasterPage(false);
               }}
             >
-              <option value=""></option>
-              {project.data.pages.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Form.Select>
-          </form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={() => setChangeMasterPage(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+              <Form.Select
+                value={page.masterPageId}
+                onBlur={() => setChangeMasterPage(false)}
+                onChange={(e) => {
+                  const index = e.target.selectedIndex;
+                  project.setMasterPage(
+                    page.id,
+                    index == 0 ? undefined : project.data.pages[index - 1].id
+                  );
+                  setChangeMasterPage(false);
+                }}
+              >
+                <option value=""></option>
+                {project.data.pages.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </form>
+          </span>
+        ) : (
+          <span
+            style={{ marginLeft: "auto", minWidth: "50px" }}
+            onClick={() => selected && setChangeMasterPage(true)}
+          >
+            {masterPageName}
+          </span>
+        )}
+        <IconButton
+          style={{ marginLeft: "8px" }}
+          onClick={async (e) => {
+            e.stopPropagation();
+            if (
+              await confirm({
+                confirmation: "Really delete Page '" + page.name + "'",
+              })
+            ) {
+              project.removePage(page.id);
+            }
+          }}
+        >
+          <Trash />
+        </IconButton>
+      </ListGroup.Item>
     </>
   );
 }

@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 import { GripVertical, Trash } from "react-bootstrap-icons";
 import { IconButton } from "../Inputs";
 import { SortableListItem } from "../SortableList";
+
 export function ItemListPropertyItem({
   item,
   idx,
