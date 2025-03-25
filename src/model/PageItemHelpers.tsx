@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { InlineEdit } from "@/util/InlineEdit";
 import { Form } from "react-bootstrap";
 import { GripVertical, Trash } from "react-bootstrap-icons";
 import { IconButton } from "../Inputs";
@@ -26,28 +26,31 @@ export function ItemListPropertyItem({
   selectionEditable: boolean;
   removeItem: (id: number) => void;
 }) {
-  const [editing, setEditing] = useState(false);
   return (
     <SortableListItem
       id={item.id}
       idx={idx}
-      onClick={() => itemEditable && setEditing(true)}
       style={{ display: "flex", alignItems: "center" }}
     >
       <GripVertical style={{ marginLeft: "-12px" }} />
-      {editing ? (
-        <Form.Control
-          autoFocus
-          value={item.label}
-          onChange={(e) => setLabel(e.target.value)}
-          onBlur={() => setEditing(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") setEditing(false);
-          }}
-        />
-      ) : (
-        item.label
-      )}
+      <InlineEdit
+        text={item.label}
+        disabled={!itemEditable}
+        edit={(stop) => (
+          <span onPointerDown={(e) => e.stopPropagation()}>
+            <Form.Control
+              autoFocus
+              value={item.label}
+              onChange={(e) => setLabel(e.target.value)}
+              onBlur={stop}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") stop();
+              }}
+            />
+          </span>
+        )}
+      />
+
       {selected !== undefined ? (
         <div
           onClick={(e) => {
