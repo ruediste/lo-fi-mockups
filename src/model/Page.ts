@@ -1,14 +1,12 @@
-import Flatbush from "flatbush";
-import { CanvasProjection } from "../Canvas";
 import { Selection } from "../Selection";
 import { Vec2d } from "../Vec2d";
 import { arraySwapInPlace } from "../utils";
 import { ModelEvent } from "./ModelEvent";
 import {
-  HorizontalSnapPosition,
+  HorizontalSnapBox,
   PageItem,
   PageItemData,
-  VerticalSnapPosition,
+  VerticalSnapBox,
 } from "./PageItem";
 import { Project } from "./Project";
 import { createPageItem } from "./createPageItem";
@@ -138,105 +136,8 @@ export class Page {
   }
 }
 
-export class SnapIndex {
-  horizontalPositions: HorizontalSnapPosition[] = [];
-  verticalPositions: VerticalSnapPosition[] = [];
-  horizontal?: Flatbush;
-  vertical?: Flatbush;
-  constructor(
-    page: Page,
-    projection: CanvasProjection,
-    filter: (item: PageItem) => boolean
-  ) {
-    [...page.masterItems, ...page.ownItems]
-      .filter(filter)
-      .forEach((item) =>
-        item.getSnapBoxes(
-          this.horizontalPositions,
-          this.verticalPositions,
-          projection.scale
-        )
-      );
-
-    if (this.horizontalPositions.length > 0) {
-      const horizontal = new Flatbush(this.horizontalPositions.length);
-
-      this.horizontalPositions.forEach((p) =>
-        horizontal.add(
-          p.x - p.snapRange,
-          p.y - p.snapRange,
-          p.x + p.width + p.snapRange,
-          p.y + p.snapRange
-        )
-      );
-      horizontal.finish();
-      this.horizontal = horizontal;
-    }
-
-    if (this.verticalPositions.length > 0) {
-      const vertical = new Flatbush(this.verticalPositions.length);
-      this.verticalPositions.forEach((p) =>
-        vertical.add(
-          p.x - p.snapRange,
-          p.y - p.snapRange,
-          p.x + p.snapRange,
-          p.y + p.height + p.snapRange
-        )
-      );
-      vertical.finish();
-      this.vertical = vertical;
-    }
-  }
-
-  snapItems(
-    items: PageItem[],
-    currentOffset: { x: number; y: number },
-    viewToWorld: number
-  ) {
-    const h: HorizontalSnapPosition[] = [];
-    const v: VerticalSnapPosition[] = [];
-    items.forEach((item) => item.getSnapBoxes(h, v, viewToWorld));
-
-    return this.snapBoxes(h, v, currentOffset);
-  }
-
-  snapBoxes(
-    h: HorizontalSnapPosition[],
-    v: VerticalSnapPosition[],
-    currentOffset: { x: number; y: number }
-  ) {
-    let deltaY: number | undefined = undefined;
-    let deltaX: number | undefined = undefined;
-
-    for (const pos of h) {
-      const indices = this.horizontal?.search(
-        pos.x - currentOffset.x,
-        pos.y - currentOffset.y,
-        pos.x + pos.width - currentOffset.x,
-        pos.y - currentOffset.y
-      );
-      for (const idx of indices ?? []) {
-        const otherPos = this.horizontalPositions[idx];
-        const delta = otherPos.y - (pos.y - currentOffset.y);
-        if (deltaY === undefined || Math.abs(deltaY) > Math.abs(delta))
-          deltaY = delta;
-      }
-    }
-
-    for (const pos of v) {
-      const indices = this.vertical?.search(
-        pos.x - currentOffset.x,
-        pos.y - currentOffset.y,
-        pos.x - currentOffset.x,
-        pos.y + pos.height - currentOffset.y
-      );
-      for (const idx of indices ?? []) {
-        const otherPos = this.verticalPositions[idx];
-        const delta = otherPos.x - (pos.x - currentOffset.x);
-        if (deltaX === undefined || Math.abs(deltaX) > Math.abs(delta))
-          deltaX = delta;
-      }
-    }
-    return new Vec2d(deltaX ?? 0, deltaY ?? 0);
-  }
+export interface SnapResult {
+  offset: Vec2d;
+  h?: HorizontalSnapBox;
+  v?: VerticalSnapBox;
 }

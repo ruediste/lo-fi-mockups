@@ -1,3 +1,15 @@
+export interface SnapConfiguration {
+  snapRange: number;
+  snapMargin: number;
+  snapSideLength: number;
+}
+
+export const snapConfiguration: SnapConfiguration = {
+  snapRange: 16,
+  snapMargin: 12,
+  snapSideLength: 100,
+};
+
 export const widgetTheme = {
   strokeWidth: 1,
   stroke: "#c9c9c9",

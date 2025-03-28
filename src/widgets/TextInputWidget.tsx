@@ -1,6 +1,11 @@
+import {
+  HorizontalSnapBox,
+  SnapBoxesArgs,
+  SnapReferencesArgs,
+} from "@/model/PageItem";
 import { StringProperty } from "../model/PageItemProperty";
 import { WidthWidget } from "./Widget";
-import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
+import { snapConfiguration, widgetRectAttrs, widgetTheme } from "./widgetTheme";
 const margin = widgetTheme.margin;
 
 export class TextInputWidget extends WidthWidget {
@@ -8,14 +13,6 @@ export class TextInputWidget extends WidthWidget {
 
   labelText = new StringProperty(this, "label", "Label", "Name");
   text = new StringProperty(this, "text", "Text", "Joe");
-
-  // get boundingBox(): Rectangle {
-  //   return {
-  //     ...this.position,
-  //     width: Math.max(100, getTextWidth(this.text.get()) + 2 * margin),
-  //     height: widgetTheme.fontSize + 2 * margin,
-  //   };
-  // }
 
   renderContent(): React.ReactNode {
     const box = this.boundingBox;
@@ -40,12 +37,34 @@ export class TextInputWidget extends WidthWidget {
       </>
     );
   }
+
   override initializeAfterAdd(): void {
     this.box = {
       x: 0,
       y: 0,
       width: 100,
-      height: widgetTheme.fontSize + 2 * margin,
+      height: widgetTheme.fontSize + 2 * widgetTheme.margin,
     };
+  }
+
+  override getSnapBoxes(args: SnapBoxesArgs): void {
+    super.getSnapBoxes(args);
+    const box = this.box;
+    args.horizontal.push(
+      new HorizontalSnapBox(
+        box.x,
+        box.y - widgetTheme.fontSize - snapConfiguration.snapMargin,
+        box.width
+      )
+    );
+  }
+  override getSnapReferences(args: SnapReferencesArgs): void {
+    super.getSnapReferences(args);
+    const box = this.box;
+    args.top.push({
+      x: box.x,
+      y: box.y - widgetTheme.fontSize,
+      width: box.width,
+    });
   }
 }

@@ -1,10 +1,15 @@
+import {
+  HorizontalSnapBox,
+  SnapBoxesArgs,
+  SnapReferencesArgs,
+} from "@/model/PageItem";
 import { ReactNode } from "react";
 import {
   ItemListProperty,
   ItemListSelectionProperty,
 } from "../model/ItemListProperty";
 import { BoxWidget } from "./Widget";
-import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
+import { snapConfiguration, widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
 export class TabsWidget extends BoxWidget {
@@ -101,5 +106,27 @@ export class TabsWidget extends BoxWidget {
     ]);
 
     this.itemListSelection.setSelection(itemId, true);
+  }
+
+  override getSnapBoxes(args: SnapBoxesArgs): void {
+    super.getSnapBoxes(args);
+    const box = this.box;
+    args.horizontal.push(
+      new HorizontalSnapBox(
+        box.x,
+        box.y + widgetTheme.fontSize + 4 + snapConfiguration.snapMargin,
+        box.width
+      )
+    );
+  }
+
+  override getSnapReferences(args: SnapReferencesArgs): void {
+    super.getSnapReferences(args);
+    const box = this.box;
+    args.top.push({
+      x: box.x,
+      y: box.y + widgetTheme.fontSize + 4,
+      width: box.width,
+    });
   }
 }

@@ -21,7 +21,7 @@ export abstract class Widget extends PageItem {
 }
 
 export abstract class BoxWidget extends Widget {
-  private boxInteraction = new BoxWidgetInteraction(this);
+  protected boxInteraction = new BoxWidgetInteraction(this);
 
   get box() {
     return this.boxInteraction.box.get();
