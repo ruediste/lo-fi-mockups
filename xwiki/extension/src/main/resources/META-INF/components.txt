@@ -1,0 +1,5 @@
+com.github.ruediste.internal.ExampleMacro
+com.github.ruediste.internal.WebJarsResourceReferenceResolver
+com.github.ruediste.internal.WebjarsResourceReferenceSerializer
+com.github.ruediste.internal.WebJarsResourceReferenceHandler
+com.github.ruediste.internal.LoFiScriptService

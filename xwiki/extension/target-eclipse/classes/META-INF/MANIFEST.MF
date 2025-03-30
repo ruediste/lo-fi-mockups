@@ -1,0 +1,29 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1743282013323
+Build-Jdk-Spec: 21
+Bundle-Description: Integrate LoFi Mockup with XWiki
+Bundle-DocURL: https://xwiki.org/
+Bundle-License: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+Bundle-ManifestVersion: 2
+Bundle-Name: LoFi Mockup
+Bundle-SymbolicName: com.github.ruediste.lo-fi-mockups.xwiki-extension
+Bundle-Vendor: XWiki
+Bundle-Version: 1.0.0.SNAPSHOT
+Created-By: Apache Maven Bundle Plugin 5.1.9
+Export-Package: com.github.ruediste;uses:="org.xwiki.model.reference,org
+ .xwiki.properties.annotation";version="1.0.0"
+Implementation-Title: LoFi Mockup
+Implementation-Vendor: XWiki
+Implementation-Version: 1.0.0-SNAPSHOT
+Import-Package: com.github.ruediste,java.lang,java.util,javax.inject,org
+ .xwiki.component.annotation;version="[16.10,17)",org.xwiki.model.refere
+ nce;version="[16.10,17)",org.xwiki.properties.annotation;version="[16.1
+ 0,17)",org.xwiki.rendering.block;version="[16.10,17)",org.xwiki.renderi
+ ng.macro;version="[16.10,17)",org.xwiki.rendering.transformation;versio
+ n="[16.10,17)"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=17))"
+Specification-Title: LoFi Mockup
+Specification-Vendor: XWiki
+Specification-Version: 1.0
+Tool: Bnd-6.3.1.202206071316
+XWiki-Extension-Id: com.github.ruediste.lo-fi-mockups:xwiki-extension
