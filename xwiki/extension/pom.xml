@@ -10,7 +10,7 @@
   </parent> -->
   <groupId>com.github.ruediste.lo-fi-mockups</groupId>
   <artifactId>xwiki-extension</artifactId>
-  <version>1.0.8-SNAPSHOT</version>
+  <version>1.0.16-SNAPSHOT</version>
   <name>LoFi Mockup</name>
   <description>Integrate LoFi Mockup with XWiki</description>
   <properties>
@@ -48,6 +48,16 @@
     <dependency>
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-resource-servlet</artifactId>
+      <version>${xwiki.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-rest-server</artifactId>
+      <version>${xwiki.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-rest-api</artifactId>
       <version>${xwiki.version}</version>
     </dependency>
 
