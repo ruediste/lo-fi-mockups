@@ -24,6 +24,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  server: {
+    open: true,
+    proxy: {
+      "/xwikiApi": {
+        target: "http://localhost:8078",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/xwikiApi/, ""),
+      },
+    },
+  },
   css: {
     preprocessorOptions: {
       scss: {

@@ -1,17 +1,20 @@
 import { CanvasProjection } from "./Canvas";
 import { Project, ProjectData } from "./model/Project";
 
+import saveAs from "file-saver";
 import { useMemo, useRef } from "react";
-import { Spinner, Tab, Tabs } from "react-bootstrap";
+import { Button, Spinner, Tab, Tabs } from "react-bootstrap";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { BrowserRouter, Route, Routes } from "react-router";
 import { Editor } from "./Editor";
+import { useConst, useRerenderOnEvent } from "./hooks";
 import { ItemProperties } from "./ItemProperties";
 import { Pages } from "./Pages";
 import { Palette } from "./Palette";
-import { Selection } from "./Selection";
-import { useConst, useRerenderOnEvent } from "./hooks";
 import { repository } from "./repository";
+import { Selection } from "./Selection";
 import "./widgets/PageItemTypeRegistry";
+import { XwikiPageMockups } from "./XwikiPageMockups";
 
 function throttle<T extends (...args: any[]) => void>(
   func: T,
@@ -67,7 +70,14 @@ function MainApp({ projectData }: { projectData: ProjectData }) {
           padding: "8px",
         }}
       >
-        <span style={{ fontSize: "24px" }}>LoFi Mockup</span>
+        <span style={{ fontSize: "24px" }}>LoFi Mockup</span>{" "}
+        <Button
+          onClick={async () => {
+            saveAs(await repository.createZip(), "download.zip");
+          }}
+        >
+          Download
+        </Button>
       </div>
 
       <PanelGroup
@@ -136,7 +146,7 @@ function MainApp({ projectData }: { projectData: ProjectData }) {
   );
 }
 
-export default function App() {
+function WaitForRepository() {
   useRerenderOnEvent(repository.onChange);
   if (repository.projectData === undefined)
     return (
@@ -145,4 +155,15 @@ export default function App() {
       </Spinner>
     );
   else return <MainApp projectData={repository.projectData} />;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<WaitForRepository />} />
+        <Route path="/xwiki" element={<XwikiPageMockups />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }

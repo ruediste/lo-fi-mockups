@@ -1,3 +1,4 @@
+import JSZip from "jszip";
 import { ModelEvent } from "./model/ModelEvent";
 import { ProjectData } from "./model/Project";
 
@@ -50,6 +51,12 @@ class Repository {
     }
 
     this.onChange.notify();
+  }
+
+  async createZip() {
+    const zip = new JSZip();
+    zip.file("project.json", JSON.stringify(this.projectData));
+    return await zip.generateAsync({ type: "blob" });
   }
 }
 

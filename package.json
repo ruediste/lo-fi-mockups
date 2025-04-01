@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit --watch --project tsconfig.app.json",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "jest --watch"
+    "test": "jest --watch",
+    "build-webjar": "tsc -b && vite build --base=./ && rm -rf xwiki/webjar/src/main/resources && mkdir -p xwiki/webjar/src/main/resources && cp -r dist/* xwiki/webjar/src/main/resources/"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -24,16 +25,19 @@
     "file-saver": "^2.0.5",
     "flatbush": "^4.4.0",
     "idb": "^8.0.2",
+    "jszip": "^3.10.1",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
     "react-bootstrap-icons": "^1.11.5",
     "react-confirm": "^0.3.0",
     "react-dom": "^19.0.0",
     "react-observe-size": "^0.3.1",
-    "react-resizable-panels": "^2.1.7"
+    "react-resizable-panels": "^2.1.7",
+    "react-router": "^7.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
+    "@types/file-saver": "^2.0.7",
     "@types/jest": "^29.5.14",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
