@@ -5,7 +5,7 @@
 
   <groupId>com.github.ruediste.lo-fi-mockups</groupId>
   <artifactId>extension-parent</artifactId>
-  <version>1.0.27-SNAPSHOT</version>
+  <version>1.0.35-SNAPSHOT</version>
 
   <packaging>pom</packaging>
   <modules>

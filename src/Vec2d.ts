@@ -39,6 +39,19 @@ export class Vec2d {
     });
     return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   }
+  static boundingBoxRect(...items: Rectangle[]): Rectangle {
+    let minX = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+    items.forEach((item) => {
+      if (minX > item.x) minX = item.x;
+      if (maxX < item.x + item.width) maxX = item.x + item.width;
+      if (minY > item.y) minY = item.y;
+      if (maxY < item.y + item.height) maxY = item.y + item.height;
+    });
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  }
 
   add(v: { x: number; y: number }) {
     return new Vec2d(this.x + v.x, this.y + v.y);

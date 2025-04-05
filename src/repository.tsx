@@ -1,8 +1,14 @@
 import JSZip from "jszip";
-import { ProjectData } from "./model/Project";
+import { Project, ProjectData } from "./model/Project";
 
 import { DBSchema, IDBPDatabase, openDB } from "idb";
+import { flushSync } from "react-dom";
+import { createRoot } from "react-dom/client";
+import { CanvasProjection } from "./Canvas";
+import { RenderPageItems } from "./Editor";
 import { ModelEvent } from "./model/ModelEvent";
+import { Vec2d } from "./Vec2d";
+import { Rectangle } from "./widgets/Widget";
 
 interface MyDB extends DBSchema {
   project: {
@@ -65,6 +71,42 @@ class Repository {
   async createZip() {
     const zip = new JSZip();
     zip.file("project.json", JSON.stringify(this.projectData));
+
+    const data = { ...this.projectData };
+    const project = new Project(data, () => {});
+    const projection = new CanvasProjection();
+    data.pages.forEach((pageData, pageNr) => {
+      project.selectPage(pageData);
+      const page = project.currentPage!;
+      const rootElement = document.createElement("svg");
+      const root = createRoot(rootElement);
+      flushSync(() => {
+        root.render(<RenderPageItems page={page} projection={projection} />);
+      });
+      const items = page.masterItems.concat(page.ownItems);
+      let drawBox: Rectangle | undefined;
+      if (items.length > 0) {
+        const margin = 32;
+        const box = Vec2d.boundingBoxRect(
+          ...items.map((item) => item.boundingBox)
+        );
+
+        drawBox = {
+          x: box.x - margin,
+          y: box.y - margin,
+          width: box.width + 2 * margin,
+          height: box.height + 2 * margin,
+        };
+      } else drawBox = { x: 0, y: 0, width: 100, height: 100 };
+
+      zip.file(
+        "pages/" + pageNr + ".svg",
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${drawBox.x} ${drawBox.y} ${drawBox.width} ${drawBox.height}">` +
+          rootElement.innerHTML +
+          "</svg>"
+      );
+    });
+
     return await zip.generateAsync({ type: "blob" });
   }
 

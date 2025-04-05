@@ -15,17 +15,16 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.PageReference;
 import org.xwiki.rest.XWikiResource;
 
-@Component("com.github.ruediste.internal.LoFiRestResource")
+@Component("com.github.ruediste.lofi.xwiki.LoFiRestResource")
 @Path("/lofimockups/")
 public class LoFiRestResource extends XWikiResource {
 
-  // http://localhost:8078/rest/lofimockups/page?wiki=xwiki&page=LoFiTest&attachment=testProject.zip&zipPath=testProject%2Ftest.jpg
+  // http://localhost:8078/rest/lofimockups/page?wiki=xwiki&page=LoFiTest&attachment=testProject.zip&pageNr=0
   @GET
   @Path("page")
-  @Produces("image/jpeg")
+  @Produces("image/svg+xml")
   public InputStream get(@QueryParam("wiki") String wiki, @QueryParam("page") String page,
-      @QueryParam("attachment") String attachmentName, @QueryParam("zipPath") String zipPath) {
-    System.out.println("get() ");
+      @QueryParam("attachment") String attachmentName, @QueryParam("pageNr") int pageNr) {
     try {
       var xcontext = xcontextProvider.get();
       var pageRef = new PageReference(wiki, List.of(page.split("/")));
@@ -34,9 +33,9 @@ public class LoFiRestResource extends XWikiResource {
       var is = attachment.getContentInputStream(xcontext);
       var zis = new ZipInputStream(is);
       ZipEntry entry;
+      var zipPath = "pages/" + pageNr + ".svg";
       while ((entry = zis.getNextEntry()) != null) {
 
-        System.out.println("getResourceStream() <" + entry.getName() + ">");
         if (entry.getName().equals(zipPath)) {
           return new InputStream() {
             @Override

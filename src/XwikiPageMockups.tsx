@@ -2,7 +2,6 @@ import { MouseEventHandler, Suspense, use, useState } from "react";
 import {
   Alert,
   Button,
-  CloseButton,
   Form,
   ListGroup,
   Spinner,
@@ -151,12 +150,12 @@ export function XwikiPageMockupsIndex({ page }: { page: string }) {
             >
               <Stack direction="horizontal">
                 <span>LoFi Mockups in </span>
-                {document.referrer != "" && (
+                {/* {document.referrer != "" && (
                   <CloseButton
                     style={{ marginLeft: "auto" }}
                     onClick={() => history.back()}
                   />
-                )}
+                )} */}
               </Stack>
               <h1> {pageData.title}</h1>
               {attachments.length == 0 ? (

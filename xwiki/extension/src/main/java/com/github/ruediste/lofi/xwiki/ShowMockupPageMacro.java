@@ -19,18 +19,22 @@
  */
 package com.github.ruediste.lofi.xwiki;
 
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.ParagraphBlock;
-import org.xwiki.rendering.block.WordBlock;
+import org.xwiki.rendering.block.RawBlock;
 import org.xwiki.rendering.macro.AbstractMacro;
 import org.xwiki.rendering.macro.MacroExecutionException;
+import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.rendering.transformation.MacroTransformationContext;
 
 /**
@@ -40,6 +44,10 @@ import org.xwiki.rendering.transformation.MacroTransformationContext;
 @Named("lo-fi-mockup")
 @Singleton
 public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParameters> {
+
+    @Inject
+    private DocumentAccessBridge documentAccessBridge;
+
     /**
      * The description of the macro.
      */
@@ -49,7 +57,7 @@ public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParame
      * Create and initialize the descriptor of the macro.
      */
     public ShowMockupPageMacro() {
-        super("Show LoFi Mockup", DESCRIPTION, ShowMockupPageMacro.class);
+        super("Show LoFi Mockup", DESCRIPTION, ShowMockupPageMacroParameters.class);
     }
 
     /**
@@ -64,7 +72,9 @@ public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParame
             throws MacroExecutionException {
         List<Block> result;
 
-        List<Block> wordBlockAsList = Arrays.<Block>asList(new WordBlock(parameters.getParameter()));
+        List<Block> wordBlockAsList = List.of(new RawBlock("<img src=\""
+                + getPageImageUrl(parameters.getMockup().getName(), parameters.getPageNr() - 1) + "\"/>",
+                Syntax.XHTML_5));
 
         // Handle both inline mode and standalone mode.
         if (context.isInline()) {
@@ -86,5 +96,19 @@ public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParame
      */
     public boolean supportsInlineMode() {
         return true;
+    }
+
+    public String getPageImageUrl(String attachment, int pageNr) {
+        try {
+            var document = documentAccessBridge.getCurrentDocumentReference();
+            var wiki = document.getWikiReference().getName();
+            var page = String.join("/", document.getSpaceReferences().stream().map(x -> x.getName()).toList());
+            return "/rest/lofimockups/page?wiki=" + URLEncoder.encode(wiki, "UTF-8")
+                    + "&page=" + URLEncoder.encode(page, "UTF-8") + "&attachment="
+                    + URLEncoder.encode(attachment, "UTF-8")
+                    + "&pageNr=" + pageNr;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

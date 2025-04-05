@@ -27,27 +27,27 @@ import org.xwiki.properties.annotation.PropertyMandatory;
  * Parameters for the {@link com.github.ruediste.lofi.xwiki.ExampleMacro} Macro.
  */
 public class ShowMockupPageMacroParameters {
-    private String parameter;
+    private int pageNr;
 
-    public String getParameter() {
-        return this.parameter;
+    public int getPageNr() {
+        return this.pageNr;
     }
 
     @PropertyMandatory
-    @PropertyDescription("Example parameter")
-    public void setParameter(String parameter) {
-        this.parameter = parameter;
+    @PropertyDescription("Number of the page to show")
+    public void setPageNr(int pageNr) {
+        this.pageNr = pageNr;
     }
 
-    private AttachmentReference ref;
+    private AttachmentReference mockup;
 
-    public AttachmentReference getRef() {
-        return ref;
+    public AttachmentReference getMockup() {
+        return mockup;
     }
 
     @PropertyMandatory
-    @PropertyDescription("Attachment")
-    public void setRef(AttachmentReference value) {
-        ref = value;
+    @PropertyDescription("Attachment containing the Mockup")
+    public void setMockup(AttachmentReference value) {
+        mockup = value;
     }
 }

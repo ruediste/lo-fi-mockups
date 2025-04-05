@@ -45,22 +45,15 @@ function MultiItemSelectionBox({
   let drawBox: Rectangle | undefined = undefined;
   if (page.selection.size > 1) {
     const margin = projection.lengthToWorld(32);
-    let minX = Number.POSITIVE_INFINITY;
-    let maxX = Number.NEGATIVE_INFINITY;
-    let minY = Number.POSITIVE_INFINITY;
-    let maxY = Number.NEGATIVE_INFINITY;
-    page.selection.items.forEach((item) => {
-      const box = item.boundingBox;
-      if (minX > box.x) minX = box.x;
-      if (maxX < box.x + box.width) maxX = box.x + box.width;
-      if (minY > box.y) minY = box.y;
-      if (maxY < box.y + box.height) maxY = box.y + box.height;
-    });
+    const box = Vec2d.boundingBoxRect(
+      ...[...page.selection.items.values()].map((item) => item.boundingBox)
+    );
+
     drawBox = {
-      x: minX - margin,
-      y: minY - margin,
-      width: maxX - minX + 2 * margin,
-      height: maxY - minY + 2 * margin,
+      x: box.x - margin,
+      y: box.y - margin,
+      width: box.width + 2 * margin,
+      height: box.height + 2 * margin,
     };
   } else drawBox = undefined;
 
@@ -77,6 +70,18 @@ function MultiItemSelectionBox({
       />
     )
   );
+}
+
+export function RenderPageItems({
+  page,
+  projection,
+}: {
+  page: Page;
+  projection: CanvasProjection;
+}) {
+  return page.masterItems
+    .concat(page.ownItems)
+    .map((item) => <RenderItem key={item.data.id} {...{ item, projection }} />);
 }
 
 export function Editor({
@@ -186,9 +191,7 @@ export function Editor({
       }}
     >
       <MultiItemSelectionBox {...{ projection, page }} />
-      {page.masterItems.concat(page.ownItems).map((item) => (
-        <RenderItem key={item.data.id} {...{ item, projection }} />
-      ))}
+      <RenderPageItems {...{ projection, page }} />
       {dragSelectionBox && (
         <rect {...attrs} {...dragSelectionBox} fill="transparent" />
       )}

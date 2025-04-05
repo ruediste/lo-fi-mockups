@@ -55,7 +55,7 @@ export function useLoader<T>(load: () => Promise<T>, deps?: any[]) {
     return () => {
       cancelled = true;
     };
-  }, [refresh, ...(deps ?? [])]);
+  }, [refreshTrigger, ...(deps ?? [])]);
   return state;
 }
 
