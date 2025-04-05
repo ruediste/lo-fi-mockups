@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package com.github.ruediste.internal;
+package com.github.ruediste.lofi.xwiki;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,25 +33,23 @@ import org.xwiki.rendering.macro.AbstractMacro;
 import org.xwiki.rendering.macro.MacroExecutionException;
 import org.xwiki.rendering.transformation.MacroTransformationContext;
 
-import com.github.ruediste.ExampleMacroParameters;
-
 /**
  * Example Macro.
  */
 @Component
 @Named("lo-fi-mockup")
 @Singleton
-public class ExampleMacro extends AbstractMacro<ExampleMacroParameters> {
+public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParameters> {
     /**
      * The description of the macro.
      */
-    private static final String DESCRIPTION = "Render a Lo Fi Mockup";
+    private static final String DESCRIPTION = "Render a page of a Lo Fi Mockup";
 
     /**
      * Create and initialize the descriptor of the macro.
      */
-    public ExampleMacro() {
-        super("LoFi Mockup", DESCRIPTION, ExampleMacroParameters.class);
+    public ShowMockupPageMacro() {
+        super("Show LoFi Mockup", DESCRIPTION, ShowMockupPageMacro.class);
     }
 
     /**
@@ -61,7 +59,8 @@ public class ExampleMacro extends AbstractMacro<ExampleMacroParameters> {
      *      MacroTransformationContext)
      */
     @Override
-    public List<Block> execute(ExampleMacroParameters parameters, String content, MacroTransformationContext context)
+    public List<Block> execute(ShowMockupPageMacroParameters parameters, String content,
+            MacroTransformationContext context)
             throws MacroExecutionException {
         List<Block> result;
 

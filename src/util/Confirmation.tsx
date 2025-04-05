@@ -8,6 +8,7 @@ export interface Props {
   cancelLabel?: string;
   title?: string;
   confirmation?: string;
+  okDangerous?: boolean;
 }
 
 const Confirmation: ConfirmDialog<Props, boolean> = (props) => (
@@ -23,10 +24,14 @@ const Confirmation: ConfirmDialog<Props, boolean> = (props) => (
       </Modal.Header>
       <Modal.Body>{props.confirmation}</Modal.Body>
       <Modal.Footer>
-        <Button onClick={() => props.proceed(false)}>
+        <Button onClick={() => props.proceed(false)} variant="secondary">
           {props.cancelLabel || "cancel"}
         </Button>
-        <Button className="button-l" onClick={() => props.proceed(true)}>
+        <Button
+          className="button-l"
+          onClick={() => props.proceed(true)}
+          variant={props.okDangerous ? "danger" : "primary"}
+        >
           {props.okLabel || "ok"}
         </Button>
       </Modal.Footer>

@@ -1,4 +1,4 @@
-package com.github.ruediste.internal;
+package com.github.ruediste.lofi.xwiki;
 
 import java.io.IOException;
 import java.io.InputStream;

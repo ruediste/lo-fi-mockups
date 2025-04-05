@@ -1,7 +1,4 @@
-com.github.ruediste.internal.ExampleMacro
-com.github.ruediste.internal.WebJarsResourceReferenceResolver
-com.github.ruediste.internal.WebjarsResourceReferenceSerializer
-com.github.ruediste.internal.WebJarsResourceReferenceHandler
-com.github.ruediste.internal.LoFiScriptService
-com.github.ruediste.internal.AddMockupUiExtension
-com.github.ruediste.internal.LoFiRestResource
+com.github.ruediste.lofi.xwiki.ShowMockupPageMacro
+com.github.ruediste.lofi.xwiki.LoFiScriptService
+com.github.ruediste.lofi.xwiki.ManageMockupsUiExtension
+com.github.ruediste.lofi.xwiki.LoFiRestResource

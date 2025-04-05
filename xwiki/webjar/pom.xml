@@ -3,12 +3,17 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.github.ruediste.lo-fi-mockups</groupId>
+  <parent>
+    <groupId>com.github.ruediste.lo-fi-mockups</groupId>
+    <artifactId>extension-parent</artifactId>
+    <version>1.0.27-SNAPSHOT</version>
+    <relativePath>../</relativePath>
+  </parent>
+
   <artifactId>lo-fi-mockups-webjar</artifactId>
-  <version>1.0.2-SNAPSHOT</version>
 
   <!--
-  http://localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.1-SNAPSHOT/index.html -->
+  http://localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.23-SNAPSHOT/index.html -->
 
   <build>
     <plugins>

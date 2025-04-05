@@ -2,10 +2,10 @@ import { CanvasProjection } from "./Canvas";
 import { Project, ProjectData } from "./model/Project";
 
 import saveAs from "file-saver";
-import { useMemo, useRef } from "react";
-import { Button, Spinner, Tab, Tabs } from "react-bootstrap";
+import { Suspense, use, useMemo, useRef } from "react";
+import { Button, Spinner, Stack, Tab, Tabs } from "react-bootstrap";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { HashRouter, Route, Routes } from "react-router";
 import { Editor } from "./Editor";
 import { useConst, useRerenderOnEvent } from "./hooks";
 import { ItemProperties } from "./ItemProperties";
@@ -14,7 +14,7 @@ import { Palette } from "./Palette";
 import { repository } from "./repository";
 import { Selection } from "./Selection";
 import "./widgets/PageItemTypeRegistry";
-import { XwikiPageMockups } from "./XwikiPageMockups";
+import { XwikiControls, XwikiPageMockups } from "./XwikiPageMockups";
 
 function throttle<T extends (...args: any[]) => void>(
   func: T,
@@ -34,14 +34,19 @@ function throttle<T extends (...args: any[]) => void>(
 }
 
 const save = throttle(async () => {
-  await repository.db!.put("project", repository.projectData!, "default");
+  await (await repository).save();
 }, 1000);
 
-function MainApp({ projectData }: { projectData: ProjectData }) {
+export function MainApp({
+  projectData,
+  downloadName,
+}: {
+  projectData: ProjectData;
+  downloadName?: string;
+}) {
   const project = useMemo(() => {
-    const result = new Project(projectData, () => save());
-    return result;
-  }, []);
+    return new Project(projectData, () => save());
+  }, [projectData]);
 
   useRerenderOnEvent(project.onChange);
   useRerenderOnEvent(project.currentPage?.onChange);
@@ -71,13 +76,19 @@ function MainApp({ projectData }: { projectData: ProjectData }) {
         }}
       >
         <span style={{ fontSize: "24px" }}>LoFi Mockup</span>{" "}
-        <Button
-          onClick={async () => {
-            saveAs(await repository.createZip(), "download.zip");
-          }}
-        >
-          Download
-        </Button>
+        <Stack direction="horizontal" style={{ marginLeft: "auto" }} gap={3}>
+          <Button
+            onClick={async () => {
+              saveAs(
+                await (await repository).createZip(),
+                downloadName ?? "project.lofi"
+              );
+            }}
+          >
+            Download
+          </Button>
+          <XwikiControls />
+        </Stack>
       </div>
 
       <PanelGroup
@@ -146,24 +157,21 @@ function MainApp({ projectData }: { projectData: ProjectData }) {
   );
 }
 
-function WaitForRepository() {
-  useRerenderOnEvent(repository.onChange);
-  if (repository.projectData === undefined)
-    return (
-      <Spinner animation="border" role="status">
-        <span className="visually-hidden">Loading...</span>
-      </Spinner>
-    );
-  else return <MainApp projectData={repository.projectData} />;
+export function WaitForRepository() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <MainApp projectData={use(repository).projectData} />
+    </Suspense>
+  );
 }
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<WaitForRepository />} />
         <Route path="/xwiki" element={<XwikiPageMockups />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

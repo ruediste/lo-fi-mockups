@@ -1,8 +1,8 @@
 import JSZip from "jszip";
-import { ModelEvent } from "./model/ModelEvent";
 import { ProjectData } from "./model/Project";
 
 import { DBSchema, IDBPDatabase, openDB } from "idb";
+import { ModelEvent } from "./model/ModelEvent";
 
 interface MyDB extends DBSchema {
   project: {
@@ -16,41 +16,50 @@ interface MyDB extends DBSchema {
 }
 
 class Repository {
-  onChange = new ModelEvent();
+  onChanged = new ModelEvent();
 
-  db?: IDBPDatabase<MyDB>;
-  projectData: ProjectData | undefined;
+  constructor(
+    public projectData: ProjectData,
+    private db: IDBPDatabase<MyDB>
+  ) {}
 
-  constructor() {
-    this.initialize();
-  }
-
-  async initialize() {
-    this.db = await openDB<MyDB>("test", 1, {
+  static async create(): Promise<Repository> {
+    const db = await openDB<MyDB>("test", 1, {
       upgrade(db) {
         db.createObjectStore("project");
         db.createObjectStore("images");
       },
     });
 
-    this.projectData = await this.db.get("project", "default");
-    if (this.projectData === undefined) {
-      this.projectData = {
-        nextId: 2,
-        currentPageId: 1,
-        pages: [
-          {
-            id: 1,
-            name: "Page 1",
-            items: [],
-            propertyValues: {},
-            overrideableProperties: {},
-          },
-        ],
-      };
-    }
+    const projectData =
+      (await db.get("project", "default")) ?? Repository.emptyData();
 
-    this.onChange.notify();
+    return new Repository(projectData, db);
+  }
+
+  private static emptyData(): ProjectData {
+    return {
+      nextId: 2,
+      currentPageId: 1,
+      pages: [
+        {
+          id: 1,
+          name: "Page 1",
+          items: [],
+          propertyValues: {},
+          overrideableProperties: {},
+        },
+      ],
+    };
+  }
+
+  clear() {
+    this.projectData = Repository.emptyData();
+    this.onChanged.notify();
+  }
+
+  async save() {
+    await this.db!.put("project", await this.projectData, "default");
   }
 
   async createZip() {
@@ -58,6 +67,14 @@ class Repository {
     zip.file("project.json", JSON.stringify(this.projectData));
     return await zip.generateAsync({ type: "blob" });
   }
+
+  async loadZip(data: Blob) {
+    const zip = await JSZip.loadAsync(data, {});
+    this.projectData = JSON.parse(
+      await zip.file("project.json")!.async("string")
+    );
+    this.onChanged.notify();
+  }
 }
 
-export const repository = new Repository();
+export const repository = Repository.create();

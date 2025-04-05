@@ -17,16 +17,16 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package com.github.ruediste;
+package com.github.ruediste.lofi.xwiki;
 
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.properties.annotation.PropertyDescription;
 import org.xwiki.properties.annotation.PropertyMandatory;
 
 /**
- * Parameters for the {@link com.github.ruediste.internal.ExampleMacro} Macro.
+ * Parameters for the {@link com.github.ruediste.lofi.xwiki.ExampleMacro} Macro.
  */
-public class ExampleMacroParameters {
+public class ShowMockupPageMacroParameters {
     private String parameter;
 
     public String getParameter() {
