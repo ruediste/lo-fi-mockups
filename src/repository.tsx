@@ -78,7 +78,10 @@ class Repository {
     data.pages.forEach((pageData, pageNr) => {
       project.selectPage(pageData);
       const page = project.currentPage!;
-      const rootElement = document.createElement("svg");
+      const rootElement = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       const root = createRoot(rootElement);
       flushSync(() => {
         root.render(<RenderPageItems page={page} projection={projection} />);

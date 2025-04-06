@@ -1,18 +1,16 @@
 import useSearchHref from "@/util/useSearchHref";
-import { Suspense, use, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Button,
   CloseButton,
   Form,
   ListGroup,
-  Spinner,
   Stack,
 } from "react-bootstrap";
 import { Trash } from "react-bootstrap-icons";
 import { useSearchParams } from "react-router";
 import { MainApp } from "../App";
-import { ErrorBoundary } from "../ErrorBoundary";
 import { repository } from "../repository";
 import { confirm } from "../util/confirm";
 import { fetchData, fetchDataRaw, useLoader } from "../util/fetchData";
@@ -190,10 +188,7 @@ function OpenAttachment({
     <WithLoader data={data}>
       {(success) =>
         success ? (
-          <MainApp
-            projectData={use(repository).projectData}
-            downloadName={attachment}
-          />
+          <MainApp downloadName={attachment} />
         ) : (
           <div>Loading Attachment Failed</div>
         )
@@ -211,15 +206,9 @@ export function XwikiPageMockups() {
     return <>No Page Specified</>;
   }
   console.log(searchParams, attachment);
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<Spinner />}>
-        {attachment ? (
-          <OpenAttachment {...{ attachment, page }} />
-        ) : (
-          <XwikiPageMockupsIndex {...{ page: page! }} />
-        )}
-      </Suspense>
-    </ErrorBoundary>
+  return attachment ? (
+    <OpenAttachment {...{ attachment, page }} />
+  ) : (
+    <XwikiPageMockupsIndex {...{ page: page! }} />
   );
 }

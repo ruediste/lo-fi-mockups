@@ -1,11 +1,13 @@
 import { CanvasProjection } from "./Canvas";
-import { Project, ProjectData } from "./model/Project";
+import { Project } from "./model/Project";
 
 import saveAs from "file-saver";
 import { Suspense, use, useMemo, useRef } from "react";
 import { Button, Spinner, Stack, Tab, Tabs } from "react-bootstrap";
+import Dropzone from "react-dropzone";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { HashRouter, Route, Routes } from "react-router";
+import { toast, ToastContainer } from "react-toastify";
 import { Editor } from "./Editor";
 import { useConst, useRerenderOnEvent } from "./hooks";
 import { ItemProperties } from "./ItemProperties";
@@ -38,13 +40,10 @@ const save = throttle(async () => {
   await (await repository).save();
 }, 1000);
 
-export function MainApp({
-  projectData,
-  downloadName,
-}: {
-  projectData: ProjectData;
-  downloadName?: string;
-}) {
+export function MainApp({ downloadName }: { downloadName?: string }) {
+  const repo = use(repository);
+  useRerenderOnEvent(repo.onChanged);
+  const projectData = repo.projectData;
   const project = useMemo(() => {
     return new Project(projectData, () => save());
   }, [projectData]);
@@ -88,6 +87,46 @@ export function MainApp({
           >
             Download
           </Button>
+          <Dropzone
+            onDropAccepted={async (acceptedFiles) => {
+              if (acceptedFiles.length < 1) {
+                return;
+              }
+              if (acceptedFiles.length > 1) {
+                toast.error("Multiple Files Dropped");
+                return;
+              }
+              if (!acceptedFiles[0].name.endsWith(".lofi")) {
+                toast.error("File has to end in '.lofi'");
+                return;
+              }
+              try {
+                await (await repository).loadZip(acceptedFiles[0]);
+              } catch (e) {
+                console.log(e);
+                toast.error("Loading " + acceptedFiles[0].name + " failed");
+              }
+              toast.success("File " + acceptedFiles[0].name + " loaded");
+            }}
+          >
+            {({ getRootProps, getInputProps, isDragActive }) => (
+              <div
+                {...getRootProps()}
+                style={{
+                  margin: "-4px",
+                  padding: "4px",
+                  ...(isDragActive
+                    ? {
+                        border: "1px dashed black",
+                      }
+                    : { border: "1px dashed transparent" }),
+                }}
+              >
+                <input {...getInputProps()} />
+                <Button>Upload</Button>
+              </div>
+            )}
+          </Dropzone>
           <XwikiControls />
         </Stack>
       </div>
@@ -158,21 +197,16 @@ export function MainApp({
   );
 }
 
-export function WaitForRepository() {
-  return (
-    <Suspense fallback={<Spinner />}>
-      <MainApp projectData={use(repository).projectData} />
-    </Suspense>
-  );
-}
-
 export default function App() {
   return (
     <HashRouter>
-      <Routes>
-        <Route path="/" element={<WaitForRepository />} />
-        <Route path="/xwiki" element={<XwikiPageMockups />} />
-      </Routes>
+      <Suspense fallback={<Spinner />}>
+        <Routes>
+          <Route path="/" element={<MainApp />} />
+          <Route path="/xwiki" element={<XwikiPageMockups />} />
+        </Routes>
+      </Suspense>
+      <ToastContainer autoClose={2000} />
     </HashRouter>
   );
 }
