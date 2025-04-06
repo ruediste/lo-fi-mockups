@@ -2,13 +2,8 @@ import { Button, Form } from "react-bootstrap";
 import { FormCheck } from "../Inputs";
 import { SortableList } from "../SortableList";
 import { PageItem } from "./PageItem";
-import { ItemListPropertyItem } from "./PageItemHelpers";
+import { Item, ItemListPropertyItem } from "./PageItemHelpers";
 import { PageItemProperty } from "./PageItemProperty";
-
-interface Item {
-  id: number;
-  label: string;
-}
 
 interface ItemListSelectionPropertyValue {
   multiSelection: boolean;
@@ -111,11 +106,17 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
                 key={item.id}
                 item={item}
                 idx={idx}
+                project={this.item.page.project}
                 itemEditable={this.isEditable}
                 selectionEditable={this.selection?.isEditable ?? false}
                 setLabel={(value) =>
                   this.modify((v) => {
                     v[idx].label = value;
+                  })
+                }
+                setLink={(value) =>
+                  this.modify((v) => {
+                    v[idx].link = value;
                   })
                 }
                 selected={

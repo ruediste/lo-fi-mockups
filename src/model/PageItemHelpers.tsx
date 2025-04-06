@@ -1,30 +1,39 @@
 import { InlineEdit } from "@/util/InlineEdit";
+import { InlinePageReferenceInput } from "@/util/PageReferenceInput";
 import { Form } from "react-bootstrap";
 import { GripVertical, Trash } from "react-bootstrap-icons";
 import { IconButton } from "../Inputs";
 import { SortableListItem } from "../SortableList";
+import { Project } from "./Project";
+
+export interface Item {
+  id: number;
+  label: string;
+  link?: number;
+}
 
 export function ItemListPropertyItem({
   item,
   idx,
   setLabel,
+  setLink,
   selected,
   setSelected,
   itemEditable,
   selectionEditable,
   removeItem,
+  project,
 }: {
-  item: {
-    id: number;
-    label: string;
-  };
+  item: Item;
   idx: number;
   setLabel: (value: string) => void;
+  setLink: (value: number | undefined) => void;
   selected?: boolean;
   setSelected?: (value: boolean) => void;
   itemEditable: boolean;
   selectionEditable: boolean;
   removeItem: (id: number) => void;
+  project: Project;
 }) {
   return (
     <SortableListItem
@@ -50,7 +59,13 @@ export function ItemListPropertyItem({
           </span>
         )}
       />
+      <div style={{ marginLeft: "auto" }}></div>
 
+      <InlinePageReferenceInput
+        project={project}
+        setPageId={(e) => setLink(e)}
+        pageId={item.link}
+      />
       {selected !== undefined ? (
         <div
           onClick={(e) => {
@@ -58,7 +73,6 @@ export function ItemListPropertyItem({
             if (selectionEditable) setSelected?.(!selected);
           }}
           style={{
-            marginLeft: "auto",
             paddingLeft: "20px",
             paddingRight: "10px",
             marginRight: "-10px",

@@ -1,3 +1,4 @@
+import { PageReferenceInput } from "@/util/PageReferenceInput";
 import React, { JSX } from "react";
 import { Form } from "react-bootstrap";
 import { NumberInput } from "../Inputs";
@@ -254,6 +255,27 @@ export class CheckboxProperty extends PageItemProperty<boolean> {
         checked={this.get()}
         onChange={(e) => this.set(e.target.checked)}
       />
+    );
+  }
+}
+
+export class PageReferenceProperty extends PageItemProperty<{
+  pageId?: number;
+}> {
+  constructor(item: PageItem, id: string, private label: string) {
+    super(item, id, {});
+  }
+
+  render(): JSX.Element {
+    return (
+      <Form.Group className="mb-3">
+        <Form.Label>{this.label}</Form.Label>
+        <PageReferenceInput
+          project={this.item.page.project}
+          pageId={this.get().pageId}
+          setPageId={(e) => this.set({ pageId: e })}
+        />
+      </Form.Group>
     );
   }
 }

@@ -1,4 +1,8 @@
-import { CheckboxProperty, StringProperty } from "../model/PageItemProperty";
+import {
+  CheckboxProperty,
+  PageReferenceProperty,
+  StringProperty,
+} from "../model/PageItemProperty";
 import { PositionWidget, Rectangle } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
@@ -10,6 +14,7 @@ export class ButtonWidget extends PositionWidget {
 
   text = new StringProperty(this, "text", "Text", "OK");
   secondary = new CheckboxProperty(this, "secondary", "Secondary", false);
+  link = new PageReferenceProperty(this, "link", "Link");
 
   get boundingBox(): Rectangle {
     return {

@@ -24,6 +24,7 @@ import { IconButton } from "./Inputs";
 import { PageData } from "./model/Page";
 import { Project } from "./model/Project";
 import { InlineEdit } from "./util/InlineEdit";
+import { InlinePageReferenceInput } from "./util/PageReferenceInput";
 
 function Page({
   page,
@@ -83,45 +84,11 @@ function Page({
           )}
         />
 
-        <InlineEdit
+        <InlinePageReferenceInput
           style={{ marginLeft: "auto" }}
-          text={masterPageName}
-          disabled={!selected}
-          edit={(stop) => (
-            <span
-              style={{ marginLeft: "auto" }}
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  stop();
-                }}
-              >
-                <Form.Select
-                  autoFocus
-                  value={page.masterPageId}
-                  onFocus={() => console.log("focus")}
-                  onBlur={() => stop()}
-                  onChange={(e) => {
-                    const index = e.target.selectedIndex;
-                    project.setMasterPage(
-                      page.id,
-                      index == 0 ? undefined : project.data.pages[index - 1].id
-                    );
-                    stop();
-                  }}
-                >
-                  <option value=""></option>
-                  {project.data.pages.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </Form.Select>
-              </form>
-            </span>
-          )}
+          project={project}
+          pageId={page.masterPageId}
+          setPageId={(e) => project.setMasterPage(page.id, e)}
         />
 
         <IconButton
