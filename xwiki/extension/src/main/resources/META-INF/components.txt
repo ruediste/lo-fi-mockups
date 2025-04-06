@@ -1,3 +1,5 @@
 com.github.ruediste.lofi.xwiki.ShowMockupPageMacro
 com.github.ruediste.lofi.xwiki.ManageMockupsUiExtension
 com.github.ruediste.lofi.xwiki.LoFiRestResource
+com.github.ruediste.lofi.xwiki.LoFiServiceImpl
+

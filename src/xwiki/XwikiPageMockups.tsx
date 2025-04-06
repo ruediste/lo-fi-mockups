@@ -1,40 +1,23 @@
-import { MouseEventHandler, Suspense, use, useState } from "react";
+import useSearchHref from "@/util/useSearchHref";
+import { Suspense, use, useState } from "react";
 import {
   Alert,
   Button,
+  CloseButton,
   Form,
   ListGroup,
   Spinner,
   Stack,
 } from "react-bootstrap";
 import { Trash } from "react-bootstrap-icons";
-import {
-  RelativeRoutingType,
-  To,
-  useHref,
-  useLocation,
-  useNavigate,
-  useSearchParams,
-} from "react-router";
-import { MainApp } from "./App";
-import { ErrorBoundary } from "./ErrorBoundary";
-import { repository } from "./repository";
-import { confirm } from "./util/confirm";
-import {
-  fetchData,
-  FetchDataArgs,
-  fetchDataRaw,
-  useLoader,
-} from "./util/fetchData";
-import { WithLoader, WithMultiData } from "./util/UseData";
-
-function xwiki<T>(args: FetchDataArgs): FetchDataArgs {
-  return {
-    ...args,
-    url: (import.meta.env.DEV ? "/xwikiApi/rest/" : "/rest/") + args.url,
-    basicAuth: { username: "admin", password: "admin" },
-  };
-}
+import { useSearchParams } from "react-router";
+import { MainApp } from "../App";
+import { ErrorBoundary } from "../ErrorBoundary";
+import { repository } from "../repository";
+import { confirm } from "../util/confirm";
+import { fetchData, fetchDataRaw, useLoader } from "../util/fetchData";
+import { WithLoader, WithMultiData } from "../util/UseData";
+import { xwiki } from "./xwikiUtils";
 
 // http://localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.23-SNAPSHOT/index.html?page=wikis%2Fxwiki%2Fspaces%2Ftest2%2Fspaces%2FLoFiTest%2Fpages%2FWebHome
 // http: //localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.1-SNAPSHOT/index.html
@@ -46,33 +29,6 @@ interface XwikiAttachments {
     name: string;
     hierarchy: { items: { name: string; type: string }[] };
   }[];
-}
-
-function useSearchHref(
-  to: To | ({ search?: { [key: string]: string | null } } & Omit<To, "search">),
-  relative?: {
-    relative?: RelativeRoutingType;
-  }
-): { href: string; onClick: MouseEventHandler<HTMLElement> } {
-  const location = useLocation();
-  const navigate = useNavigate();
-  if (typeof to === "object" && typeof to.search === "object") {
-    const search = new URLSearchParams(location.search);
-    for (const [key, value] of Object.entries(to.search)) {
-      if (value !== null) search.set(key, value);
-      else search.delete(key);
-    }
-    to = { ...to, search: search.toString() };
-  }
-  const href = useHref(to as any, relative);
-  return {
-    href,
-    onClick: (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      navigate(to as any, relative);
-    },
-  };
 }
 
 export function MockupListItem({
@@ -150,12 +106,12 @@ export function XwikiPageMockupsIndex({ page }: { page: string }) {
             >
               <Stack direction="horizontal">
                 <span>LoFi Mockups in </span>
-                {/* {document.referrer != "" && (
+                {document.referrer != "" && (
                   <CloseButton
                     style={{ marginLeft: "auto" }}
                     onClick={() => history.back()}
                   />
-                )} */}
+                )}
               </Stack>
               <h1> {pageData.title}</h1>
               {attachments.length == 0 ? (
@@ -243,40 +199,6 @@ function OpenAttachment({
         )
       }
     </WithLoader>
-  );
-}
-
-export function XwikiControls() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const attachment = searchParams.get("attachment");
-  const page = searchParams.get("page");
-  const save = async () => {
-    const repo = await repository;
-    const zip = await repo.createZip();
-    fetchData(
-      xwiki({
-        url: page + "/attachments/" + attachment,
-        data: zip,
-        method: "PUT",
-      })
-    );
-  };
-  if (page == null || attachment == null) return null;
-  return (
-    <>
-      <Button onClick={save}>Save</Button>
-      <Button
-        onClick={async () => {
-          await save();
-          setSearchParams((x) => {
-            x.delete("attachment");
-            return x;
-          });
-        }}
-      >
-        Save & Close
-      </Button>
-    </>
   );
 }
 

@@ -19,16 +19,16 @@
  */
 package com.github.ruediste.lofi.xwiki;
 
-import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.icon.IconManager;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.ParagraphBlock;
 import org.xwiki.rendering.block.RawBlock;
@@ -36,6 +36,7 @@ import org.xwiki.rendering.macro.AbstractMacro;
 import org.xwiki.rendering.macro.MacroExecutionException;
 import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.rendering.transformation.MacroTransformationContext;
+import org.xwiki.skinx.SkinExtension;
 
 /**
  * Example Macro.
@@ -46,7 +47,14 @@ import org.xwiki.rendering.transformation.MacroTransformationContext;
 public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParameters> {
 
     @Inject
-    private DocumentAccessBridge documentAccessBridge;
+    private LoFiService service;
+
+    @Inject
+    private IconManager iconManager;
+
+    @Inject
+    @Named("linkx")
+    private SkinExtension linkx;
 
     /**
      * The description of the macro.
@@ -70,23 +78,37 @@ public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParame
     public List<Block> execute(ShowMockupPageMacroParameters parameters, String content,
             MacroTransformationContext context)
             throws MacroExecutionException {
-        List<Block> result;
+        try {
+            linkx.use(service.getWebjarUrl() + "/xwiki.css", Map.of("type", "text/css", "rel", "stylesheet"));
+            var attachment = parameters.getMockup().getName();
 
-        List<Block> wordBlockAsList = List.of(new RawBlock("<img src=\""
-                + getPageImageUrl(parameters.getMockup().getName(), parameters.getPageNr() - 1) + "\"/>",
-                Syntax.XHTML_5));
+            List<Block> wordBlockAsList = List.of(new RawBlock(
+                    "<div class=\"include-lo-fi-mockup-page\"><div class=\"actions\">"
 
-        // Handle both inline mode and standalone mode.
-        if (context.isInline()) {
-            result = wordBlockAsList;
-        } else {
-            // Wrap the result in a Paragraph Block since a WordBlock is an inline element
-            // and it needs to be
-            // inside a standalone block.
-            result = Arrays.<Block>asList(new ParagraphBlock(wordBlockAsList));
+                            + "<a href=\"" + service.getMockupPlayUrl(attachment) + "\" >"
+                            + iconManager.renderHTML("play")
+                            + "</a>"
+
+                            + "<a href=\"" + service.getMockupEditUrl(attachment) + "\" >"
+                            + iconManager.renderHTML("edit")
+                            + "</a>"
+                            + "</div> <img src=\""
+                            + service.getPageImageUrl(attachment, parameters.getPageNr() - 1)
+                            + "\"/></div>",
+                    Syntax.XHTML_5));
+
+            // Handle both inline mode and standalone mode.
+            if (context.isInline()) {
+                return wordBlockAsList;
+            } else {
+                // Wrap the result in a Paragraph Block since a WordBlock is an inline element
+                // and it needs to be
+                // inside a standalone block.
+                return Arrays.<Block>asList(new ParagraphBlock(wordBlockAsList));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-
-        return result;
     }
 
     /**
@@ -98,17 +120,4 @@ public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParame
         return true;
     }
 
-    public String getPageImageUrl(String attachment, int pageNr) {
-        try {
-            var document = documentAccessBridge.getCurrentDocumentReference();
-            var wiki = document.getWikiReference().getName();
-            var page = String.join("/", document.getSpaceReferences().stream().map(x -> x.getName()).toList());
-            return "/rest/lofimockups/page?wiki=" + URLEncoder.encode(wiki, "UTF-8")
-                    + "&page=" + URLEncoder.encode(page, "UTF-8") + "&attachment="
-                    + URLEncoder.encode(attachment, "UTF-8")
-                    + "&pageNr=" + pageNr;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

@@ -14,7 +14,8 @@ import { Palette } from "./Palette";
 import { repository } from "./repository";
 import { Selection } from "./Selection";
 import "./widgets/PageItemTypeRegistry";
-import { XwikiControls, XwikiPageMockups } from "./XwikiPageMockups";
+import { XwikiControls } from "./xwiki/XwikiControls";
+import { XwikiPageMockups } from "./xwiki/XwikiPageMockups";
 
 function throttle<T extends (...args: any[]) => void>(
   func: T,
