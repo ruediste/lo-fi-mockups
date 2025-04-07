@@ -44,7 +44,9 @@ public class LoFiServiceImpl implements LoFiService {
 
     @Override
     public String getMockupPlayUrl(String attachment) {
-        return getMockupEditUrl(attachment);
+        return this.getWebjarUrl() + "/index.html#xwiki/play?page="
+                + getPageValue(documentAccessBridge.getCurrentDocumentReference()) + "&attachment="
+                + URLEncoder.encode(attachment, StandardCharsets.UTF_8);
     }
 
     @Override

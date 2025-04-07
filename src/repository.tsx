@@ -2,11 +2,14 @@ import JSZip from "jszip";
 import { Project, ProjectData } from "./model/Project";
 
 import { DBSchema, IDBPDatabase, openDB } from "idb";
+import { use, useMemo } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { CanvasProjection } from "./Canvas";
 import { RenderPageItems } from "./Editor";
+import { useRerenderOnEvent } from "./hooks";
 import { ModelEvent } from "./model/ModelEvent";
+import { throttle } from "./throttle";
 import { Vec2d } from "./Vec2d";
 import { Rectangle } from "./widgets/Widget";
 
@@ -104,7 +107,9 @@ class Repository {
 
       zip.file(
         "pages/" + pageNr + ".svg",
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${drawBox.x} ${drawBox.y} ${drawBox.width} ${drawBox.height}">` +
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${page.boundingViewBox(
+          32
+        )}">` +
           rootElement.innerHTML +
           "</svg>"
       );
@@ -123,3 +128,17 @@ class Repository {
 }
 
 export const repository = Repository.create();
+
+const save = throttle(async () => {
+  await (await repository).save();
+}, 1000);
+
+export function useProject() {
+  const repo = use(repository);
+  useRerenderOnEvent(repo.onChanged);
+  const projectData = repo.projectData;
+  const project = useMemo(() => {
+    return new Project(projectData, () => save());
+  }, [projectData]);
+  return project;
+}

@@ -1,3 +1,4 @@
+import { InnerApp } from "@/App";
 import useSearchHref from "@/util/useSearchHref";
 import { useState } from "react";
 import {
@@ -10,7 +11,6 @@ import {
 } from "react-bootstrap";
 import { Trash } from "react-bootstrap-icons";
 import { useSearchParams } from "react-router";
-import { MainApp } from "../App";
 import { repository } from "../repository";
 import { confirm } from "../util/confirm";
 import { fetchData, fetchDataRaw, useLoader } from "../util/fetchData";
@@ -188,7 +188,7 @@ function OpenAttachment({
     <WithLoader data={data}>
       {(success) =>
         success ? (
-          <MainApp downloadName={attachment} />
+          <InnerApp downloadName={attachment} />
         ) : (
           <div>Loading Attachment Failed</div>
         )
@@ -205,7 +205,6 @@ export function XwikiPageMockups() {
   if (page == null) {
     return <>No Page Specified</>;
   }
-  console.log(searchParams, attachment);
   return attachment ? (
     <OpenAttachment {...{ attachment, page }} />
   ) : (

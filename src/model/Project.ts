@@ -35,8 +35,31 @@ export class Project {
     this.selectPage(page);
   }
 
+  selectPreviousPage() {
+    if (this.data.pages.length == 0) return;
+    const idx = this.data.pages.findIndex(
+      (x) => x.id === this.data.currentPageId
+    );
+    this.selectPage(this.data.pages[idx < 1 ? 0 : idx - 1]);
+  }
+
+  selectNextPage() {
+    const pageCount = this.data.pages.length;
+    if (pageCount == 0) return;
+    const idx = this.data.pages.findIndex(
+      (x) => x.id == this.data.currentPageId
+    );
+    this.selectPage(
+      this.data.pages[idx < 0 || idx >= pageCount - 1 ? pageCount - 1 : idx + 1]
+    );
+  }
+
   selectPage(page?: PageData) {
-    this.data.currentPageId = page?.id;
+    this.selectPageId(page?.id);
+  }
+
+  selectPageId(pageId?: number) {
+    this.data.currentPageId = pageId;
     this.onDataChanged();
     this.recreateCurrentPage();
   }

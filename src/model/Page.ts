@@ -1,3 +1,4 @@
+import { Rectangle } from "@/widgets/Widget";
 import { Selection } from "../Selection";
 import { Vec2d } from "../Vec2d";
 import { arraySwapInPlace } from "../utils";
@@ -133,6 +134,30 @@ export class Page {
 
   private toPageItem(data: PageItemData, fromMasterPage: boolean) {
     return createPageItem({ data, page: this, fromMasterPage });
+  }
+
+  boundingBox(margin: number) {
+    const items = this.masterItems.concat(this.ownItems);
+    let drawBox: Rectangle | undefined;
+    if (items.length > 0) {
+      const margin = 32;
+      const box = Vec2d.boundingBoxRect(
+        ...items.map((item) => item.boundingBox)
+      );
+
+      drawBox = {
+        x: box.x - margin,
+        y: box.y - margin,
+        width: box.width + 2 * margin,
+        height: box.height + 2 * margin,
+      };
+    } else drawBox = { x: 0, y: 0, width: 100, height: 100 };
+    return drawBox;
+  }
+
+  boundingViewBox(margin: number) {
+    const box = this.boundingBox(margin);
+    return `${box.x} ${box.y} ${box.width} ${box.height}`;
   }
 }
 

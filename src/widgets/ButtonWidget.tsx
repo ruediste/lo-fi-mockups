@@ -4,6 +4,7 @@ import {
   StringProperty,
 } from "../model/PageItemProperty";
 import { PositionWidget, Rectangle } from "./Widget";
+import { PageLink } from "./WidgetHelpers";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
@@ -42,6 +43,7 @@ export class ButtonWidget extends PositionWidget {
         >
           {this.text.get()}
         </text>
+        <PageLink {...box} pageId={this.link.get().pageId} />
       </>
     );
   }

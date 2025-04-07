@@ -1,4 +1,5 @@
-import { SVGAttributes, useId } from "react";
+import { PageItemRenderContext } from "@/model/PageItem";
+import { SVGAttributes, useContext, useId } from "react";
 import { CanvasProjection } from "../Canvas";
 import { Rectangle } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
@@ -11,6 +12,44 @@ export function dragPositionRectAttrs(
     stroke: "#008800",
     strokeWidth: projection.lengthToWorld(0.5),
   };
+}
+
+export function PageLink({
+  pageId,
+  x,
+  y,
+  width,
+  height,
+}: {
+  pageId?: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}) {
+  const ctx = useContext(PageItemRenderContext);
+
+  if (pageId === undefined) return;
+
+  if (!ctx?.isPlay) return;
+  return (
+    <rect
+      {...{ x, y, width, height }}
+      rx={widgetTheme.rx}
+      ry={widgetTheme.ry}
+      css={{
+        fill: "transparent",
+        "&:hover": {
+          fill: "green",
+          opacity: 0.5,
+        },
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        ctx.openPage(pageId);
+      }}
+    ></rect>
+  );
 }
 
 export function WidgetBounds({

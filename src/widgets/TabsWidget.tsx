@@ -9,6 +9,7 @@ import {
   ItemListSelectionProperty,
 } from "../model/ItemListProperty";
 import { BoxWidget } from "./Widget";
+import { PageLink } from "./WidgetHelpers";
 import { snapConfiguration, widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
@@ -68,6 +69,17 @@ export class TabsWidget extends BoxWidget {
         >
           {item.label}
         </text>
+      );
+
+      overlay.push(
+        <PageLink
+          key={id++}
+          x={x + widgetTheme.strokeWidth / 2}
+          y={y + widgetTheme.strokeWidth / 2}
+          width={width + 8 - widgetTheme.strokeWidth}
+          height={widgetTheme.fontSize + 4 - widgetTheme.strokeWidth}
+          pageId={item.link}
+        />
       );
 
       x += 8 + width;

@@ -1,4 +1,3 @@
-import { Form } from "react-bootstrap";
 import { ArrowDown, ArrowUp, Back, Front, Trash } from "react-bootstrap-icons";
 import { useRerenderOnEvent } from "./hooks";
 import { IconButton } from "./Inputs";
@@ -52,7 +51,7 @@ export function ItemProperties({
             </IconButton>
           </>
         )}
-        <Form>
+        <div style={{ marginLeft: "4px" }}>
           {item.properties
             .filter((p) => p.shouldRender())
             .map((p) => {
@@ -60,7 +59,7 @@ export function ItemProperties({
               if (result == null) return null;
               return <div key={p.id}>{result}</div>;
             })}
-        </Form>
+        </div>
       </>
     );
   }

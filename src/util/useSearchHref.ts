@@ -22,6 +22,8 @@ export default function useSearchHref(
       else search.delete(key);
     }
     to = { ...to, search: search.toString() };
+  } else {
+    to.search = location.search;
   }
   const href = useHref(to as any, relative);
   return {

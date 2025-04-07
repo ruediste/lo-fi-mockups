@@ -1,5 +1,5 @@
 import { snapConfiguration, SnapConfiguration } from "@/widgets/widgetTheme";
-import React from "react";
+import React, { createContext } from "react";
 import { CanvasProjection } from "../Canvas";
 import { Rectangle } from "../widgets/Widget";
 import { ModelEvent } from "./ModelEvent";
@@ -17,6 +17,12 @@ export interface PageItemsArgs {
   page: Page;
   fromMasterPage: boolean;
 }
+
+export const PageItemRenderContext = createContext<
+  | { isPlay: true; openPage: (pageId: number) => void }
+  | { isPlay: false }
+  | undefined
+>(undefined);
 
 export abstract class PageItem {
   public interaction!: PageItemInteraction;
