@@ -1,8 +1,10 @@
 import { Button, Form } from "react-bootstrap";
-import { FormCheck } from "../Inputs";
+import { Lock, Unlock } from "react-bootstrap-icons";
+import { IconButton } from "../Inputs";
 import { SortableList } from "../SortableList";
 import { PageItem } from "./PageItem";
 import { Item, ItemListPropertyItem } from "./PageItemHelpers";
+import { PropertyOverrideControls } from "./PageItemInteractionHelpers";
 import { PageItemProperty } from "./PageItemProperty";
 
 interface ItemListSelectionPropertyValue {
@@ -73,27 +75,27 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
     return (
       <>
         <Form.Group className="mb-3">
-          <div style={{ display: "flex" }}>
+          <div style={{ display: "flex", alignItems: "baseline" }}>
             <span>{this.label}</span>
             {this.isEditable && (
-              <FormCheck
-                style={{ marginLeft: "auto", display: "inline-block" }}
-                label="Items Overrideable"
-                checked={this.isOverrideable}
-                onChange={() => this.setOverrideable(!this.isOverrideable)}
-              />
+              <>
+                <PropertyOverrideControls property={this} />
+                Items
+              </>
             )}
             {this.selection?.isEditable && (
-              <FormCheck
-                style={{ marginLeft: "auto", display: "inline-block" }}
-                label="Selection Overrideable"
-                checked={this.selection.isOverrideable}
-                onChange={() =>
-                  this.selection!.setOverrideable(
-                    !this.selection!.isOverrideable
-                  )
-                }
-              />
+              <>
+                <IconButton
+                  onClick={() =>
+                    this.selection!.setOverrideable(
+                      !this.selection!.isOverrideable
+                    )
+                  }
+                >
+                  {this.selection.isOverrideable ? <Unlock /> : <Lock />}
+                </IconButton>
+                Selection
+              </>
             )}
           </div>
           <SortableList<Item>

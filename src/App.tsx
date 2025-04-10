@@ -1,11 +1,60 @@
-import { Editor } from "@/editor/Editor";
+import { Editor, editorLayoutKey } from "@/editor/Editor";
 import { Suspense } from "react";
-import { Spinner } from "react-bootstrap";
+import { Button, Card, Spinner } from "react-bootstrap";
 import { HashRouter, Route, Routes } from "react-router";
 import { ToastContainer } from "react-toastify";
+import { editorState } from "./editor/EditorState";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { Play } from "./Play";
 import "./widgets/PageItemTypeRegistry";
 import { XwikiPageMockups } from "./xwiki/XwikiPageMockups";
+
+function RootError({ clear }: { clear: () => void }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexGrow: 1,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Card style={{ width: "18rem" }}>
+        <Card.Body>
+          <Card.Title>An Error Occurred</Card.Title>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Button
+              variant="primary"
+              onClick={async () => {
+                location.reload();
+              }}
+            >
+              Reload
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                (await editorState).repository.clear();
+                clear();
+              }}
+            >
+              Clear Mockup Data
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                localStorage.removeItem(editorLayoutKey);
+                clear();
+              }}
+            >
+              Clear Layout Data
+            </Button>
+          </div>
+        </Card.Body>
+      </Card>
+    </div>
+  );
+}
 
 export function InnerApp({ downloadName }: { downloadName?: string }) {
   return (
@@ -18,13 +67,15 @@ export function InnerApp({ downloadName }: { downloadName?: string }) {
 export default function App() {
   return (
     <HashRouter>
-      <Suspense fallback={<Spinner />}>
-        <Routes>
-          <Route path="/*" element={<InnerApp />} />
-          <Route path="/xwiki/*" element={<XwikiPageMockups />} />
-        </Routes>
-      </Suspense>
-      <ToastContainer autoClose={2000} />
+      <ErrorBoundary fallback={(clear) => <RootError clear={clear} />}>
+        <Suspense fallback={<Spinner />}>
+          <Routes>
+            <Route path="/*" element={<InnerApp />} />
+            <Route path="/xwiki/*" element={<XwikiPageMockups />} />
+          </Routes>
+        </Suspense>
+        <ToastContainer autoClose={2000} />
+      </ErrorBoundary>
     </HashRouter>
   );
 }

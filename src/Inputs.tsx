@@ -30,19 +30,21 @@ export function NumberInput({
   );
 }
 
+export interface IconButtonProps {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+  className?: string;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  ref?: React.Ref<HTMLButtonElement>;
+}
+
 export function IconButton({
   children,
   onClick,
   style,
   className,
   ref,
-}: {
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-  className?: string;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
-  ref?: React.Ref<HTMLButtonElement>;
-}) {
+}: IconButtonProps) {
   return (
     <button
       ref={ref}

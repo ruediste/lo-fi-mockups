@@ -1,4 +1,16 @@
-import { JSX, MouseEventHandler, useContext, useRef, useState } from "react";
+import { IconButton, IconButtonProps } from "@/Inputs";
+import {
+  forwardRef,
+  JSX,
+  MouseEventHandler,
+  ReactElement,
+  useContext,
+  useId,
+  useRef,
+  useState,
+} from "react";
+import { InputGroup, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Eraser, Lock, Unlock } from "react-bootstrap-icons";
 import { ProjectionContext } from "../Contexts";
 import { CanvasProjection } from "../editor/Canvas";
 import { useRerenderOnEvent } from "../hooks";
@@ -8,6 +20,7 @@ import { toSet } from "../utils";
 import { Vec2d } from "../Vec2d";
 import { Rectangle } from "../widgets/Widget";
 import { dragPositionRectAttrs } from "../widgets/WidgetHelpers";
+import { PageItemProperty } from "./PageItemProperty";
 import { SnapIndex } from "./SnapIndex";
 
 export function MoveWidgetBox(
@@ -570,6 +583,89 @@ export function SelectableBox({
             }
           : { fill: "transparent" })}
       />
+    </>
+  );
+}
+
+function PropertyOverrideableTooltip(props: {
+  isOverrideable: boolean;
+  children: ReactElement;
+}) {
+  const id = useId();
+  return (
+    <OverlayTrigger
+      delay={1000}
+      overlay={
+        <Tooltip id={id}>
+          {props.isOverrideable
+            ? "Property can be overridden by pages using this page as master page"
+            : "When using this page as master page, this property cannot be overridden"}
+        </Tooltip>
+      }
+    >
+      {props.children}
+    </OverlayTrigger>
+  );
+}
+
+const Test = forwardRef<HTMLDivElement, IconButtonProps>((props, ref) => (
+  <div ref={ref}>
+    <IconButton {...props} />
+  </div>
+));
+
+export function PropertyOverrideControls({
+  property,
+}: {
+  property: PageItemProperty<any>;
+}) {
+  return (
+    <>
+      <span style={{ marginLeft: "auto" }}></span>
+      {property.isEditable && property.isOverridden && (
+        <IconButton onClick={() => property.clear()}>
+          <Eraser />
+        </IconButton>
+      )}
+      <IconButton
+        onClick={() => property.setOverrideable(!property.isOverrideable)}
+      >
+        {property.isOverrideable ? <Unlock /> : <Lock />}
+      </IconButton>
+    </>
+  );
+}
+
+export function PropertyOverrideableInputGroupControls({
+  property,
+}: {
+  property: PageItemProperty<any>;
+}) {
+  property.isEditable;
+  return (
+    <>
+      {property.isEditable && property.isOverridden && (
+        <InputGroup.Text
+          css={{
+            cursor: "pointer",
+            "&:hover": { background: "lightGray" },
+          }}
+          onClick={() => property.clear()}
+        >
+          <Eraser />
+        </InputGroup.Text>
+      )}
+      <PropertyOverrideableTooltip isOverrideable={property.isOverrideable}>
+        <InputGroup.Text
+          css={{
+            cursor: "pointer",
+            "&:hover": { background: "lightGray" },
+          }}
+          onClick={() => property.setOverrideable(!property.isOverrideable)}
+        >
+          {property.isOverrideable ? <Unlock /> : <Lock />}
+        </InputGroup.Text>
+      </PropertyOverrideableTooltip>
     </>
   );
 }

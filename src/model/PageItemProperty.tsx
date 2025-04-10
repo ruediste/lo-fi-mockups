@@ -1,9 +1,11 @@
 import { PageReferenceInput } from "@/util/PageReferenceInput";
 import React, { JSX } from "react";
-import { Form } from "react-bootstrap";
-import { NumberInput } from "../Inputs";
+import { Form, InputGroup } from "react-bootstrap";
+import { Lock, Unlock } from "react-bootstrap-icons";
+import { IconButton, NumberInput } from "../Inputs";
 import { ModelEvent } from "./ModelEvent";
 import { PageItem } from "./PageItem";
+import { PropertyOverrideableInputGroupControls } from "./PageItemInteractionHelpers";
 
 /*
 The value comes from 
@@ -25,6 +27,8 @@ export abstract class PageItemProperty<T extends {} | null> {
   isEditable: boolean;
   valueChanged = new ModelEvent();
 
+  isOverridden: boolean;
+
   constructor(
     protected item: PageItem,
     public id: string,
@@ -45,6 +49,9 @@ export abstract class PageItemProperty<T extends {} | null> {
       this.isEditable = item.directMasterOverrideableProperties?.[id] ?? false;
     } else this.isEditable = true;
 
+    this.isOverridden =
+      item.fromMasterPage && item.propertyValues?.[id] !== undefined;
+
     let value = this.isEditable ? item.propertyValues?.[id] : undefined;
     if (value === undefined) {
       value = this.masterValue;
@@ -64,6 +71,7 @@ export abstract class PageItemProperty<T extends {} | null> {
   set(value: T): void {
     this.item.editablePropertyValues[this.id] = value;
     this.value = value;
+    this.isOverridden = this.item.fromMasterPage;
     this.notify();
   }
 
@@ -78,7 +86,7 @@ export abstract class PageItemProperty<T extends {} | null> {
       values[this.id] = newValue;
       this.value = newValue;
     }
-
+    this.isOverridden = this.item.fromMasterPage;
     this.notify();
   }
 
@@ -109,6 +117,7 @@ export abstract class PageItemProperty<T extends {} | null> {
       value = this.defaultValue;
     }
     this.value = value;
+    this.isOverridden = false;
     this.notify();
   }
 
@@ -200,12 +209,15 @@ export class StringProperty extends PageItemProperty<string> {
     return (
       <Form.Group className="mb-3">
         <Form.Label>{this.label}</Form.Label>
-        <Form.Control
-          value={this.get()}
-          onChange={(e) => this.set(e.target.value)}
-          as={this.isTextArea ? "textarea" : undefined}
-          rows={5}
-        />
+        <InputGroup>
+          <Form.Control
+            value={this.get()}
+            onChange={(e) => this.set(e.target.value)}
+            as={this.isTextArea ? "textarea" : undefined}
+            rows={5}
+          />
+          <PropertyOverrideableInputGroupControls property={this} />
+        </InputGroup>
       </Form.Group>
     );
   }
@@ -230,7 +242,10 @@ export class NumberProperty extends PageItemProperty<number> {
     return (
       <Form.Group className="mb-3">
         <Form.Label>{this.label}</Form.Label>
-        <NumberInput value={this.get()} onChange={(e) => this.set(e)} />
+        <InputGroup>
+          <NumberInput value={this.get()} onChange={(e) => this.set(e)} />
+          <PropertyOverrideableInputGroupControls property={this} />
+        </InputGroup>
       </Form.Group>
     );
   }
@@ -248,13 +263,22 @@ export class CheckboxProperty extends PageItemProperty<boolean> {
 
   render(): JSX.Element {
     return (
-      <Form.Check
-        type="checkbox"
-        id={this.item.data.id + "-" + this.id + "-checkbox"}
-        label={this.label}
-        checked={this.get()}
-        onChange={(e) => this.set(e.target.checked)}
-      />
+      <div style={{ display: "flex" }}>
+        <Form.Check
+          style={{ display: "inline-block" }}
+          type="checkbox"
+          id={this.item.data.id + "-" + this.id + "-checkbox"}
+          label={this.label}
+          checked={this.get()}
+          onChange={(e) => this.set(e.target.checked)}
+        />
+        <IconButton
+          style={{ marginLeft: "auto" }}
+          onClick={() => this.setOverrideable(!this.isOverrideable)}
+        >
+          {this.isOverrideable ? <Unlock /> : <Lock />}
+        </IconButton>
+      </div>
     );
   }
 }
@@ -270,11 +294,15 @@ export class PageReferenceProperty extends PageItemProperty<{
     return (
       <Form.Group className="mb-3">
         <Form.Label>{this.label}</Form.Label>
-        <PageReferenceInput
-          project={this.item.page.project}
-          pageId={this.get().pageId}
-          setPageId={(e) => this.set({ pageId: e })}
-        />
+        <InputGroup>
+          <PageReferenceInput
+            style={{ flex: "1 1 auto" }}
+            project={this.item.page.project}
+            pageId={this.get().pageId}
+            setPageId={(e) => this.set({ pageId: e })}
+          />
+          <PropertyOverrideableInputGroupControls property={this} />
+        </InputGroup>
       </Form.Group>
     );
   }

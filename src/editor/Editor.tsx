@@ -268,7 +268,7 @@ const defaultLayout: LayoutData = {
   },
 };
 
-const layoutKey = "lo-fi-mockups-layout";
+export const editorLayoutKey = "lo-fi-mockups-layout";
 export function Editor({ downloadName }: { downloadName?: string }) {
   const state = use(editorState);
 
@@ -357,12 +357,12 @@ export function Editor({ downloadName }: { downloadName?: string }) {
         <DockLayout
           ref={(x) => {
             ref.current = x;
-            const layout = localStorage.getItem(layoutKey);
+            const layout = localStorage.getItem(editorLayoutKey);
             if (layout !== null) x?.loadLayout(JSON.parse(layout));
           }}
           defaultLayout={defaultLayout}
           onLayoutChange={(layout) =>
-            localStorage.setItem(layoutKey, JSON.stringify(layout))
+            localStorage.setItem(editorLayoutKey, JSON.stringify(layout))
           }
           style={{ flexGrow: 1 }}
         />
