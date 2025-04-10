@@ -1,6 +1,4 @@
 import { Button, Form } from "react-bootstrap";
-import { Lock, Unlock } from "react-bootstrap-icons";
-import { IconButton } from "../Inputs";
 import { SortableList } from "../SortableList";
 import { PageItem } from "./PageItem";
 import { Item, ItemListPropertyItem } from "./PageItemHelpers";
@@ -85,15 +83,7 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
             )}
             {this.selection?.isEditable && (
               <>
-                <IconButton
-                  onClick={() =>
-                    this.selection!.setOverrideable(
-                      !this.selection!.isOverrideable
-                    )
-                  }
-                >
-                  {this.selection.isOverrideable ? <Unlock /> : <Lock />}
-                </IconButton>
+                <PropertyOverrideControls property={this.selection} />
                 Selection
               </>
             )}
