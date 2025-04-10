@@ -1,5 +1,9 @@
+import { Page } from "@/model/Page";
+import { Selection } from "@/Selection";
+import { Rectangle } from "@/widgets/Widget";
 import classNames from "classnames";
-import { MouseEventHandler, PointerEventHandler, useRef } from "react";
+import { PointerEventHandler, useRef } from "react";
+import { Fullscreen, Icon1Square } from "react-bootstrap-icons";
 import ObserveSize from "react-observe-size";
 import { ProjectionContext } from "../Contexts";
 import { useRerenderOnEvent } from "../hooks";
@@ -17,6 +21,7 @@ export class CanvasProjection {
   // size of the view in view coordinates
   viewPortPosition = new Vec2d(0, 0);
   viewPortSize = new Vec2d(100, 100);
+  viewPortPositionInitialized = false;
 
   // size of the view in world
   get worldViewSize(): Vec2d {
@@ -31,6 +36,48 @@ export class CanvasProjection {
       .add(eventPositionWorld)
       .sub(newEventPositionWorld);
     this.onChange.notify();
+  }
+
+  setScaleOne() {
+    this.changeScale(1, this.viewCenterPos);
+  }
+
+  setScaleFit(rect: Rectangle) {
+    // Calculate the scale needed to fit the rectangle within the viewport
+    const scaleX = this.viewPortSize.x / rect.width;
+    const scaleY = this.viewPortSize.y / rect.height;
+
+    // Use the smaller scale to ensure the rectangle fits within the viewport
+    this.scale = Math.min(scaleX, scaleY);
+
+    this.alignViewPortCenterWithRectCenter(rect);
+
+    this.onChange.notify();
+  }
+
+  setScaleOneAndAlign(rect: Rectangle) {
+    this.scale = 1;
+    this.alignViewPortCenterWithRectCenter(rect);
+    this.onChange.notify();
+  }
+
+  private alignViewPortCenterWithRectCenter(rect: Rectangle) {
+    // Calculate the new offset to center the rectangle in the viewport
+    const rectCenter = new Vec2d(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2
+    );
+
+    this.offset = rectCenter.sub(
+      this.scaleToWorld(this.viewPortSize.scale(0.5))
+    );
+  }
+
+  private get viewCenterPos() {
+    return new Vec2d(
+      this.viewPortPosition.x + this.viewPortSize.x / 2,
+      this.viewPortPosition.y + this.viewPortSize.y / 2
+    );
   }
 
   lengthToWorld(viewLength: number) {
@@ -58,22 +105,20 @@ export function Canvas({
   projection,
   children,
   ref,
-  onClick,
   onPointerDown,
   onPointerMove,
   onPointerUp,
   className,
-  onDelete,
+  page,
 }: {
   projection: CanvasProjection;
   children?: React.ReactNode;
   ref?: (element: HTMLElement | null) => void;
-  onClick?: MouseEventHandler;
   onPointerDown?: PointerEventHandler<SVGElement>;
   onPointerMove?: PointerEventHandler<SVGElement>;
   onPointerUp?: PointerEventHandler<SVGElement>;
-  onDelete: () => void;
   className?: string;
+  page: Page;
 }) {
   const dragState = useRef<
     | {
@@ -94,7 +139,7 @@ export function Canvas({
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Delete") {
-          onDelete();
+          page.removeSelectedItems();
         }
       }}
     >
@@ -108,6 +153,10 @@ export function Canvas({
             elementRect.left,
             elementRect.top
           );
+          if (!projection.viewPortPositionInitialized) {
+            projection.viewPortPositionInitialized = true;
+            projection.setScaleOneAndAlign(page.boundingBox());
+          }
           projection.onChange.notify();
         }}
       >
@@ -141,7 +190,7 @@ export function Canvas({
                 const pointerPos = Vec2d.fromEvent(e);
                 const delta = pointerPos.sub(state.startPointerPos);
                 if (delta.length < 10) {
-                  onClick?.(e);
+                  page.setSelection(Selection.empty);
                 }
                 e.nativeEvent.stopImmediatePropagation();
                 dragState.current = undefined;
@@ -172,6 +221,27 @@ export function Canvas({
           </svg>
         </ProjectionContext.Provider>
       </ObserveSize>
+
+      <div
+        style={{
+          position: "absolute",
+          top: "16px",
+          right: "16px",
+          display: "flex",
+          flexDirection: "row",
+          gap: "8px",
+          flexWrap: "nowrap",
+        }}
+      >
+        <Icon1Square
+          size="16px"
+          onClick={() => projection.setScaleOneAndAlign(page.boundingBox())}
+        />
+        <Fullscreen
+          size="16px"
+          onClick={() => projection.setScaleFit(page.boundingBox())}
+        />
+      </div>
     </div>
   );
 }

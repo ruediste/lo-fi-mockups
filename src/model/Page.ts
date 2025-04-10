@@ -148,11 +148,10 @@ export class Page {
     return createPageItem({ data, page: this, fromMasterPage });
   }
 
-  boundingBox(margin: number) {
+  boundingBox(margin: number = 32) {
     const items = this.masterItems.concat(this.ownItems);
     let drawBox: Rectangle | undefined;
     if (items.length > 0) {
-      const margin = 32;
       const box = Vec2d.boundingBoxRect(
         ...items.map((item) => item.boundingBox)
       );

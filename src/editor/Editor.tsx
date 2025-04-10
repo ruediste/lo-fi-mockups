@@ -8,7 +8,7 @@ import { Rectangle, Widget } from "@/widgets/Widget";
 import { dragPositionRectAttrs } from "@/widgets/WidgetHelpers";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import Flatbush from "flatbush";
-import { use, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { Canvas, CanvasProjection } from "./Canvas";
 
 import useSearchHref from "@/util/useSearchHref";
@@ -130,6 +130,8 @@ function EditorCanvasInner({
     id: "editor",
   });
 
+  useEffect(() => projection.setScaleOneAndAlign(page.boundingBox()), [page]);
+
   useDndMonitor({
     onDragEnd(event) {
       if (event.over && event.over.id === "editor") {
@@ -177,8 +179,7 @@ function EditorCanvasInner({
     <Canvas
       projection={projection}
       ref={setNodeRef}
-      onClick={() => page.setSelection(Selection.empty)}
-      onDelete={() => page.removeSelectedItems()}
+      page={page}
       onPointerDown={(e) => {
         if (e.ctrlKey) {
           e.stopPropagation();
