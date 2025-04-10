@@ -23,6 +23,8 @@ import { Pages } from "./Pages";
 import { Palette } from "./Palette";
 
 import { ItemProperties } from "@/editor/ItemProperties";
+import { ThreeDotMenu } from "@/Inputs";
+import { confirm } from "@/util/confirm";
 import "rc-dock/dist/rc-dock.css";
 import { editorState, EditorStateContext, useEditorState } from "./EditorState";
 
@@ -274,7 +276,7 @@ export function Editor({ downloadName }: { downloadName?: string }) {
 
   const play = useSearchHref({ pathname: "./play" });
 
-  const ref = useRef<DockLayout | null>(null);
+  const dockLayout = useRef<DockLayout | null>(null);
 
   return (
     <EditorStateContext.Provider value={state}>
@@ -351,12 +353,46 @@ export function Editor({ downloadName }: { downloadName?: string }) {
               )}
             </Dropzone>
             <XwikiControls />
+            <ThreeDotMenu
+              items={[
+                {
+                  label: "Clear Project",
+                  onClick: async () => {
+                    if (
+                      await confirm({
+                        title: "Clear Project",
+                        confirmation: "Really clear the project?",
+                        okDangerous: true,
+                        okLabel: "Clear",
+                      })
+                    )
+                      state.repository.clear();
+                  },
+                },
+                {
+                  label: "Reset Editor Layout",
+                  onClick: async () => {
+                    if (
+                      await confirm({
+                        title: "Reset Editor Layout",
+                        confirmation:
+                          "Really set the editor layout back to the default?",
+                        okDangerous: true,
+                        okLabel: "Reset",
+                      })
+                    )
+                      localStorage.removeItem(editorLayoutKey);
+                    dockLayout.current?.loadLayout(defaultLayout);
+                  },
+                },
+              ]}
+            />
           </Stack>
         </div>
 
         <DockLayout
           ref={(x) => {
-            ref.current = x;
+            dockLayout.current = x;
             const layout = localStorage.getItem(editorLayoutKey);
             if (layout !== null) x?.loadLayout(JSON.parse(layout));
           }}

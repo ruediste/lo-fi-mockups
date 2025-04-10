@@ -1,8 +1,7 @@
 import { PageReferenceInput } from "@/util/PageReferenceInput";
 import React, { JSX } from "react";
 import { Form, InputGroup } from "react-bootstrap";
-import { Lock, Unlock } from "react-bootstrap-icons";
-import { IconButton, NumberInput } from "../Inputs";
+import { NumberInput } from "../Inputs";
 import { ModelEvent } from "./ModelEvent";
 import { PageItem } from "./PageItem";
 import { PropertyOverrideableInputGroupControls } from "./PageItemInteractionHelpers";
@@ -272,12 +271,8 @@ export class CheckboxProperty extends PageItemProperty<boolean> {
           checked={this.get()}
           onChange={(e) => this.set(e.target.checked)}
         />
-        <IconButton
-          style={{ marginLeft: "auto" }}
-          onClick={() => this.setOverrideable(!this.isOverrideable)}
-        >
-          {this.isOverrideable ? <Unlock /> : <Lock />}
-        </IconButton>
+        <span style={{ marginLeft: "auto" }}></span>
+        <PropertyOverrideableInputGroupControls property={this} />
       </div>
     );
   }

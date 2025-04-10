@@ -61,7 +61,7 @@ export function IconButton({
   );
 }
 
-export function ThreeDotMenuToggle({
+function ThreeDotMenuToggle({
   onClick,
   ref,
 }: {
