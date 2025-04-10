@@ -84,7 +84,16 @@ export function ItemProperties() {
         />
       )}
       {selection !== undefined && selection.size > 1 && (
-        <h1> Multiple selected Items </h1>
+        <>
+          <h1> Multiple selected Items </h1>
+          <IconButton
+            onClick={() => {
+              project.currentPage?.removeSelectedItems();
+            }}
+          >
+            <Trash size={24} />
+          </IconButton>
+        </>
       )}
     </div>
   );

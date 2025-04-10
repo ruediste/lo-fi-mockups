@@ -178,6 +178,7 @@ function EditorCanvasInner({
       projection={projection}
       ref={setNodeRef}
       onClick={() => page.setSelection(Selection.empty)}
+      onDelete={() => page.removeSelectedItems()}
       onPointerDown={(e) => {
         if (e.ctrlKey) {
           e.stopPropagation();

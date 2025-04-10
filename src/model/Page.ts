@@ -82,10 +82,22 @@ export class Page {
   }
 
   removeItem(id: number) {
-    this.data.items = this.data.items.filter((x) => x.id != id);
-    this.ownItems = this.ownItems.filter((x) => x.data.id != id);
+    this.removeItemImpl(id);
     this.onDataChanged();
     this.onChange.notify();
+  }
+  private removeItemImpl(id: number) {
+    this.data.items = this.data.items.filter((x) => x.id != id);
+    this.ownItems = this.ownItems.filter((x) => x.data.id != id);
+  }
+
+  removeSelectedItems() {
+    this.selection
+      .all()
+      .filter((item) => !item.fromMasterPage)
+      .forEach((item) => this.removeItemImpl(item.id));
+    this.onDataChanged();
+    this.setSelection(Selection.empty);
   }
 
   moveBack(item: PageItem): void {

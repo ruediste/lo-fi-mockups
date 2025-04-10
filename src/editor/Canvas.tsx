@@ -63,6 +63,7 @@ export function Canvas({
   onPointerMove,
   onPointerUp,
   className,
+  onDelete,
 }: {
   projection: CanvasProjection;
   children?: React.ReactNode;
@@ -71,6 +72,7 @@ export function Canvas({
   onPointerDown?: PointerEventHandler<SVGElement>;
   onPointerMove?: PointerEventHandler<SVGElement>;
   onPointerUp?: PointerEventHandler<SVGElement>;
+  onDelete: () => void;
   className?: string;
 }) {
   const dragState = useRef<
@@ -86,7 +88,16 @@ export function Canvas({
   const observerRef = useRef<any>(null);
 
   return (
-    <div className={classNames(className, "canvas")} ref={ref}>
+    <div
+      className={classNames(className, "canvas")}
+      ref={ref}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Delete") {
+          onDelete();
+        }
+      }}
+    >
       <ObserveSize
         ref={observerRef}
         observerFn={(rect) => {
