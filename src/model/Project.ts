@@ -1,10 +1,17 @@
 import { ModelEvent } from "./ModelEvent";
 import { Page, PageData } from "./Page";
+import { PageItemData } from "./PageItem";
 
 export interface ProjectData {
   nextId: number;
   pages: PageData[];
   currentPageId?: number;
+}
+
+function getOwnPropertyNames<K extends string | number>(value: {
+  [key in K]: any;
+}) {
+  return Object.getOwnPropertyNames(value) as K[];
 }
 
 export class Project {
@@ -33,6 +40,41 @@ export class Project {
     this.data.pages.push(page);
     this.pageDataMap[page.id] = page;
     this.selectPage(page);
+  }
+
+  duplicatePage(page: PageData) {
+    const itemMap: { [key: number]: PageItemData } = Object.fromEntries(
+      page.items.map((item) => [
+        item.id,
+        { id: this.data.nextId++, type: item.type },
+      ])
+    );
+    const mapItemId = (id: number) =>
+      itemMap.hasOwnProperty(id) ? itemMap[id].id : id;
+    let copy: PageData = {
+      id: this.data.nextId++,
+      name: page.name + " (copy)",
+      items: Object.values(itemMap),
+      masterPageId: page.masterPageId,
+      propertyValues: Object.fromEntries(
+        getOwnPropertyNames(page.propertyValues).map((itemId) => [
+          mapItemId(itemId),
+          { ...page.propertyValues[itemId] },
+        ])
+      ),
+      overrideableProperties: Object.fromEntries(
+        getOwnPropertyNames(page.propertyValues).map((itemId) => [
+          mapItemId(itemId),
+          { ...page.overrideableProperties[itemId] },
+        ])
+      ),
+    };
+
+    // serialization roundtrip to copy the property values
+    copy = JSON.parse(JSON.stringify(copy));
+    this.data.pages.push(copy);
+    this.pageDataMap[copy.id] = copy;
+    this.selectPage(copy);
   }
 
   selectPreviousPage() {

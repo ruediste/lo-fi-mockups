@@ -26,7 +26,12 @@ import { ItemProperties } from "@/editor/ItemProperties";
 import { ThreeDotMenu } from "@/Inputs";
 import { confirm } from "@/util/confirm";
 import "rc-dock/dist/rc-dock.css";
-import { editorState, EditorStateContext, useEditorState } from "./EditorState";
+import {
+  EditorState,
+  editorState,
+  EditorStateContext,
+  useEditorState,
+} from "./EditorState";
 
 function RenderItem({
   item,
@@ -105,11 +110,21 @@ function EditorCanvas() {
   const state = useEditorState();
   const project = state.project;
   useRerenderOnEvent(project.onChange);
-  const projection = state.projection;
 
   const page = project.currentPage;
-  if (page === undefined) return null;
 
+  if (page === undefined) return null;
+  return <EditorCanvasInner {...{ state, page }} />;
+}
+
+function EditorCanvasInner({
+  state,
+  page,
+}: {
+  state: EditorState;
+  page: Page;
+}) {
+  const projection = state.projection;
   useRerenderOnEvent(page.onChange);
   const { setNodeRef } = useDroppable({
     id: "editor",
