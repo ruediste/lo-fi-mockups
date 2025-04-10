@@ -1,10 +1,12 @@
+import { useProject } from "@/editor/EditorState";
 import { ArrowDown, ArrowUp, Back, Front, Trash } from "react-bootstrap-icons";
-import { useRerenderOnEvent } from "./hooks";
-import { IconButton } from "./Inputs";
-import { PageItem } from "./model/PageItem";
-import { Widget } from "./widgets/Widget";
+import { useRerenderOnEvent } from "../hooks";
+import { IconButton } from "../Inputs";
+import { PageItem } from "../model/PageItem";
+import { Selection } from "../Selection";
+import { Widget } from "../widgets/Widget";
 
-export function ItemProperties({
+function SingleItemProperties({
   item,
   clearSelection,
 }: {
@@ -64,4 +66,26 @@ export function ItemProperties({
     );
   }
   return <></>;
+}
+
+export function ItemProperties() {
+  const project = useProject();
+  useRerenderOnEvent(project.currentPage?.onChange);
+  const selection = project.currentPage?.selection;
+  return (
+    <div style={{ overflow: "auto", height: "100%" }}>
+      {selection?.size === 0 && <h1> No selected Item </h1>}
+      {selection?.size === 1 && (
+        <SingleItemProperties
+          item={selection.single}
+          clearSelection={() =>
+            project.currentPage?.setSelection(Selection.empty)
+          }
+        />
+      )}
+      {selection !== undefined && selection.size > 1 && (
+        <h1> Multiple selected Items </h1>
+      )}
+    </div>
+  );
 }

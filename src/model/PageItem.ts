@@ -1,6 +1,6 @@
 import { snapConfiguration, SnapConfiguration } from "@/widgets/widgetTheme";
 import React, { createContext } from "react";
-import { CanvasProjection } from "../Canvas";
+import { CanvasProjection } from "../editor/Canvas";
 import { Rectangle } from "../widgets/Widget";
 import { ModelEvent } from "./ModelEvent";
 import { Page } from "./Page";

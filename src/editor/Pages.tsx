@@ -1,4 +1,10 @@
+import { useRerenderTrigger } from "@/hooks";
+import { IconButton } from "@/Inputs";
+import { PageData } from "@/model/Page";
+import { Project } from "@/model/Project";
 import { confirm } from "@/util/confirm";
+import { InlineEdit } from "@/util/InlineEdit";
+import { InlinePageReferenceInput } from "@/util/PageReferenceInput";
 import {
   DndContext,
   DragEndEvent,
@@ -19,12 +25,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Button, Form, ListGroup } from "react-bootstrap";
 import { GripVertical, Trash } from "react-bootstrap-icons";
-import { useRerenderTrigger } from "./hooks";
-import { IconButton } from "./Inputs";
-import { PageData } from "./model/Page";
-import { Project } from "./model/Project";
-import { InlineEdit } from "./util/InlineEdit";
-import { InlinePageReferenceInput } from "./util/PageReferenceInput";
+import { useProject } from "./EditorState";
 
 function Page({
   page,
@@ -124,7 +125,8 @@ export function PageList({ project }: { project: Project }) {
     </SortableContext>
   );
 }
-export function Pages({ project }: { project: Project }) {
+export function Pages() {
+  const project = useProject();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -139,7 +141,14 @@ export function Pages({ project }: { project: Project }) {
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          overflow: "auto",
+          height: "100%",
+        }}
+      >
         <PageList project={project} />
         <div className="mt-3">
           <Button onClick={() => project.addPage()}>Add</Button>

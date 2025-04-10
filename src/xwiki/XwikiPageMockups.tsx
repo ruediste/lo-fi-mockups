@@ -1,4 +1,5 @@
 import { InnerApp } from "@/App";
+import { useEditorState } from "@/editor/EditorState";
 import useSearchHref from "@/util/useSearchHref";
 import { useState } from "react";
 import {
@@ -11,7 +12,6 @@ import {
 } from "react-bootstrap";
 import { Trash } from "react-bootstrap-icons";
 import { useSearchParams } from "react-router";
-import { repository } from "../repository";
 import { confirm } from "../util/confirm";
 import { fetchData, fetchDataRaw, useLoader } from "../util/fetchData";
 import { WithLoader, WithMultiData } from "../util/UseData";
@@ -167,13 +167,14 @@ function OpenAttachment({
   attachment: string;
   page: string;
 }) {
+  const state = useEditorState();
   const data = useLoader(async () => {
     const response = await fetchDataRaw(
       xwiki({
         url: page + "/attachments/" + attachment,
       })
     );
-    const repo = await repository;
+    const repo = state.repository;
     if (response.status == 404) {
       repo.clear();
       return true;

@@ -1,6 +1,6 @@
 import { JSX, MouseEventHandler, useContext, useRef, useState } from "react";
-import { CanvasProjection } from "../Canvas";
 import { ProjectionContext } from "../Contexts";
+import { CanvasProjection } from "../editor/Canvas";
 import { useRerenderOnEvent } from "../hooks";
 import { Page, SnapResult } from "../model/Page";
 import { PageItem, SnapReferencesArgs } from "../model/PageItem";

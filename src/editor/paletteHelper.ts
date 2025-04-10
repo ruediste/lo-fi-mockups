@@ -1,4 +1,4 @@
-import { Rectangle } from "./widgets/Widget";
+import { Rectangle } from "../widgets/Widget";
 
 export function calculateViewBox(
   targetAspectRatio: number,

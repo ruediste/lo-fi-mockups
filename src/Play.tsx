@@ -1,19 +1,22 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { editorState } from "@/editor/EditorState";
+import { use, useCallback, useEffect, useMemo } from "react";
 import { CloseButton } from "react-bootstrap";
 import { ArrowLeft, ArrowRight } from "react-bootstrap-icons";
 import { useRerenderOnEvent } from "./hooks";
 import { IconButton } from "./Inputs";
 import { PageItem, PageItemRenderContext } from "./model/PageItem";
-import { useProject } from "./repository";
 
 function RenderItem({ item }: { item: PageItem }) {
   useRerenderOnEvent(item.onChange);
   return <>{item.renderContent()}</>;
 }
 
-export function Play({}: {}) {
-  const project = useProject();
-  useRerenderOnEvent(project.onChange);
+export function Play() {
+  const state = use(editorState);
+  useRerenderOnEvent(state.onChanged);
+  useRerenderOnEvent(state.project.onChange);
+  const project = state.project;
+
   useEffect(() => {
     if (!project.currentPage && project.data.pages.length > 0)
       project.selectPage(project.data.pages[0]);

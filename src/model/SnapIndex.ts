@@ -1,4 +1,4 @@
-import { CanvasProjection } from "@/Canvas";
+import { CanvasProjection } from "@/editor/Canvas";
 import { Vec2d } from "@/Vec2d";
 import Flatbush from "flatbush";
 import { Page, SnapResult } from "./Page";

@@ -1,8 +1,8 @@
+import { Editor } from "@/editor/Editor";
 import { Suspense } from "react";
 import { Spinner } from "react-bootstrap";
 import { HashRouter, Route, Routes } from "react-router";
 import { ToastContainer } from "react-toastify";
-import { Editor } from "./Editor";
 import { Play } from "./Play";
 import "./widgets/PageItemTypeRegistry";
 import { XwikiPageMockups } from "./xwiki/XwikiPageMockups";

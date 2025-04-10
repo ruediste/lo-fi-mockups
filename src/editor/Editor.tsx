@@ -1,29 +1,30 @@
+import { useRerenderOnEvent } from "@/hooks";
+import { Page } from "@/model/Page";
+import { PageItem } from "@/model/PageItem";
+import { DraggableSnapBox } from "@/model/PageItemInteractionHelpers";
+import { Selection } from "@/Selection";
+import { Vec2d } from "@/Vec2d";
+import { Rectangle, Widget } from "@/widgets/Widget";
+import { dragPositionRectAttrs } from "@/widgets/WidgetHelpers";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import Flatbush from "flatbush";
-import { RefObject, useRef, useState } from "react";
+import { use, useRef, useState } from "react";
 import { Canvas, CanvasProjection } from "./Canvas";
-import { useRerenderOnEvent } from "./hooks";
-import { Page } from "./model/Page";
-import { PageItem } from "./model/PageItem";
-import { DraggableSnapBox } from "./model/PageItemInteractionHelpers";
-import { Selection } from "./Selection";
-import { Vec2d } from "./Vec2d";
-import { Rectangle, Widget } from "./widgets/Widget";
-import { dragPositionRectAttrs } from "./widgets/WidgetHelpers";
 
+import useSearchHref from "@/util/useSearchHref";
+import "@/widgets/PageItemTypeRegistry";
+import { XwikiControls } from "@/xwiki/XwikiControls";
 import saveAs from "file-saver";
-import { Button, Stack, Tab, Tabs } from "react-bootstrap";
+import DockLayout, { LayoutData } from "rc-dock";
+import { Button, Stack } from "react-bootstrap";
 import Dropzone from "react-dropzone";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { toast } from "react-toastify";
-import { useConst } from "./hooks";
-import { ItemProperties } from "./ItemProperties";
 import { Pages } from "./Pages";
 import { Palette } from "./Palette";
-import { repository, useProject } from "./repository";
-import useSearchHref from "./util/useSearchHref";
-import "./widgets/PageItemTypeRegistry";
-import { XwikiControls } from "./xwiki/XwikiControls";
+
+import { ItemProperties } from "@/editor/ItemProperties";
+import "rc-dock/dist/rc-dock.css";
+import { editorState, EditorStateContext, useEditorState } from "./EditorState";
 
 function RenderItem({
   item,
@@ -97,15 +98,16 @@ export function RenderPageItems({
     .concat(page.ownItems)
     .map((item) => <RenderItem key={item.data.id} {...{ item, projection }} />);
 }
-function EditorCanvas({
-  projection,
-  page,
-  dragOffset,
-}: {
-  projection: CanvasProjection;
-  page: Page;
-  dragOffset: RefObject<{ x: number; y: number }>;
-}) {
+
+function EditorCanvas() {
+  const state = useEditorState();
+  const project = state.project;
+  useRerenderOnEvent(project.onChange);
+  const projection = state.projection;
+
+  const page = project.currentPage;
+  if (page === undefined) return null;
+
   useRerenderOnEvent(page.onChange);
   const { setNodeRef } = useDroppable({
     id: "editor",
@@ -116,15 +118,16 @@ function EditorCanvas({
       if (event.over && event.over.id === "editor") {
         const droppableRect = event.over.rect!;
         const draggableRect = event.active!.rect;
+        const dragOffset = state.dragOffset;
 
         const x =
           draggableRect.current.translated!.left -
           droppableRect.left +
-          dragOffset.current.x;
+          dragOffset.x;
         const y =
           draggableRect.current.translated!.top -
           droppableRect.top +
-          dragOffset.current.y;
+          dragOffset.y;
 
         const item = page.addItem({
           id: page.project.data.nextId++,
@@ -225,159 +228,145 @@ function EditorCanvas({
   );
 }
 
+const defaultLayout: LayoutData = {
+  dockbox: {
+    mode: "horizontal",
+    children: [
+      {
+        tabs: [
+          {
+            id: "palette",
+            title: "Palette",
+            content: <Palette />,
+          },
+          {
+            id: "pages",
+            title: "Pages",
+            content: <Pages />,
+          },
+        ],
+      },
+      {
+        tabs: [
+          {
+            id: "editor",
+            title: "Editor",
+            content: <EditorCanvas />,
+          },
+        ],
+      },
+      {
+        tabs: [
+          {
+            id: "properties",
+            title: "Properties",
+            content: <ItemProperties />,
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const layoutKey = "lo-fi-mockups-layout";
 export function Editor({ downloadName }: { downloadName?: string }) {
-  const project = useProject();
-
-  useRerenderOnEvent(project.onChange);
-  useRerenderOnEvent(project.currentPage?.onChange);
-
-  const projection = useConst(() => new CanvasProjection());
-
-  const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-
-  const selection = project.currentPage?.selection;
+  const state = use(editorState);
 
   const play = useSearchHref({ pathname: "./play" });
 
+  const ref = useRef<DockLayout | null>(null);
+
   return (
-    <div
-      style={{
-        minHeight: "0px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "stretch",
-        flexGrow: 1,
-      }}
-    >
+    <EditorStateContext.Provider value={state}>
       <div
         style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "stretch",
-          padding: "8px",
-        }}
-      >
-        <span style={{ fontSize: "24px" }}>LoFi Mockup</span>{" "}
-        <Stack direction="horizontal" style={{ marginLeft: "auto" }} gap={3}>
-          <Button as="a" {...play}>
-            Play
-          </Button>
-          <Button
-            onClick={async () => {
-              saveAs(
-                await (await repository).createZip(),
-                downloadName ?? "project.lofi"
-              );
-            }}
-          >
-            Download
-          </Button>
-          <Dropzone
-            onDropAccepted={async (acceptedFiles) => {
-              if (acceptedFiles.length < 1) {
-                return;
-              }
-              if (acceptedFiles.length > 1) {
-                toast.error("Multiple Files Dropped");
-                return;
-              }
-              if (!acceptedFiles[0].name.endsWith(".lofi")) {
-                toast.error("File has to end in '.lofi'");
-                return;
-              }
-              try {
-                await (await repository).loadZip(acceptedFiles[0]);
-              } catch (e) {
-                console.log(e);
-                toast.error("Loading " + acceptedFiles[0].name + " failed");
-              }
-              toast.success("File " + acceptedFiles[0].name + " loaded");
-            }}
-          >
-            {({ getRootProps, getInputProps, isDragActive }) => (
-              <div
-                {...getRootProps()}
-                style={{
-                  margin: "-4px",
-                  padding: "4px",
-                  ...(isDragActive
-                    ? {
-                        border: "1px dashed black",
-                      }
-                    : { border: "1px dashed transparent" }),
-                }}
-              >
-                <input {...getInputProps()} />
-                <Button>Upload</Button>
-              </div>
-            )}
-          </Dropzone>
-          <XwikiControls />
-        </Stack>
-      </div>
-
-      <PanelGroup
-        autoSaveId="main"
-        direction="horizontal"
-        style={{
           minHeight: "0px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "stretch",
           flexGrow: 1,
         }}
       >
-        <Panel
-          style={{
-            overflow: "visible",
-          }}
-        >
-          <Tabs defaultActiveKey="palette">
-            <Tab title="Palette" style={{}} eventKey="palette">
-              <Palette editorProjection={projection} dragOffset={dragOffset} />
-            </Tab>
-            <Tab title="Pages" eventKey="pages">
-              <Pages project={project} />
-            </Tab>
-          </Tabs>
-        </Panel>
-        <PanelResizeHandle className="panel-resize-handle" />
-        <Panel
+        <div
           style={{
             display: "flex",
             flexDirection: "row",
             alignItems: "stretch",
+            padding: "8px",
           }}
         >
-          {project.currentPage === undefined ? null : (
-            <EditorCanvas
-              projection={projection}
-              page={project.currentPage}
-              dragOffset={dragOffset}
-            />
-          )}
-        </Panel>
-        <PanelResizeHandle className="panel-resize-handle" />
-        <Panel
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "stretch",
-          }}
-        >
-          <div style={{ flexGrow: 1 }}>
-            {selection?.size === 0 && <h1> No selected Item </h1>}
-            {selection?.size === 1 && (
-              <ItemProperties
-                item={selection.single}
-                clearSelection={() =>
-                  project.currentPage?.setSelection(Selection.empty)
+          <span style={{ fontSize: "24px" }}>LoFi Mockup</span>{" "}
+          <Stack direction="horizontal" style={{ marginLeft: "auto" }} gap={3}>
+            <Button as="a" {...play}>
+              Play
+            </Button>
+            <Button
+              onClick={async () => {
+                saveAs(
+                  await state.repository.createZip(),
+                  downloadName ?? "project.lofi"
+                );
+              }}
+            >
+              Download
+            </Button>
+            <Dropzone
+              onDropAccepted={async (acceptedFiles) => {
+                if (acceptedFiles.length < 1) {
+                  return;
                 }
-              />
-            )}
-            {selection !== undefined && selection.size > 1 && (
-              <h1> Multiple selected Items </h1>
-            )}
-          </div>
-        </Panel>
-      </PanelGroup>
-    </div>
+                if (acceptedFiles.length > 1) {
+                  toast.error("Multiple Files Dropped");
+                  return;
+                }
+                if (!acceptedFiles[0].name.endsWith(".lofi")) {
+                  toast.error("File has to end in '.lofi'");
+                  return;
+                }
+                try {
+                  await state.repository.loadZip(acceptedFiles[0]);
+                } catch (e) {
+                  console.log(e);
+                  toast.error("Loading " + acceptedFiles[0].name + " failed");
+                }
+                toast.success("File " + acceptedFiles[0].name + " loaded");
+              }}
+            >
+              {({ getRootProps, getInputProps, isDragActive }) => (
+                <div
+                  {...getRootProps()}
+                  style={{
+                    margin: "-4px",
+                    padding: "4px",
+                    ...(isDragActive
+                      ? {
+                          border: "1px dashed black",
+                        }
+                      : { border: "1px dashed transparent" }),
+                  }}
+                >
+                  <input {...getInputProps()} />
+                  <Button>Upload</Button>
+                </div>
+              )}
+            </Dropzone>
+            <XwikiControls />
+          </Stack>
+        </div>
+
+        <DockLayout
+          ref={(x) => {
+            ref.current = x;
+            const layout = localStorage.getItem(layoutKey);
+            if (layout !== null) x?.loadLayout(JSON.parse(layout));
+          }}
+          defaultLayout={defaultLayout}
+          onLayoutChange={(layout) =>
+            localStorage.setItem(layoutKey, JSON.stringify(layout))
+          }
+          style={{ flexGrow: 1 }}
+        />
+      </div>
+    </EditorStateContext.Provider>
   );
 }

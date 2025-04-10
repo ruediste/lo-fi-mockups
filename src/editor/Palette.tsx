@@ -1,24 +1,22 @@
+import { calculateViewBox } from "@/editor/paletteHelper";
+import { PageItemData } from "@/model/PageItem";
+import { Project, ProjectData } from "@/model/Project";
+import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
+import { Widget } from "@/widgets/Widget";
 import { DragOverlay, useDraggable } from "@dnd-kit/core";
-import { memo, RefObject, useEffect, useMemo, useState } from "react";
-import { CanvasProjection } from "./Canvas";
-import { PageItemData } from "./model/PageItem";
-import { Project, ProjectData } from "./model/Project";
-import { calculateViewBox } from "./paletteHelper";
-import { pageItemTypeRegistry } from "./widgets/PageItemTypeRegistry";
-import { Widget } from "./widgets/Widget";
+import { memo, useEffect, useMemo, useState } from "react";
+import { EditorState, useEditorState } from "./EditorState";
 
 const paletteItemSize = { width: 120, height: 90 };
 
 function PaletteEntry({
   widget,
-  editorProjection,
   idx,
-  dragOffset,
+  state,
 }: {
   widget: Widget;
-  editorProjection: CanvasProjection;
   idx: number;
-  dragOffset: RefObject<{ x: number; y: number }>;
+  state: EditorState;
 }) {
   const {
     attributes,
@@ -45,13 +43,13 @@ function PaletteEntry({
         const rect = node.current.getBoundingClientRect();
         const x = activatorEvent.clientX - rect.left;
         const y = activatorEvent.clientY - rect.top;
-        dragOffset.current = { x, y };
+        state.dragOffset = { x, y };
         setOverlayTransform(`translate(${x}px,${y}px)`);
       }
     } else {
       setOverlayTransform(undefined);
     }
-  }, [isDragging, activatorEvent, node, dragOffset]);
+  }, [isDragging, activatorEvent, node]);
 
   return (
     <>
@@ -77,8 +75,8 @@ function PaletteEntry({
           <svg
             style={{ transform: overlayTransform }}
             viewBox={`${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}`}
-            width={editorProjection.lengthToView(boundingBox.width) + "px"}
-            height={editorProjection.lengthToView(boundingBox.height) + "px"}
+            width={state.projection.lengthToView(boundingBox.width) + "px"}
+            height={state.projection.lengthToView(boundingBox.height) + "px"}
           >
             {widget.renderContent()}
           </svg>
@@ -88,13 +86,8 @@ function PaletteEntry({
   );
 }
 
-export const Palette = memo(function Palette({
-  editorProjection,
-  dragOffset,
-}: {
-  editorProjection: CanvasProjection;
-  dragOffset: RefObject<{ x: number; y: number }>;
-}) {
+export const Palette = memo(function Palette() {
+  const state = useEditorState();
   const widgets = useMemo(() => {
     let nextId = 1;
 
@@ -125,16 +118,10 @@ export const Palette = memo(function Palette({
   }, []);
 
   return (
-    <>
+    <div style={{ overflow: "auto", height: "100%" }}>
       {widgets.map((widget, idx) => (
-        <PaletteEntry
-          key={idx}
-          widget={widget}
-          editorProjection={editorProjection}
-          idx={idx}
-          dragOffset={dragOffset}
-        />
+        <PaletteEntry key={idx} widget={widget} idx={idx} state={state} />
       ))}
-    </>
+    </div>
   );
 });

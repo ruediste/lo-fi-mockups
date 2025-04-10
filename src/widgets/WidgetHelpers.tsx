@@ -1,6 +1,6 @@
 import { PageItemRenderContext } from "@/model/PageItem";
 import { SVGAttributes, useContext, useId } from "react";
-import { CanvasProjection } from "../Canvas";
+import { CanvasProjection } from "../editor/Canvas";
 import { Rectangle } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 
