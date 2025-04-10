@@ -19,7 +19,7 @@ import { PageItem, SnapReferencesArgs } from "../model/PageItem";
 import { toSet } from "../utils";
 import { Vec2d } from "../Vec2d";
 import { Rectangle } from "../widgets/Widget";
-import { dragPositionRectAttrs } from "../widgets/WidgetHelpers";
+import { dragPositionRectAttrs } from "../widgets/widgetUtils";
 import { PageItemProperty } from "./PageItemProperty";
 import { SnapIndex } from "./SnapIndex";
 

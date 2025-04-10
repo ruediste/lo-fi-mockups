@@ -1,18 +1,7 @@
 import { PageItemRenderContext } from "@/model/PageItem";
-import { SVGAttributes, useContext, useId } from "react";
-import { CanvasProjection } from "../editor/Canvas";
+import { useContext, useId } from "react";
 import { Rectangle } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function dragPositionRectAttrs(
-  projection: CanvasProjection
-): SVGAttributes<SVGRectElement> {
-  return {
-    stroke: "#008800",
-    strokeWidth: projection.lengthToWorld(0.5),
-  };
-}
 
 export function PageLink({
   pageId,
@@ -36,7 +25,6 @@ export function PageLink({
     <rect
       {...{ x, y, width, height }}
       rx={widgetTheme.rx}
-      ry={widgetTheme.ry}
       css={{
         fill: "transparent",
         "&:hover": {

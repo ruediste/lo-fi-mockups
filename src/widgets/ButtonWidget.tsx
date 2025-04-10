@@ -8,7 +8,7 @@ import { PageLink } from "./WidgetHelpers";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
-const margin = widgetTheme.margin;
+export const margin = widgetTheme.margin;
 
 export class ButtonWidget extends PositionWidget {
   label = "Button";

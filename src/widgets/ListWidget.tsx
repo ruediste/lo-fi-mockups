@@ -9,7 +9,7 @@ import {
   NumberProperty,
 } from "../model/PageItemProperty";
 import { BoxWidget } from "./Widget";
-import { WidgetBounds } from "./WidgetHelpers";
+import { PageLink, WidgetBounds } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 
 export class ListWidget extends BoxWidget {
@@ -38,11 +38,14 @@ export class ListWidget extends BoxWidget {
     this.itemListSelection
   );
 
-  itemsMemo = new MemoValue<{ label: string; selected: boolean }[]>(() => {
+  itemsMemo = new MemoValue<
+    { label: string; selected: boolean; link?: number }[]
+  >(() => {
     const selection = this.itemListSelection.get();
     return this.itemList.get().map((item) => ({
       label: item.label,
       selected: selection.selectedItems[item.id] ?? false,
+      link: item.link,
     }));
   }, [this.itemList, this.itemListSelection]);
 
@@ -98,6 +101,18 @@ export class ListWidget extends BoxWidget {
           {item.label}
         </text>
       );
+
+      renderedItems.push(
+        <PageLink
+          key={id++}
+          x={box.x}
+          y={y}
+          width={box.width}
+          height={advance}
+          pageId={item.link}
+        />
+      );
+
       y += advance;
     });
 

@@ -49,8 +49,10 @@ export abstract class WidthWidget extends Widget {
   private boxInteraction = new BoxWidgetInteraction(this).widthOnly();
 
   get box() {
-    return this.boxInteraction.box.get();
+    return { ...this.boxInteraction.box.get(), height: this.height };
   }
+
+  abstract get height(): number;
 
   set box(value: Rectangle) {
     this.boxInteraction.box.set(value);

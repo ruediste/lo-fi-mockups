@@ -43,8 +43,12 @@ export class TextInputWidget extends WidthWidget {
       x: 0,
       y: 0,
       width: 100,
-      height: widgetTheme.fontSize + 2 * widgetTheme.margin,
+      height: 0,
     };
+  }
+
+  get height(): number {
+    return widgetTheme.fontSize + 2 * widgetTheme.margin;
   }
 
   override getSnapBoxes(args: SnapBoxesArgs): void {

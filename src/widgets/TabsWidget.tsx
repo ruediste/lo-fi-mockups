@@ -42,7 +42,7 @@ export class TabsWidget extends BoxWidget {
           x={x}
           y={y}
           width={width + 8}
-          height={widgetTheme.fontSize + 4 + widgetTheme.ry}
+          height={widgetTheme.fontSize + 4 + widgetTheme.rx}
           fill={selected ? "white" : widgetTheme.selectedGray}
         />
       );

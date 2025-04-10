@@ -5,7 +5,7 @@ import { DraggableSnapBox } from "@/model/PageItemInteractionHelpers";
 import { Selection } from "@/Selection";
 import { Vec2d } from "@/Vec2d";
 import { Rectangle, Widget } from "@/widgets/Widget";
-import { dragPositionRectAttrs } from "@/widgets/WidgetHelpers";
+import { dragPositionRectAttrs } from "@/widgets/widgetUtils";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import Flatbush from "flatbush";
 import { use, useEffect, useRef, useState } from "react";

@@ -1,3 +1,6 @@
+import { CanvasProjection } from "@/editor/Canvas";
+import { SVGAttributes } from "react";
+
 let canvas: HTMLCanvasElement | undefined;
 
 export function getTextWidth(
@@ -12,4 +15,21 @@ export function getTextWidth(
   context.font = size + "px " + font;
   const metrics = context.measureText(text);
   return metrics.width;
+}
+
+export function dragPositionRectAttrs(
+  projection: CanvasProjection
+): SVGAttributes<SVGRectElement> {
+  return {
+    stroke: "#008800",
+    strokeWidth: projection.lengthToWorld(0.5),
+  };
+}
+
+export function triangleDown(x: number, y: number) {
+  return (
+    <g transform={`translate(${x} ${y - 8})`}>
+      <path fill="#c9c9c9" strokeWidth="0" d="M0,0 L4.75,6.2,L9.5,0 z"></path>
+    </g>
+  );
 }
