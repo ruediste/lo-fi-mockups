@@ -195,6 +195,7 @@ export class ObjectProperty<T extends {} | null> extends PageItemProperty<T> {
 
 export class StringProperty extends PageItemProperty<string> {
   isTextArea = false;
+  isAcceptTabs = false;
   constructor(
     item: PageItem,
     id: string,
@@ -214,6 +215,27 @@ export class StringProperty extends PageItemProperty<string> {
             onChange={(e) => this.set(e.target.value)}
             as={this.isTextArea ? "textarea" : undefined}
             rows={5}
+            onKeyDown={
+              this.isAcceptTabs
+                ? (e) => {
+                    if (e.key == "Tab") {
+                      e.preventDefault();
+                      const target = e.target as HTMLTextAreaElement;
+                      var start = target.selectionStart;
+                      var end = target.selectionEnd;
+
+                      // set textarea value to: text before caret + tab + text after caret
+                      target.value =
+                        target.value.substring(0, start) +
+                        "\t" +
+                        target.value.substring(end);
+
+                      // put caret at right position again
+                      target.selectionStart = target.selectionEnd = start + 1;
+                    }
+                  }
+                : undefined
+            }
           />
           <PropertyOverrideableInputGroupControls property={this} />
         </InputGroup>
@@ -223,6 +245,11 @@ export class StringProperty extends PageItemProperty<string> {
 
   textArea() {
     this.isTextArea = true;
+    return this;
+  }
+
+  acceptTabs() {
+    this.isAcceptTabs = true;
     return this;
   }
 }

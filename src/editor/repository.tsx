@@ -1,6 +1,7 @@
 import JSZip from "jszip";
 import { Project, ProjectData } from "../model/Project";
 
+import { PageData } from "@/model/Page";
 import { toSet } from "@/util/utils";
 import * as htmlToImage from "html-to-image";
 import { DBSchema, IDBPDatabase, openDB } from "idb";
@@ -86,6 +87,8 @@ export class Repository {
   async generatePageImages(
     handle: (args: {
       pageName: string;
+      pageData: PageData;
+      masterPages: Set<number>;
       element: (scale: number) => Promise<HTMLElement>;
       pageNr: number;
       box: Rectangle;
@@ -98,7 +101,6 @@ export class Repository {
       ...data.pages.map((p) => p.masterPageId).filter((x) => x !== undefined)
     );
     for (const pageData of data.pages) {
-      if (masterPages.has(pageData.id)) continue;
       project.selectPage(pageData);
       const page = project.currentPage!;
       const box = page.boundingBox();
@@ -107,6 +109,8 @@ export class Repository {
         box,
         pageName: page.data.name,
         pageNr,
+        pageData: page.data,
+        masterPages,
         element: async (scale) => {
           rootElement.className = "export-helper";
           document.body.append(rootElement);
@@ -146,9 +150,13 @@ export class Repository {
     });
     const padding = 10;
 
+    let firstPage = true;
     await this.generatePageImages(
-      async ({ element, pageNr, box, pageName }) => {
-        if (pageNr > 0) doc.addPage();
+      async ({ element, pageNr, box, pageName, masterPages, pageData }) => {
+        if (masterPages.has(pageData.id)) return;
+
+        if (!firstPage) doc.addPage();
+        firstPage = false;
         const widthRatio = (pageWidth - 2 * padding) / box.width;
         const heightRatio = (pageHeight - 2 * padding) / box.height;
         const ratio = Math.min(widthRatio, heightRatio);
