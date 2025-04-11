@@ -1,9 +1,9 @@
-import { useRerenderTrigger } from "@/hooks";
-import { IconButton } from "@/Inputs";
 import { PageData } from "@/model/Page";
 import { Project } from "@/model/Project";
 import { confirm } from "@/util/confirm";
+import { useRerenderTrigger } from "@/util/hooks";
 import { InlineEdit } from "@/util/InlineEdit";
+import { IconButton } from "@/util/Inputs";
 import { InlinePageReferenceInput } from "@/util/PageReferenceInput";
 import {
   DndContext,

@@ -61,3 +61,13 @@ button.icon-button {
     background-color: rgba(0, 0, 0, 0.2);
   }
 }
+
+body > .export-helper {
+  // visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0px;
+  height: 0px;
+  overflow: scroll;
+}

@@ -1,7 +1,7 @@
 import { PageReferenceInput } from "@/util/PageReferenceInput";
 import React, { JSX } from "react";
 import { Form, InputGroup } from "react-bootstrap";
-import { NumberInput } from "../Inputs";
+import { NumberInput } from "../util/Inputs";
 import { ModelEvent } from "./ModelEvent";
 import { PageItem } from "./PageItem";
 import { PropertyOverrideableInputGroupControls } from "./PageItemInteractionHelpers";

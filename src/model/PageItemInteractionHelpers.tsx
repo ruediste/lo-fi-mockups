@@ -1,4 +1,5 @@
-import { IconButton, IconButtonProps } from "@/Inputs";
+import { IconButton, IconButtonProps } from "@/util/Inputs";
+import { Vec2d } from "@/util/Vec2d";
 import {
   forwardRef,
   JSX,
@@ -11,13 +12,12 @@ import {
 } from "react";
 import { InputGroup, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Eraser, Lock, Unlock } from "react-bootstrap-icons";
-import { ProjectionContext } from "../Contexts";
 import { CanvasProjection } from "../editor/Canvas";
-import { useRerenderOnEvent } from "../hooks";
 import { Page, SnapResult } from "../model/Page";
 import { PageItem, SnapReferencesArgs } from "../model/PageItem";
-import { toSet } from "../utils";
-import { Vec2d } from "../Vec2d";
+import { ProjectionContext } from "../util/Contexts";
+import { useRerenderOnEvent } from "../util/hooks";
+import { toSet } from "../util/utils";
 import { Rectangle } from "../widgets/Widget";
 import { dragPositionRectAttrs } from "../widgets/widgetUtils";
 import { PageItemProperty } from "./PageItemProperty";

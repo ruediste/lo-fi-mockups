@@ -1,4 +1,4 @@
-import { Rectangle } from "./widgets/Widget";
+import { Rectangle } from "@/widgets/Widget";
 
 export class Vec2d {
   readonly x: number;

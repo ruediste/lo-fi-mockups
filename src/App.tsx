@@ -4,8 +4,8 @@ import { Button, Card, Spinner } from "react-bootstrap";
 import { HashRouter, Route, Routes } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { editorState } from "./editor/EditorState";
-import { ErrorBoundary } from "./ErrorBoundary";
 import { Play } from "./Play";
+import { ErrorBoundary } from "./util/ErrorBoundary";
 import "./widgets/PageItemTypeRegistry";
 import { XwikiPageMockups } from "./xwiki/XwikiPageMockups";
 

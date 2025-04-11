@@ -22,7 +22,7 @@ public class LoFiRestResource extends XWikiResource {
   // http://localhost:8078/rest/lofimockups/page?wiki=xwiki&page=LoFiTest&attachment=testProject.zip&pageNr=0
   @GET
   @Path("page")
-  @Produces("image/svg+xml")
+  @Produces("image/png")
   public InputStream get(@QueryParam("wiki") String wiki, @QueryParam("page") String page,
       @QueryParam("attachment") String attachmentName, @QueryParam("pageNr") int pageNr) {
     try {
@@ -33,7 +33,7 @@ public class LoFiRestResource extends XWikiResource {
       var is = attachment.getContentInputStream(xcontext);
       var zis = new ZipInputStream(is);
       ZipEntry entry;
-      var zipPath = "pages/" + pageNr + ".svg";
+      var zipPath = "pages/" + pageNr + ".png";
       while ((entry = zis.getNextEntry()) != null) {
 
         if (entry.getName().equals(zipPath)) {

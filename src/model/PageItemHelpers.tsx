@@ -2,8 +2,8 @@ import { InlineEdit } from "@/util/InlineEdit";
 import { InlinePageReferenceInput } from "@/util/PageReferenceInput";
 import { Form } from "react-bootstrap";
 import { GripVertical, Trash } from "react-bootstrap-icons";
-import { IconButton } from "../Inputs";
-import { SortableListItem } from "../SortableList";
+import { IconButton } from "../util/Inputs";
+import { SortableListItem } from "../util/SortableList";
 import { Project } from "./Project";
 
 export interface Item {

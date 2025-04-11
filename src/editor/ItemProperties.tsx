@@ -1,10 +1,10 @@
 import { useProject } from "@/editor/EditorState";
 import { ArrowDown, ArrowUp, Back, Front, Trash } from "react-bootstrap-icons";
-import { useRerenderOnEvent } from "../hooks";
-import { IconButton } from "../Inputs";
 import { PageItem } from "../model/PageItem";
-import { Selection } from "../Selection";
+import { useRerenderOnEvent } from "../util/hooks";
+import { IconButton } from "../util/Inputs";
 import { Widget } from "../widgets/Widget";
+import { Selection } from "./Selection";
 
 function SingleItemProperties({
   item,

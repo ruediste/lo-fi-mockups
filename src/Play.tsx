@@ -2,9 +2,9 @@ import { editorState } from "@/editor/EditorState";
 import { use, useCallback, useEffect, useMemo } from "react";
 import { CloseButton } from "react-bootstrap";
 import { ArrowLeft, ArrowRight } from "react-bootstrap-icons";
-import { useRerenderOnEvent } from "./hooks";
-import { IconButton } from "./Inputs";
 import { PageItem, PageItemRenderContext } from "./model/PageItem";
+import { useRerenderOnEvent } from "./util/hooks";
+import { IconButton } from "./util/Inputs";
 
 function RenderItem({ item }: { item: PageItem }) {
   useRerenderOnEvent(item.onChange);

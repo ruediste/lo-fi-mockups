@@ -1,7 +1,7 @@
+import { Vec2d } from "@/util/Vec2d";
 import { Rectangle } from "@/widgets/Widget";
-import { Selection } from "../Selection";
-import { Vec2d } from "../Vec2d";
-import { arraySwapInPlace } from "../utils";
+import { Selection } from "../editor/Selection";
+import { arraySwapInPlace } from "../util/utils";
 import { ModelEvent } from "./ModelEvent";
 import {
   HorizontalSnapBox,
@@ -166,7 +166,7 @@ export class Page {
     return drawBox;
   }
 
-  boundingViewBox(margin: number) {
+  boundingViewBox(margin: number = 32) {
     const box = this.boundingBox(margin);
     return `${box.x} ${box.y} ${box.width} ${box.height}`;
   }

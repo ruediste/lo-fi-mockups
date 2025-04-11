@@ -1,7 +1,7 @@
 import { JSX } from "react";
+import { Selection } from "../editor/Selection";
 import { PageItem, RenderInteractionArgs } from "../model/PageItem";
 import { ObjectProperty } from "../model/PageItemProperty";
-import { Selection } from "../Selection";
 import { Position, Rectangle } from "../widgets/Widget";
 import {
   DraggableSnapBox,

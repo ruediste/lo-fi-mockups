@@ -1,5 +1,5 @@
 import { Button, Form } from "react-bootstrap";
-import { SortableList } from "../SortableList";
+import { SortableList } from "../util/SortableList";
 import { PageItem } from "./PageItem";
 import { Item, ItemListPropertyItem } from "./PageItemHelpers";
 import { PropertyOverrideControls } from "./PageItemInteractionHelpers";

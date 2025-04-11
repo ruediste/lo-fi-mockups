@@ -1,8 +1,8 @@
-import { useRerenderOnEvent } from "@/hooks";
+import { Repository } from "@/editor/repository";
 import { ModelEvent } from "@/model/ModelEvent";
 import { Project } from "@/model/Project";
-import { Repository } from "@/repository";
-import { throttle } from "@/throttle";
+import { useRerenderOnEvent } from "@/util/hooks";
+import { throttle } from "@/util/throttle";
 import { createContext, useContext } from "react";
 import { CanvasProjection } from "./Canvas";
 

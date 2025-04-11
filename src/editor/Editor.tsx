@@ -1,9 +1,9 @@
-import { useRerenderOnEvent } from "@/hooks";
+import { Selection } from "@/editor/Selection";
 import { Page } from "@/model/Page";
 import { PageItem } from "@/model/PageItem";
 import { DraggableSnapBox } from "@/model/PageItemInteractionHelpers";
-import { Selection } from "@/Selection";
-import { Vec2d } from "@/Vec2d";
+import { useRerenderOnEvent } from "@/util/hooks";
+import { Vec2d } from "@/util/Vec2d";
 import { Rectangle, Widget } from "@/widgets/Widget";
 import { dragPositionRectAttrs } from "@/widgets/widgetUtils";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
@@ -23,8 +23,8 @@ import { Pages } from "./Pages";
 import { Palette } from "./Palette";
 
 import { ItemProperties } from "@/editor/ItemProperties";
-import { ThreeDotMenu } from "@/Inputs";
 import { confirm } from "@/util/confirm";
+import { ThreeDotMenu } from "@/util/Inputs";
 import "rc-dock/dist/rc-dock.css";
 import {
   EditorState,
@@ -94,7 +94,7 @@ function MultiItemSelectionBox({
   );
 }
 
-export function RenderPageItems({
+function RenderPageItems({
   page,
   projection,
 }: {
@@ -372,6 +372,12 @@ export function Editor({ downloadName }: { downloadName?: string }) {
             <XwikiControls />
             <ThreeDotMenu
               items={[
+                {
+                  label: "Export PDF",
+                  onClick: async () => {
+                    await state.repository.savePdf();
+                  },
+                },
                 {
                   label: "Clear Project",
                   onClick: async () => {

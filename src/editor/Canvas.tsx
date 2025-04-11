@@ -1,15 +1,14 @@
+import { Selection } from "@/editor/Selection";
 import { Page } from "@/model/Page";
-import { Selection } from "@/Selection";
+import { Vec2d } from "@/util/Vec2d";
 import { Rectangle } from "@/widgets/Widget";
 import classNames from "classnames";
 import { PointerEventHandler, useRef } from "react";
 import { Fullscreen, Icon1Square } from "react-bootstrap-icons";
 import ObserveSize from "react-observe-size";
-import { ProjectionContext } from "../Contexts";
-import { useRerenderOnEvent } from "../hooks";
 import { ModelEvent } from "../model/ModelEvent";
-import { Vec2d } from "../Vec2d";
-
+import { ProjectionContext } from "../util/Contexts";
+import { useRerenderOnEvent } from "../util/hooks";
 export class CanvasProjection {
   onChange = new ModelEvent();
 

@@ -1,5 +1,5 @@
 import { CanvasProjection } from "@/editor/Canvas";
-import { Vec2d } from "@/Vec2d";
+import { Vec2d } from "@/util/Vec2d";
 import Flatbush from "flatbush";
 import { Page, SnapResult } from "./Page";
 import {

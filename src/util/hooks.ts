@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ModelEvent } from "./model/ModelEvent";
+import { ModelEvent } from "../model/ModelEvent";
 
 export function useRerenderTrigger() {
   const [, trigger] = useState({});

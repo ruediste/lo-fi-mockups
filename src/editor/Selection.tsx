@@ -1,5 +1,5 @@
-import { PageItem } from "./model/PageItem";
-import { toSet } from "./utils";
+import { PageItem } from "../model/PageItem";
+import { toSet } from "../util/utils";
 
 export class Selection {
   static empty = new Selection(toSet());
