@@ -1,6 +1,7 @@
 import JSZip from "jszip";
 import { Project, ProjectData } from "../model/Project";
 
+import { toSet } from "@/util/utils";
 import * as htmlToImage from "html-to-image";
 import { DBSchema, IDBPDatabase, openDB } from "idb";
 import jsPDF from "jspdf";
@@ -93,7 +94,11 @@ export class Repository {
     const data = { ...this.projectData };
     const project = new Project(data, () => {});
     let pageNr = 0;
+    const masterPages = toSet(
+      ...data.pages.map((p) => p.masterPageId).filter((x) => x !== undefined)
+    );
     for (const pageData of data.pages) {
+      if (masterPages.has(pageData.id)) continue;
       project.selectPage(pageData);
       const page = project.currentPage!;
       const box = page.boundingBox();
