@@ -112,26 +112,48 @@ function SnapResultDisplay({ snap }: { snap: SnapResult }) {
   return (
     <>
       {snap.h && (
-        <line
-          strokeWidth="1px"
-          stroke="black"
-          strokeDasharray="4"
-          x1={snap.h.x}
-          x2={snap.h.x + snap.h.width}
-          y1={snap.h.y}
-          y2={snap.h.y}
-        />
+        <>
+          <line
+            strokeWidth="1px"
+            stroke="black"
+            strokeDasharray="4"
+            x1={snap.h.box.x}
+            x2={snap.h.box.x + snap.h.box.width}
+            y1={snap.h.box.y}
+            y2={snap.h.box.y}
+          />
+          <line
+            strokeWidth="1px"
+            stroke="black"
+            strokeDasharray="2"
+            x1={snap.h.ref.x}
+            x2={snap.h.ref.x + snap.h.ref.width}
+            y1={snap.h.ref.y}
+            y2={snap.h.ref.y}
+          />
+        </>
       )}
       {snap.v && (
-        <line
-          strokeWidth="1px"
-          stroke="black"
-          strokeDasharray="4"
-          x1={snap.v.x}
-          x2={snap.v.x}
-          y1={snap.v.y}
-          y2={snap.v.y + snap.v.height}
-        />
+        <>
+          <line
+            strokeWidth="1px"
+            stroke="black"
+            strokeDasharray="4"
+            x1={snap.v.box.x}
+            x2={snap.v.box.x}
+            y1={snap.v.box.y}
+            y2={snap.v.box.y + snap.v.box.height}
+          />
+          <line
+            strokeWidth="1px"
+            stroke="black"
+            strokeDasharray="2"
+            x1={snap.v.ref.x}
+            x2={snap.v.ref.x}
+            y1={snap.v.ref.y}
+            y2={snap.v.ref.y + snap.v.ref.height}
+          />
+        </>
       )}
     </>
   );
@@ -309,7 +331,9 @@ export function DraggableSnapResizeBox({
                 pick(
                   PageItem.getSnapReferences([item], 1 / projection.scale),
                   "top",
-                  "left"
+                  "left",
+                  "otherHorizontal",
+                  "otherVertical"
                 ),
               update: (start, delta) => {
                 const x = Math.min(start.width - minSize.width, delta.x);
@@ -339,7 +363,8 @@ export function DraggableSnapResizeBox({
               snapReferences: () =>
                 pick(
                   PageItem.getSnapReferences([item], 1 / projection.scale),
-                  "top"
+                  "top",
+                  "otherHorizontal"
                 ),
               update: (start, delta) => {
                 const y = Math.min(start.height - minSize.height, delta.y);
@@ -369,7 +394,9 @@ export function DraggableSnapResizeBox({
                 pick(
                   PageItem.getSnapReferences([item], 1 / projection.scale),
                   "top",
-                  "right"
+                  "right",
+                  "otherHorizontal",
+                  "otherVertical"
                 ),
               update: (start, delta) => {
                 const x = Math.max(minSize.width - start.width, delta.x);
@@ -398,7 +425,8 @@ export function DraggableSnapResizeBox({
             snapReferences: () =>
               pick(
                 PageItem.getSnapReferences([item], 1 / projection.scale),
-                "right"
+                "right",
+                "otherVertical"
               ),
             update: (start, delta) => {
               const x = Math.max(minSize.width - start.width, delta.x);
@@ -427,7 +455,9 @@ export function DraggableSnapResizeBox({
                 pick(
                   PageItem.getSnapReferences([item], 1 / projection.scale),
                   "right",
-                  "bottom"
+                  "bottom",
+                  "otherHorizontal",
+                  "otherVertical"
                 ),
               update: (start, delta) => {
                 const x = Math.max(minSize.width - start.width, delta.x);
@@ -457,7 +487,8 @@ export function DraggableSnapResizeBox({
               snapReferences: () =>
                 pick(
                   PageItem.getSnapReferences([item], 1 / projection.scale),
-                  "bottom"
+                  "bottom",
+                  "otherHorizontal"
                 ),
               update: (start, delta) => {
                 const y = Math.max(minSize.height - start.height, delta.y);
@@ -487,7 +518,9 @@ export function DraggableSnapResizeBox({
                 pick(
                   PageItem.getSnapReferences([item], 1 / projection.scale),
                   "bottom",
-                  "left"
+                  "left",
+                  "otherHorizontal",
+                  "otherVertical"
                 ),
               update: (start, delta) => {
                 const x = Math.min(start.width - minSize.width, delta.x);
@@ -516,7 +549,8 @@ export function DraggableSnapResizeBox({
             snapReferences: () =>
               pick(
                 PageItem.getSnapReferences([item], 1 / projection.scale),
-                "left"
+                "left",
+                "otherVertical"
               ),
             update: (start, delta) => {
               const x = Math.min(start.width - minSize.width, delta.x);

@@ -20,10 +20,7 @@ export class EditorState {
   onChanged = new ModelEvent();
 
   constructor(public repository: Repository) {
-    repository.onChanged.subscribe(() => {
-      this.project = this.createProject();
-      this.onChanged.notify();
-    });
+    repository.onChanged.subscribe(() => this.recreateProject());
     this.project = this.createProject();
   }
 
@@ -34,9 +31,25 @@ export class EditorState {
   static async create() {
     return new EditorState(await Repository.create());
   }
+
+  public recreateProject() {
+    const oldSelection = this.project.currentPage?.selection;
+    this.project = this.createProject();
+    if (oldSelection) {
+      this.project.currentPage?.selectAvailableItemsById(oldSelection);
+    }
+    this.onChanged.notify();
+  }
 }
 
 export const editorState = EditorState.create();
+
+if (import.meta.hot) {
+  // recreate
+  import.meta.hot.on("vite:afterUpdate", async (p) => {
+    (await editorState).recreateProject();
+  });
+}
 
 export const EditorStateContext = createContext<EditorState | undefined>(
   undefined

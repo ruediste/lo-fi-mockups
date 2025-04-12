@@ -47,5 +47,11 @@ export class ButtonWidget extends PositionWidget {
       </>
     );
   }
+
+  override initialize(): void {
+    this.snapMiddle = "both";
+    this.snapInnerMargins = "vertical";
+  }
+
   initializeAfterAdd(): void {}
 }

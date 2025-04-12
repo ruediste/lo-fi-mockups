@@ -39,10 +39,7 @@ export class Repository {
       },
     });
 
-    const projectData =
-      (await db.get("project", "default")) ?? Repository.emptyData();
-
-    return new Repository(projectData, db);
+    return new Repository(await this.loadFromDb(db), db);
   }
 
   private static emptyData(): ProjectData {
@@ -68,6 +65,23 @@ export class Repository {
 
   async save() {
     await this.db!.put("project", await this.projectData, "default");
+  }
+
+  async reload() {
+    this.projectData = await Repository.loadFromDb(this.db);
+    this.onChanged.notify();
+  }
+
+  private static async loadFromDb(db: IDBPDatabase<MyDB>) {
+    return (await db.get("project", "default")) ?? Repository.emptyData();
+  }
+
+  async loadZip(data: Blob) {
+    const zip = await JSZip.loadAsync(data, {});
+    this.projectData = JSON.parse(
+      await zip.file("project.json")!.async("string")
+    );
+    this.onChanged.notify();
   }
 
   async createZip() {
@@ -178,13 +192,5 @@ export class Repository {
     );
 
     doc.save("export.pdf");
-  }
-
-  async loadZip(data: Blob) {
-    const zip = await JSZip.loadAsync(data, {});
-    this.projectData = JSON.parse(
-      await zip.file("project.json")!.async("string")
-    );
-    this.onChanged.notify();
   }
 }

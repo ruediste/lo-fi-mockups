@@ -4,9 +4,11 @@ import Flatbush from "flatbush";
 import { Page, SnapResult } from "./Page";
 import {
   HorizontalSnapBox,
+  HorizontalSnapReference,
   PageItem,
   SnapReferencesArgs,
   VerticalSnapBox,
+  VerticalSnapReference,
 } from "./PageItem";
 
 export class SnapIndex {
@@ -31,12 +33,7 @@ export class SnapIndex {
       const horizontal = new Flatbush(this.horizontalBoxes.length);
 
       this.horizontalBoxes.forEach((p) =>
-        horizontal.add(
-          p.x - p.snapRange,
-          p.y - p.snapRange,
-          p.x + p.width + p.snapRange,
-          p.y + p.snapRange
-        )
+        horizontal.add(p.x, p.y - p.snapRange, p.x + p.width, p.y + p.snapRange)
       );
       horizontal.finish();
       this.horizontal = horizontal;
@@ -45,12 +42,7 @@ export class SnapIndex {
     if (this.verticalBoxes.length > 0) {
       const vertical = new Flatbush(this.verticalBoxes.length);
       this.verticalBoxes.forEach((p) =>
-        vertical.add(
-          p.x - p.snapRange,
-          p.y - p.snapRange,
-          p.x + p.snapRange,
-          p.y + p.height + p.snapRange
-        )
+        vertical.add(p.x - p.snapRange, p.y, p.x + p.snapRange, p.y + p.height)
       );
       vertical.finish();
       this.vertical = vertical;
@@ -72,40 +64,52 @@ export class SnapIndex {
     currentOffset: { x: number; y: number }
   ): SnapResult {
     let deltaX: number | undefined = undefined;
-    let horizontalSnap: HorizontalSnapBox | undefined = undefined;
+    let horizontalSnap:
+      | { box: HorizontalSnapBox; ref: HorizontalSnapReference }
+      | undefined = undefined;
     let deltaY: number | undefined = undefined;
-    let verticalSnap: VerticalSnapBox | undefined = undefined;
+    let verticalSnap:
+      | { box: VerticalSnapBox; ref: VerticalSnapReference }
+      | undefined = undefined;
 
-    for (const pos of [...(refs.left ?? []), ...(refs.right ?? [])]) {
+    for (const ref of [
+      ...(refs.left ?? []),
+      ...(refs.right ?? []),
+      ...(refs.otherVertical ?? []),
+    ]) {
       const indices = this.vertical?.search(
-        pos.x - currentOffset.x,
-        pos.y - currentOffset.y,
-        pos.x - currentOffset.x,
-        pos.y + pos.height - currentOffset.y
+        ref.x - currentOffset.x,
+        ref.y - currentOffset.y,
+        ref.x - currentOffset.x,
+        ref.y + ref.height - currentOffset.y
       );
       for (const idx of indices ?? []) {
         const box = this.verticalBoxes[idx];
-        const delta = box.x - (pos.x - currentOffset.x);
+        const delta = box.x - (ref.x - currentOffset.x);
         if (deltaX === undefined || Math.abs(deltaX) > Math.abs(delta)) {
           deltaX = delta;
-          verticalSnap = box;
+          verticalSnap = { box, ref };
         }
       }
     }
 
-    for (const pos of [...(refs.top ?? []), ...(refs.bottom ?? [])]) {
+    for (const ref of [
+      ...(refs.top ?? []),
+      ...(refs.bottom ?? []),
+      ...(refs.otherHorizontal ?? []),
+    ]) {
       const indices = this.horizontal?.search(
-        pos.x - currentOffset.x,
-        pos.y - currentOffset.y,
-        pos.x + pos.width - currentOffset.x,
-        pos.y - currentOffset.y
+        ref.x - currentOffset.x,
+        ref.y - currentOffset.y,
+        ref.x + ref.width - currentOffset.x,
+        ref.y - currentOffset.y
       );
       for (const idx of indices ?? []) {
         const box = this.horizontalBoxes[idx];
-        const delta = box.y - (pos.y - currentOffset.y);
+        const delta = box.y - (ref.y - currentOffset.y);
         if (deltaY === undefined || Math.abs(deltaY) > Math.abs(delta)) {
           deltaY = delta;
-          horizontalSnap = box;
+          horizontalSnap = { box, ref };
         }
       }
     }

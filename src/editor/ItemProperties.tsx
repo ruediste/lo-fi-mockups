@@ -1,4 +1,5 @@
 import { useProject } from "@/editor/EditorState";
+import { IconWidget } from "@/widgets/IconWidget";
 import { ArrowDown, ArrowUp, Back, Front, Trash } from "react-bootstrap-icons";
 import { PageItem } from "../model/PageItem";
 import { useRerenderOnEvent } from "../util/hooks";
@@ -65,7 +66,12 @@ function SingleItemProperties({
       </>
     );
   }
-  return <></>;
+  return (
+    <>
+      {typeof item} {(item as any).constructor.name}{" "}
+      {"" + (item instanceof IconWidget)}
+    </>
+  );
 }
 
 export function ItemProperties() {

@@ -71,3 +71,12 @@ body > .export-helper {
   height: 0px;
   overflow: scroll;
 }
+
+@font-face {
+  font-display: block;
+  font-family: "bootstrap-icons";
+  src: url("../node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2")
+      format("woff2"),
+    url("../node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff")
+      format("woff");
+}

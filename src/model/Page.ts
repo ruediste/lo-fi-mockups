@@ -5,9 +5,11 @@ import { arraySwapInPlace } from "../util/utils";
 import { ModelEvent } from "./ModelEvent";
 import {
   HorizontalSnapBox,
+  HorizontalSnapReference,
   PageItem,
   PageItemData,
   VerticalSnapBox,
+  VerticalSnapReference,
 } from "./PageItem";
 import { Project } from "./Project";
 import { createPageItem } from "./createPageItem";
@@ -35,7 +37,10 @@ export class Page {
   // raised when only the position of an item changes. onChange is not raised in this case
   onItemPositionChange = new ModelEvent();
 
-  selection = Selection.of();
+  private _selection = Selection.of();
+  get selection() {
+    return this._selection;
+  }
 
   constructor(
     public data: PageData,
@@ -68,7 +73,20 @@ export class Page {
   }
 
   setSelection(value: Selection) {
-    this.selection = value;
+    this._selection = value;
+    this.onChange.notify();
+  }
+
+  selectAvailableItemsById(value: Selection) {
+    const items = Object.fromEntries(
+      this.ownItems.concat(this.masterItems).map((i) => [i.id, i])
+    );
+    this._selection = Selection.of(
+      ...value
+        .all()
+        .filter((i) => i.id in items)
+        .map((i) => items[i.id])
+    );
     this.onChange.notify();
   }
 
@@ -174,6 +192,6 @@ export class Page {
 
 export interface SnapResult {
   offset: Vec2d;
-  h?: HorizontalSnapBox;
-  v?: VerticalSnapBox;
+  h?: { box: HorizontalSnapBox; ref: HorizontalSnapReference };
+  v?: { box: VerticalSnapBox; ref: VerticalSnapReference };
 }

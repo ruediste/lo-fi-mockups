@@ -1,6 +1,9 @@
+import { FontIcon } from "@/util/FontIcon";
 import { PageReferenceInput } from "@/util/PageReferenceInput";
-import React, { JSX } from "react";
+import { iconNumberToName, iconsList } from "@/util/utils";
+import React, { Fragment, JSX } from "react";
 import { Form, InputGroup } from "react-bootstrap";
+import AsyncSelect from "react-select/async";
 import { NumberInput } from "../util/Inputs";
 import { ModelEvent } from "./ModelEvent";
 import { PageItem } from "./PageItem";
@@ -274,6 +277,56 @@ export class NumberProperty extends PageItemProperty<number> {
         </InputGroup>
       </Form.Group>
     );
+  }
+}
+
+export class IconProperty extends PageItemProperty<number | null> {
+  constructor(
+    item: PageItem,
+    id: string,
+    private label: string,
+    defaultValue: number
+  ) {
+    super(item, id, defaultValue);
+  }
+
+  isClearable = false;
+
+  render(): JSX.Element {
+    const nr = this.get();
+    return (
+      <Form.Group className="mb-3">
+        <Form.Label>{this.label}</Form.Label>
+        <InputGroup>
+          <AsyncSelect<{ name: string; nr: number }>
+            defaultOptions
+            isClearable={this.isClearable}
+            value={nr === null ? undefined : { nr, name: iconNumberToName[nr] }}
+            onChange={(e) => this.set(e === null ? null : e.nr)}
+            getOptionValue={(o) => o.name}
+            formatOptionLabel={(o) => (
+              <Fragment>
+                <span css={{ marginRight: "8px" }}>{o.name}</span>
+                <FontIcon nr={o.nr} />
+              </Fragment>
+            )}
+            loadOptions={async (input) =>
+              iconsList
+                .filter((o) => input === "" || o[0].includes(input))
+                .slice(0, 20)
+                .map((o) => ({ nr: o[1], name: o[0] }))
+            }
+            styles={{ container: (base) => ({ ...base, flexGrow: 1 }) }}
+          />
+          <PropertyOverrideableInputGroupControls property={this} />
+        </InputGroup>
+      </Form.Group>
+    );
+  }
+
+  clearable() {
+    this.isClearable = true;
+    return this;
   }
 }
 

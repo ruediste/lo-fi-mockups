@@ -1,3 +1,5 @@
+import { Selection } from "@/editor/Selection";
+import { getOwnPropertyNames } from "@/util/utils";
 import { ModelEvent } from "./ModelEvent";
 import { Page, PageData } from "./Page";
 import { PageItemData } from "./PageItem";
@@ -6,12 +8,6 @@ export interface ProjectData {
   nextId: number;
   pages: PageData[];
   currentPageId?: number;
-}
-
-function getOwnPropertyNames<K extends string | number>(value: {
-  [key in K]: any;
-}) {
-  return Object.getOwnPropertyNames(value) as K[];
 }
 
 export class Project {
@@ -101,9 +97,10 @@ export class Project {
   }
 
   selectPageId(pageId?: number) {
+    const oldSelection = this.currentPage?.selection;
     this.data.currentPageId = pageId;
     this.onDataChanged();
-    this.recreateCurrentPage();
+    this.recreateCurrentPage(oldSelection);
   }
 
   removePage(id: number) {
@@ -131,7 +128,7 @@ export class Project {
     this.recreateCurrentPage();
   }
 
-  private recreateCurrentPage() {
+  private recreateCurrentPage(oldSelection?: Selection) {
     this.currentPage =
       this.data.currentPageId === undefined
         ? undefined
@@ -140,6 +137,9 @@ export class Project {
             this,
             this.onDataChanged
           );
+    if (oldSelection) {
+      this.currentPage?.selectAvailableItemsById(oldSelection);
+    }
     this.onChange.notify();
   }
 }

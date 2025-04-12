@@ -314,7 +314,8 @@ export function Editor({ downloadName }: { downloadName?: string }) {
             padding: "8px",
           }}
         >
-          <span style={{ fontSize: "24px" }}>LoFi Mockup</span>{" "}
+          <span style={{ fontSize: "24px" }}>LoFi Mockup</span>
+
           <Stack direction="horizontal" style={{ marginLeft: "auto" }} gap={3}>
             <Button as="a" {...play}>
               Play

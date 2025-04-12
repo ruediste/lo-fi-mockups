@@ -24,8 +24,12 @@ export const PageItemRenderContext = createContext<
   | undefined
 >(undefined);
 
+type MiddleSnapSpecification = "horizontal" | "vertical" | "both" | "none";
+
 export abstract class PageItem {
   public interaction!: PageItemInteraction;
+  protected snapMiddle: MiddleSnapSpecification = "none";
+  protected snapInnerMargins: MiddleSnapSpecification = "both";
 
   properties: PageItemProperty<any>[] = [];
   propertyMap = new Map<string, PageItemProperty<any>>();
@@ -102,30 +106,86 @@ export abstract class PageItem {
   initialize() {}
 
   getSnapBoxes(args: SnapBoxesArgs) {
-    this.createSnapBoxes(args, this.boundingBox);
+    this.createSnapBoxes(args, this.boundingBox, this.snapMiddle);
   }
 
-  protected createSnapBoxes(args: SnapBoxesArgs, box: Rectangle) {
+  protected createSnapBoxes(
+    args: SnapBoxesArgs,
+    box: Rectangle,
+    middle?: MiddleSnapSpecification
+  ) {
     args.horizontal.push(
-      ...HorizontalSnapBox.from(box.x, box.y, box.width, "both")
+      ...HorizontalSnapBox.from(
+        box.x,
+        box.y,
+        box.width,
+        this.snapInnerMargins === "horizontal" ||
+          this.snapInnerMargins === "both"
+          ? "both"
+          : "above"
+      )
     );
     args.horizontal.push(
-      ...HorizontalSnapBox.from(box.x, box.y + box.height, box.width, "both")
+      ...HorizontalSnapBox.from(
+        box.x,
+        box.y + box.height,
+        box.width,
+        this.snapInnerMargins === "horizontal" ||
+          this.snapInnerMargins === "both"
+          ? "both"
+          : "below"
+      )
+    );
+    if (middle === "horizontal" || middle === "both") {
+      args.horizontal.push(
+        new HorizontalSnapBox(
+          box.x - snapConfiguration.snapSideLength,
+          box.y + box.height / 2,
+          box.width + 2 * snapConfiguration.snapSideLength,
+          snapConfiguration.snapRange
+        )
+      );
+    }
+    args.vertical.push(
+      ...VerticalSnapBox.from(
+        box.x,
+        box.y,
+        box.height,
+        this.snapInnerMargins === "vertical" || this.snapInnerMargins === "both"
+          ? "both"
+          : "left"
+      )
     );
     args.vertical.push(
-      ...VerticalSnapBox.from(box.x, box.y, box.height, "both")
+      ...VerticalSnapBox.from(
+        box.x + box.width,
+        box.y,
+        box.height,
+        this.snapInnerMargins === "vertical" || this.snapInnerMargins === "both"
+          ? "both"
+          : "right"
+      )
     );
-    args.vertical.push(
-      ...VerticalSnapBox.from(box.x + box.width, box.y, box.height, "both")
-    );
+    if (middle === "vertical" || middle === "both") {
+      args.vertical.push(
+        new VerticalSnapBox(
+          box.x + box.width / 2,
+          box.y - snapConfiguration.snapSideLength,
+          box.height + 2 * snapConfiguration.snapSideLength,
+          snapConfiguration.snapRange
+        )
+      );
+    }
   }
 
   static getSnapReferences(items: PageItem[], viewToWorld: number) {
     const args: SnapReferencesArgs = {
       top: [],
       bottom: [],
+      otherHorizontal: [],
       left: [],
       right: [],
+      otherVertical: [],
       viewToWorld,
     };
     items.forEach((item) => item.getSnapReferences(args));
@@ -133,14 +193,31 @@ export abstract class PageItem {
   }
 
   getSnapReferences(args: SnapReferencesArgs) {
-    this.createSnapReferences(args, this.boundingBox);
+    this.createSnapReferences(args, this.boundingBox, this.snapMiddle);
   }
 
-  protected createSnapReferences(args: SnapReferencesArgs, box: Rectangle) {
+  protected createSnapReferences(
+    args: SnapReferencesArgs,
+    box: Rectangle,
+    middle?: MiddleSnapSpecification
+  ) {
     args.top.push({ x: box.x, y: box.y, width: box.width });
     args.bottom.push({ x: box.x, y: box.y + box.height, width: box.width });
+    if (middle === "horizontal" || middle === "both")
+      args.otherHorizontal.push({
+        x: box.x,
+        y: box.y + box.height / 2,
+        width: box.width,
+      });
+
     args.left.push({ x: box.x, y: box.y, height: box.height });
     args.right.push({ x: box.x + box.width, y: box.y, height: box.height });
+    if (middle === "vertical" || middle === "both")
+      args.otherVertical.push({
+        x: box.x + box.width / 2,
+        y: box.y,
+        height: box.height,
+      });
   }
 }
 
@@ -152,8 +229,10 @@ export interface SnapBoxesArgs {
 export interface SnapReferencesArgs {
   top: HorizontalSnapReference[];
   bottom: HorizontalSnapReference[];
+  otherHorizontal: HorizontalSnapReference[];
   left: VerticalSnapReference[];
   right: VerticalSnapReference[];
+  otherVertical: VerticalSnapReference[];
   viewToWorld: number;
 }
 
