@@ -285,7 +285,7 @@ export class IconProperty extends PageItemProperty<number | null> {
     item: PageItem,
     id: string,
     private label: string,
-    defaultValue: number
+    defaultValue: number | null
   ) {
     super(item, id, defaultValue);
   }

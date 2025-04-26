@@ -70,3 +70,28 @@ export function WidgetBounds({
     </>
   );
 }
+
+export function WidgetIcon({
+  size,
+  x,
+  y,
+  nr,
+}: {
+  size: number;
+  x: number;
+  y: number;
+  nr: number | null;
+}) {
+  return (
+    <text
+      x={x}
+      y={y}
+      fontFamily="bootstrap-icons"
+      fontStyle="normal"
+      fontWeight="normal"
+      fontVariant="normal"
+      fontSize={size}
+      dangerouslySetInnerHTML={nr === null ? undefined : { __html: `&#${nr}` }}
+    />
+  );
+}
