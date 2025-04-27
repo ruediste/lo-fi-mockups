@@ -23,9 +23,12 @@ export class ButtonWidget extends PositionWidget {
     const icon = this.icon.get();
     return {
       ...this.position,
-      width:
-        Math.max(100, getTextWidth(this.text.get()) + 2 * margin) +
-        (icon == null ? 0 : widgetTheme.fontSize),
+      width: Math.max(
+        100,
+        getTextWidth(this.text.get()) +
+          2 * margin +
+          (icon == null ? 0 : widgetTheme.fontSize)
+      ),
       height: widgetTheme.fontSize + 2 * margin,
     };
   }

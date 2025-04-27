@@ -2,6 +2,7 @@ import { SnapBoxesArgs, SnapReferencesArgs } from "@/model/PageItem";
 import { IconProperty, NumberProperty } from "@/model/PageItemProperty";
 import { icons } from "@/util/utils";
 import { PositionWidget, Rectangle } from "./Widget";
+import { WidgetIcon } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 
 export class IconWidget extends PositionWidget {
@@ -24,17 +25,11 @@ export class IconWidget extends PositionWidget {
     const nr = this.icon.get();
     const size = Math.max(10, this.size.get());
     return (
-      <text
+      <WidgetIcon
         x={box.x + (box.width - size) / 2}
         y={box.y + size + (box.height - size) / 2}
-        fontFamily="bootstrap-icons"
-        fontStyle="normal"
-        fontWeight="normal"
-        fontVariant="normal"
-        fontSize={size}
-        dangerouslySetInnerHTML={
-          nr === null ? undefined : { __html: `&#${nr}` }
-        }
+        size={size}
+        nr={nr}
       />
     );
   }

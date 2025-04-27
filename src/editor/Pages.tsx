@@ -127,7 +127,7 @@ export function PageList({ project }: { project: Project }) {
       items={project.data.pages}
       strategy={verticalListSortingStrategy}
     >
-      <ListGroup>
+      <ListGroup style={{}}>
         {project.data.pages.map((page, idx) => (
           <Page page={page} idx={idx} project={project} key={page.id} />
         ))}

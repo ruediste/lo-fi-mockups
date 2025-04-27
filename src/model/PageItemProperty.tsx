@@ -382,3 +382,45 @@ export class PageReferenceProperty extends PageItemProperty<{
     );
   }
 }
+
+export class SelectProperty<
+  T extends string | number
+> extends PageItemProperty<T | null> {
+  constructor(
+    item: PageItem,
+    id: string,
+    private label: string,
+    private getOptions: () => [T | null, string][],
+    defaultValue: T | null
+  ) {
+    super(item, id, defaultValue);
+  }
+
+  render(): JSX.Element {
+    const options = this.getOptions();
+    const value = this.get();
+    return (
+      <Form.Group className="mb-3">
+        <Form.Label>{this.label}</Form.Label>
+        <InputGroup>
+          <Form.Select
+            autoFocus
+            value={value == null ? undefined : value}
+            onChange={(e) => {
+              const index = e.target.selectedIndex;
+              const value = options[index][0];
+              this.set(value === undefined ? null : value);
+            }}
+          >
+            {options.map((o, idx) => (
+              <option key={idx} value={o[0] === null ? undefined : o[0]}>
+                {o[1]}
+              </option>
+            ))}
+          </Form.Select>
+          <PropertyOverrideableInputGroupControls property={this} />
+        </InputGroup>
+      </Form.Group>
+    );
+  }
+}

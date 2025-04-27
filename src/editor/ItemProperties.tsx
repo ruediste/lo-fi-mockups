@@ -60,7 +60,7 @@ function SingleItemProperties({
             .map((p) => {
               const result = p.render();
               if (result == null) return null;
-              return <div key={p.id}>{result}</div>;
+              return <div key={item.id + "-" + p.id}>{result}</div>;
             })}
         </div>
       </>
