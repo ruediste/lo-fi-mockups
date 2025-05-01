@@ -56,7 +56,7 @@ export function DraggableBox<TState>({
   box: Rectangle;
   onDragStart: () => TState;
   onDragEnd?: () => void;
-  update: (diff: Vec2d, state: TState) => void;
+  update: (offset: Vec2d, diff: Vec2d, state: TState) => void;
   projection: CanvasProjection;
   visible: boolean;
   select?: (toggle: boolean) => void;
@@ -65,7 +65,7 @@ export function DraggableBox<TState>({
 }) {
   const dragState = useRef<{
     startEventPos: Vec2d;
-    lastDelta: Vec2d;
+    lastOffset: Vec2d;
     state: TState;
   }>(undefined);
 
@@ -83,18 +83,18 @@ export function DraggableBox<TState>({
         e.currentTarget.setPointerCapture(e.pointerId);
         dragState.current = {
           startEventPos: Vec2d.fromEvent(e),
-          lastDelta: new Vec2d(0, 0),
+          lastOffset: new Vec2d(0, 0),
           state: onDragStart(),
         };
       }}
       onPointerMove={(e) => {
         const state = dragState.current;
         if (state) {
-          const delta = projection.scaleToWorld(
+          const offset = projection.scaleToWorld(
             Vec2d.fromEvent(e).sub(state.startEventPos)
           );
-          update(delta.sub(state.lastDelta), state.state);
-          state.lastDelta = delta;
+          update(offset, offset.sub(state.lastOffset), state.state);
+          state.lastOffset = offset;
         }
       }}
       onPointerUp={(e) => {
@@ -179,7 +179,8 @@ export function DraggableSnapBox({
     <>
       <DraggableBox<{
         snapIndex: SnapIndex;
-        snapOffset: Vec2d;
+        lastSnappedOffset: Vec2d;
+        refs: Partial<SnapReferencesArgs>;
       }>
         {...{
           box,
@@ -194,23 +195,21 @@ export function DraggableSnapBox({
                 projection,
                 (item) => !tmp.has(item)
               ),
-              snapOffset: new Vec2d(0, 0),
+              lastSnappedOffset: new Vec2d(0, 0),
+              refs: PageItem.getSnapReferences(
+                [...items()],
+                1 / projection.scale
+              ),
             };
           },
-          update: (diff, state) => {
-            const snapResult = state.snapIndex.snapItems(
-              [...items()],
-              state.snapOffset.sub(diff),
-              1 / projection.scale
-            );
+          update: (offset, diff, state) => {
+            const snapResult = state.snapIndex.snapBoxes(state.refs, offset);
+            const snappedOffset = offset.add(snapResult.offset);
+            const move = snappedOffset.sub(state.lastSnappedOffset);
+            state.lastSnappedOffset = snappedOffset;
 
-            items().forEach((i) =>
-              i.interaction.moveBy(
-                diff.add(snapResult.offset).sub(state.snapOffset)
-              )
-            );
+            items().forEach((i) => i.interaction.moveBy(move));
             page.onItemPositionChange.notify();
-            state.snapOffset = snapResult.offset;
             setSnapResult(snapResult);
           },
           onDragEnd: () => setSnapResult(undefined),
@@ -243,9 +242,9 @@ export function DraggableSnapCornerBox({
     <>
       <DraggableBox<{
         snapIndex: SnapIndex;
-        snapOffset: Vec2d;
-        delta: Vec2d;
         startBox: Rectangle;
+        appliedOffset: Vec2d;
+        refs: Partial<SnapReferencesArgs>;
       }>
         {...{
           box,
@@ -256,22 +255,19 @@ export function DraggableSnapCornerBox({
           filled: true,
           onDragStart: () => ({
             snapIndex: new SnapIndex(item.page, projection, (i) => i != item),
-            snapOffset: new Vec2d(0, 0),
-            delta: new Vec2d(0, 0),
             startBox: item.boundingBox,
+            appliedOffset: new Vec2d(0, 0),
+            refs: snapReferences(),
           }),
-          update: (diff, state) => {
+          update: (offset, diff, state) => {
             const snapResult = state.snapIndex.snapBoxes(
               snapReferences(),
-              state.snapOffset.sub(diff)
+              diff.sub(state.appliedOffset)
             );
-            const snappedDiff = diff
-              .add(snapResult.offset)
-              .sub(state.snapOffset);
-            state.delta = state.delta.add(snappedDiff);
-            update(state.startBox, state.delta);
+            const snappedOffset = offset.add(snapResult.offset);
+            update(state.startBox, snappedOffset);
+            state.appliedOffset = snapResult.offset;
             item.page.onItemPositionChange.notify();
-            state.snapOffset = snapResult.offset;
             setSnapResult(snapResult);
           },
           onDragEnd: () => setSnapResult(undefined),

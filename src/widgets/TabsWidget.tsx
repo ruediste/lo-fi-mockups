@@ -1,8 +1,4 @@
-import {
-  HorizontalSnapBox,
-  SnapBoxesArgs,
-  SnapReferencesArgs,
-} from "@/model/PageItem";
+import { SnapBoxesArgs, SnapReferencesArgs } from "@/model/PageItem";
 import { ReactNode } from "react";
 import {
   ItemListProperty,
@@ -85,20 +81,25 @@ export class TabsWidget extends BoxWidget {
       x += 8 + width;
     }
 
-    const lowerBox = {
+    return (
+      <>
+        {renderedItems}
+        <rect {...widgetRectAttrs} fill="white" {...this.lowerBox} />
+        {overlay}
+      </>
+    );
+  }
+
+  private get lowerBox() {
+    const box = this.boundingBox;
+    return {
       x: box.x,
       y: box.y + widgetTheme.fontSize + 4,
       width: box.width,
       height: box.height - widgetTheme.fontSize - 4,
     };
-    return (
-      <>
-        {renderedItems}
-        <rect {...widgetRectAttrs} fill="white" {...lowerBox} />
-        {overlay}
-      </>
-    );
   }
+
   override initializeAfterAdd() {
     this.box = { x: 0, y: 0, width: 180, height: 115 };
     const itemId = this.nextId();
@@ -123,22 +124,12 @@ export class TabsWidget extends BoxWidget {
   override getSnapBoxes(args: SnapBoxesArgs): void {
     super.getSnapBoxes(args);
     const box = this.box;
-    args.horizontal.push(
-      new HorizontalSnapBox(
-        box.x,
-        box.y + widgetTheme.fontSize + 4 + snapConfiguration.snapMargin,
-        box.width
-      )
-    );
+    args.addMarginBox(this.lowerBox, -snapConfiguration.snapMargin);
   }
 
   override getSnapReferences(args: SnapReferencesArgs): void {
     super.getSnapReferences(args);
     const box = this.box;
-    args.top.push({
-      x: box.x,
-      y: box.y + widgetTheme.fontSize + 4,
-      width: box.width,
-    });
+    args.addMarginBox(this.lowerBox, -snapConfiguration.snapMargin);
   }
 }

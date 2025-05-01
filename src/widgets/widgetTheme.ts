@@ -6,7 +6,7 @@ export interface SnapConfiguration {
 
 export const snapConfiguration: SnapConfiguration = {
   snapRange: 16,
-  snapMargin: 12,
+  snapMargin: 6,
   snapSideLength: 100,
 };
 

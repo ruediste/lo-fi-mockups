@@ -1,5 +1,6 @@
 import {
   HorizontalSnapBox,
+  HorizontalSnapReference,
   SnapBoxesArgs,
   SnapReferencesArgs,
 } from "@/model/PageItem";
@@ -58,17 +59,21 @@ export class TextInputWidget extends WidthWidget {
       new HorizontalSnapBox(
         box.x,
         box.y - widgetTheme.fontSize - snapConfiguration.snapMargin,
-        box.width
+        box.width,
+        "margin"
       )
     );
   }
   override getSnapReferences(args: SnapReferencesArgs): void {
     super.getSnapReferences(args);
     const box = this.box;
-    args.top.push({
-      x: box.x,
-      y: box.y - widgetTheme.fontSize,
-      width: box.width,
-    });
+    args.top.push(
+      new HorizontalSnapReference(
+        box.x,
+        box.y - widgetTheme.fontSize - snapConfiguration.snapMargin,
+        box.width,
+        "margin"
+      )
+    );
   }
 }

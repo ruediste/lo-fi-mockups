@@ -86,6 +86,10 @@ export class Vec2d {
     return this.x * this.x + this.y * this.y;
   }
 
+  get negate() {
+    return new Vec2d(-this.x, -this.y);
+  }
+
   normalize() {
     const l = this.length;
     if (l == 0) {

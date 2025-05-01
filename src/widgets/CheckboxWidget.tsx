@@ -1,8 +1,3 @@
-import {
-  HorizontalSnapBox,
-  SnapBoxesArgs,
-  VerticalSnapBox,
-} from "@/model/PageItem";
 import { icons } from "@/util/utils";
 import {
   PageReferenceProperty,
@@ -11,7 +6,7 @@ import {
 } from "../model/PageItemProperty";
 import { PositionWidget, Rectangle } from "./Widget";
 import { PageLink, WidgetIcon } from "./WidgetHelpers";
-import { snapConfiguration, widgetTheme } from "./widgetTheme";
+import { widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
 export const margin = widgetTheme.margin;
@@ -40,7 +35,7 @@ export class CheckboxWidget extends PositionWidget {
         100,
         getTextWidth(this.text.get()) + 3 * margin + widgetTheme.fontSize
       ),
-      height: widgetTheme.fontSize + 2 * margin,
+      height: widgetTheme.fontSize,
     };
   }
 
@@ -65,7 +60,7 @@ export class CheckboxWidget extends PositionWidget {
         {/* <rect {...widgetRectAttrs} {...box} /> */}
         <text
           x={box.x + widgetTheme.fontSize + 2 * widgetTheme.margin}
-          y={box.y + box.height - margin - 2}
+          y={box.y + box.height - 2}
           fontSize={widgetTheme.fontSize}
           textAnchor="left"
         >
@@ -73,48 +68,12 @@ export class CheckboxWidget extends PositionWidget {
         </text>
         <WidgetIcon
           x={box.x + widgetTheme.margin}
-          y={box.y + box.height - margin}
+          y={box.y + box.height}
           size={widgetTheme.fontSize}
           nr={icon}
         />
         <PageLink {...box} pageId={this.link.get().pageId} />
       </>
-    );
-  }
-  override getSnapBoxes(args: SnapBoxesArgs) {
-    const box = this.boundingBox;
-    const config = snapConfiguration;
-    args.horizontal.push(
-      new HorizontalSnapBox(
-        box.x - config.snapSideLength,
-        box.y,
-        box.width + 2 * config.snapSideLength,
-        config.snapRange
-      )
-    );
-    args.horizontal.push(
-      new HorizontalSnapBox(
-        box.x - config.snapSideLength,
-        box.y + box.height,
-        box.width + 2 * config.snapSideLength,
-        config.snapRange
-      )
-    );
-    args.vertical.push(
-      new VerticalSnapBox(
-        box.x,
-        box.y - config.snapSideLength,
-        box.height + 2 * config.snapSideLength,
-        config.snapRange
-      )
-    );
-    args.vertical.push(
-      new VerticalSnapBox(
-        box.x + box.width,
-        box.y - config.snapSideLength,
-        box.height + 2 * config.snapSideLength,
-        config.snapRange
-      )
     );
   }
 
