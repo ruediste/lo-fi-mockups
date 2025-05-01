@@ -196,23 +196,23 @@ export function Canvas({
               } else onPointerUp?.(e);
             }}
             onWheel={(event) => {
+              event.stopPropagation();
               if (event.ctrlKey) {
-                // event is a browser-level zoom, which is handled elsewhere
+                // do a zoom
+                const eventPositionView = Vec2d.fromEvent(event);
+                const alpha = 500;
+                projection.changeScale(
+                  projection.scale /
+                    Math.max(0.1, Math.min(10, (alpha + event.deltaY) / alpha)),
+                  eventPositionView
+                );
                 return;
-              }
-
-              const eventPositionView = Vec2d.fromEvent(event);
-              if (event.deltaY > 0) {
-                projection.changeScale(
-                  projection.scale / scaleFactor,
-                  eventPositionView
+              } else {
+                // perform a scroll
+                projection.offset = projection.offset.add(
+                  projection.scaleToWorld(new Vec2d(event.deltaX, event.deltaY))
                 );
-              }
-              if (event.deltaY < 0) {
-                projection.changeScale(
-                  projection.scale * scaleFactor,
-                  eventPositionView
-                );
+                projection.onChange.notify();
               }
             }}
           >
