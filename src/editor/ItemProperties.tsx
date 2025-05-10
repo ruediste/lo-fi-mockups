@@ -1,6 +1,14 @@
 import { useProject } from "@/editor/EditorState";
+import { Project } from "@/model/Project";
 import { IconWidget } from "@/widgets/IconWidget";
-import { ArrowDown, ArrowUp, Back, Front, Trash } from "react-bootstrap-icons";
+import {
+  ArrowDown,
+  ArrowUp,
+  Back,
+  Copy,
+  Front,
+  Trash,
+} from "react-bootstrap-icons";
 import { PageItem } from "../model/PageItem";
 import { useRerenderOnEvent } from "../util/hooks";
 import { IconButton } from "../util/Inputs";
@@ -9,10 +17,10 @@ import { Selection } from "./Selection";
 
 function SingleItemProperties({
   item,
-  clearSelection,
+  project,
 }: {
   item: PageItem;
-  clearSelection: () => void;
+  project: Project;
 }) {
   useRerenderOnEvent(item?.onChange);
   if (item instanceof Widget) {
@@ -22,16 +30,25 @@ function SingleItemProperties({
           style={{
             display: "flex",
             flexDirection: "row",
-            justifyContent: "space-between",
             alignItems: "center",
           }}
         >
-          <h1> {item.label} </h1>
+          <h1 style={{ marginRight: "auto" }}> {item.label} </h1>
+          {!item.fromMasterPage && (
+            <IconButton
+              onClick={() => {
+                const clone = item.page.duplicateItem(item);
+                project.currentPage?.setSelection(Selection.of(clone));
+              }}
+            >
+              <Copy size={24} />
+            </IconButton>
+          )}
           {!item.fromMasterPage && (
             <IconButton
               onClick={() => {
                 item.page.removeItem(item.data.id);
-                clearSelection();
+                project.currentPage?.setSelection(Selection.empty);
               }}
             >
               <Trash size={24} />
@@ -82,12 +99,7 @@ export function ItemProperties() {
     <div style={{ overflow: "auto", height: "100%" }}>
       {selection?.size === 0 && <h1> No selected Item </h1>}
       {selection?.size === 1 && (
-        <SingleItemProperties
-          item={selection.single}
-          clearSelection={() =>
-            project.currentPage?.setSelection(Selection.empty)
-          }
-        />
+        <SingleItemProperties item={selection.single} project={project} />
       )}
       {selection !== undefined && selection.size > 1 && (
         <>

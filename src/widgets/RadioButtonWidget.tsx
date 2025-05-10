@@ -1,18 +1,17 @@
-import { icons } from "@/util/utils";
 import {
   PageReferenceProperty,
   SelectProperty,
   StringProperty,
 } from "../model/PageItemProperty";
 import { PositionWidget, Rectangle } from "./Widget";
-import { PageLink, WidgetIcon } from "./WidgetHelpers";
+import { PageLink } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
 export const margin = widgetTheme.margin;
 
-export class CheckboxWidget extends PositionWidget {
-  label = "Checkbox";
+export class RadioButtonWidget extends PositionWidget {
+  label = "RadioButton";
 
   text = new StringProperty(this, "label", "Label", "Enabled");
   state = new SelectProperty(
@@ -20,11 +19,10 @@ export class CheckboxWidget extends PositionWidget {
     "state",
     "State",
     () => [
-      ["unchecked", "Unchecked"],
-      ["indeterminate", "Indeterminate"],
-      ["checked", "Checked"],
+      ["unselected", "Unselected"],
+      ["selected", "Selected"],
     ],
-    "unchecked"
+    "unselected"
   );
   link = new PageReferenceProperty(this, "link", "Link");
 
@@ -41,20 +39,6 @@ export class CheckboxWidget extends PositionWidget {
 
   renderContent(): React.ReactNode {
     const box = this.boundingBox;
-    let icon: number;
-    switch (this.state.get()) {
-      case "checked":
-        icon = icons["x-square"];
-        break;
-      case "indeterminate":
-        icon = icons["dash-square"];
-        break;
-      case "unchecked":
-        icon = icons["square"];
-        break;
-      default:
-        icon = 0;
-    }
     return (
       <>
         <text
@@ -65,12 +49,22 @@ export class CheckboxWidget extends PositionWidget {
         >
           {this.text.get()}
         </text>
-        <WidgetIcon
-          x={box.x + widgetTheme.margin}
-          y={box.y + box.height}
-          size={widgetTheme.fontSize}
-          nr={icon}
+        <circle
+          cx={box.x + widgetTheme.margin + widgetTheme.fontSize / 2}
+          cy={box.y + box.height - widgetTheme.fontSize / 2}
+          r={widgetTheme.fontSize / 2 - 1}
+          stroke="black"
+          fill="none"
+          strokeWidth="1"
         />
+        {this.state.get() === "selected" && (
+          <circle
+            cx={box.x + widgetTheme.margin + widgetTheme.fontSize / 2}
+            cy={box.y + box.height - widgetTheme.fontSize / 2}
+            r={widgetTheme.fontSize / 4}
+            fill="black"
+          />
+        )}
         <PageLink {...box} pageId={this.link.get().pageId} />
       </>
     );

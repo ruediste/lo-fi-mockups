@@ -99,11 +99,28 @@ export class Page {
     return item;
   }
 
+  duplicateItem(item: PageItem) {
+    const cloneData = { ...item.data, id: this.project.data.nextId++ };
+
+    // serialization roundtrip to copy the property values
+    this.data.propertyValues[cloneData.id] = JSON.parse(
+      JSON.stringify(this.data.propertyValues[item.id])
+    );
+    const clone = this.toPageItem(cloneData, false);
+    clone.interaction.moveBy({ x: 20, y: 20 });
+    this.data.items.push(cloneData);
+    this.ownItems.push(clone);
+    this.onDataChanged();
+    this.onChange.notify();
+    return clone;
+  }
+
   removeItem(id: number) {
     this.removeItemImpl(id);
     this.onDataChanged();
     this.onChange.notify();
   }
+
   private removeItemImpl(id: number) {
     this.data.items = this.data.items.filter((x) => x.id != id);
     this.ownItems = this.ownItems.filter((x) => x.data.id != id);
