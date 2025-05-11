@@ -4,16 +4,20 @@ import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
 const margin = 8;
-export class LabelWidget extends PositionWidget {
-  label = "Label";
+export class TitleWidget extends PositionWidget {
+  label = "Title";
 
-  text = new StringProperty(this, "text", "Text", "Name");
+  text = new StringProperty(this, "text", "Text", "Title");
+
+  private get fontSize() {
+    return widgetTheme.fontSize * 2;
+  }
 
   get boundingBox(): Rectangle {
     return {
       ...this.position,
-      width: getTextWidth(this.text.get()) + 2 * margin,
-      height: widgetTheme.fontSize,
+      width: getTextWidth(this.text.get(), this.fontSize) + 2 * margin,
+      height: this.fontSize + 2 * margin,
     };
   }
 
@@ -24,8 +28,8 @@ export class LabelWidget extends PositionWidget {
       <>
         <text
           x={box.x + box.width / 2}
-          y={box.y + box.height - 2}
-          fontSize={widgetTheme.fontSize}
+          y={box.y + box.height - margin - 2}
+          fontSize={this.fontSize}
           textAnchor="middle"
         >
           {text}

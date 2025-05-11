@@ -70,6 +70,8 @@ public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParame
 
     /**
      * {@inheritDoc}
+     * <relativePath>../</relativePath>
+     * </parent>
      * 
      * @see org.xwiki.rendering.macro.Macro#execute(Object, String,
      *      MacroTransformationContext)

@@ -11,6 +11,7 @@ import { ListWidget } from "./ListWidget";
 import { RadioButtonWidget } from "./RadioButtonWidget";
 import { TabsWidget } from "./TabsWidget";
 import { TextInputWidget } from "./TextInputWidget";
+import { TitleWidget } from "./TitleWidget";
 import { Widget } from "./Widget";
 
 export class PageItemTypeRegistry {
@@ -52,6 +53,7 @@ function register(
 register("list", ListWidget);
 register("tabs", TabsWidget);
 register("button", ButtonWidget);
+register("title", TitleWidget);
 register("label", LabelWidget);
 register("textInput", TextInputWidget);
 register("dropdown", DropdownWidget);

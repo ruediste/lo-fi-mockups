@@ -13,7 +13,7 @@ export const margin = widgetTheme.margin;
 export class RadioButtonWidget extends PositionWidget {
   label = "RadioButton";
 
-  text = new StringProperty(this, "label", "Label", "Enabled");
+  text = new StringProperty(this, "label", "Label", "Allow");
   state = new SelectProperty(
     this,
     "state",

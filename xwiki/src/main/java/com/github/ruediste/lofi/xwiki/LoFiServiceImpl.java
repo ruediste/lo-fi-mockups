@@ -86,7 +86,7 @@ public class LoFiServiceImpl implements LoFiService {
         try {
             String version = new String(getClass().getClassLoader().getResourceAsStream("version.txt").readAllBytes(),
                     StandardCharsets.UTF_8);
-            return "/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/" + version;
+            return "/webjars/wiki%3Axwiki/lo-fi-mockups-xwiki/" + version;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

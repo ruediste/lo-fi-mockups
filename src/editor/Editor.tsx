@@ -8,7 +8,7 @@ import { Rectangle, Widget } from "@/widgets/Widget";
 import { dragPositionRectAttrs } from "@/widgets/widgetUtils";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import Flatbush from "flatbush";
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Canvas, CanvasProjection } from "./Canvas";
 
 import useSearchHref from "@/util/useSearchHref";
@@ -26,12 +26,7 @@ import { ItemProperties } from "@/editor/ItemProperties";
 import { confirm } from "@/util/confirm";
 import { ThreeDotMenu } from "@/util/Inputs";
 import "rc-dock/dist/rc-dock.css";
-import {
-  EditorState,
-  editorState,
-  EditorStateContext,
-  useEditorState,
-} from "./EditorState";
+import { EditorState, useEditorState } from "./EditorState";
 
 function RenderItem({
   item,
@@ -289,144 +284,141 @@ const defaultLayout: LayoutData = {
 
 export const editorLayoutKey = "lo-fi-mockups-layout";
 export function Editor({ downloadName }: { downloadName?: string }) {
-  const state = use(editorState);
-
+  const state = useEditorState();
   const play = useSearchHref({ pathname: "./play" });
 
   const dockLayout = useRef<DockLayout | null>(null);
 
   return (
-    <EditorStateContext.Provider value={state}>
+    <div
+      style={{
+        minHeight: "0px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch",
+        flexGrow: 1,
+      }}
+    >
       <div
         style={{
-          minHeight: "0px",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           alignItems: "stretch",
-          flexGrow: 1,
+          padding: "8px",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "stretch",
-            padding: "8px",
-          }}
-        >
-          <span style={{ fontSize: "24px" }}>LoFi Mockup</span>
+        <span style={{ fontSize: "24px" }}>LoFi Mockup</span>
 
-          <Stack direction="horizontal" style={{ marginLeft: "auto" }} gap={3}>
-            <Button as="a" {...play}>
-              Play
-            </Button>
-            <Button
-              onClick={async () => {
-                saveAs(
-                  await state.repository.createZip(),
-                  downloadName ?? "project.lofi"
-                );
-              }}
-            >
-              Download
-            </Button>
-            <Dropzone
-              onDropAccepted={async (acceptedFiles) => {
-                if (acceptedFiles.length < 1) {
-                  return;
-                }
-                if (acceptedFiles.length > 1) {
-                  toast.error("Multiple Files Dropped");
-                  return;
-                }
-                if (!acceptedFiles[0].name.endsWith(".lofi")) {
-                  toast.error("File has to end in '.lofi'");
-                  return;
-                }
-                try {
-                  await state.repository.loadZip(acceptedFiles[0]);
-                } catch (e) {
-                  console.log(e);
-                  toast.error("Loading " + acceptedFiles[0].name + " failed");
-                }
-                toast.success("File " + acceptedFiles[0].name + " loaded");
-              }}
-            >
-              {({ getRootProps, getInputProps, isDragActive }) => (
-                <div
-                  {...getRootProps()}
-                  style={{
-                    margin: "-4px",
-                    padding: "4px",
-                    ...(isDragActive
-                      ? {
-                          border: "1px dashed black",
-                        }
-                      : { border: "1px dashed transparent" }),
-                  }}
-                >
-                  <input {...getInputProps()} />
-                  <Button>Upload</Button>
-                </div>
-              )}
-            </Dropzone>
-            <XwikiControls />
-            <ThreeDotMenu
-              items={[
-                {
-                  label: "Export PDF",
-                  onClick: async () => {
-                    await state.repository.savePdf();
-                  },
+        <Stack direction="horizontal" style={{ marginLeft: "auto" }} gap={3}>
+          <Button as="a" {...play}>
+            Play
+          </Button>
+          <Button
+            onClick={async () => {
+              saveAs(
+                await state.repository.createZip(),
+                downloadName ?? "project.lofi"
+              );
+            }}
+          >
+            Download
+          </Button>
+          <Dropzone
+            onDropAccepted={async (acceptedFiles) => {
+              if (acceptedFiles.length < 1) {
+                return;
+              }
+              if (acceptedFiles.length > 1) {
+                toast.error("Multiple Files Dropped");
+                return;
+              }
+              if (!acceptedFiles[0].name.endsWith(".lofi")) {
+                toast.error("File has to end in '.lofi'");
+                return;
+              }
+              try {
+                await state.repository.loadZip(acceptedFiles[0]);
+              } catch (e) {
+                console.log(e);
+                toast.error("Loading " + acceptedFiles[0].name + " failed");
+              }
+              toast.success("File " + acceptedFiles[0].name + " loaded");
+            }}
+          >
+            {({ getRootProps, getInputProps, isDragActive }) => (
+              <div
+                {...getRootProps()}
+                style={{
+                  margin: "-4px",
+                  padding: "4px",
+                  ...(isDragActive
+                    ? {
+                        border: "1px dashed black",
+                      }
+                    : { border: "1px dashed transparent" }),
+                }}
+              >
+                <input {...getInputProps()} />
+                <Button>Upload</Button>
+              </div>
+            )}
+          </Dropzone>
+          <XwikiControls />
+          <ThreeDotMenu
+            items={[
+              {
+                label: "Export PDF",
+                onClick: async () => {
+                  await state.repository.savePdf();
                 },
-                {
-                  label: "Clear Project",
-                  onClick: async () => {
-                    if (
-                      await confirm({
-                        title: "Clear Project",
-                        confirmation: "Really clear the project?",
-                        okDangerous: true,
-                        okLabel: "Clear",
-                      })
-                    )
-                      state.repository.clear();
-                  },
+              },
+              {
+                label: "Clear Project",
+                onClick: async () => {
+                  if (
+                    await confirm({
+                      title: "Clear Project",
+                      confirmation: "Really clear the project?",
+                      okDangerous: true,
+                      okLabel: "Clear",
+                    })
+                  )
+                    state.repository.clear();
                 },
-                {
-                  label: "Reset Editor Layout",
-                  onClick: async () => {
-                    if (
-                      await confirm({
-                        title: "Reset Editor Layout",
-                        confirmation:
-                          "Really set the editor layout back to the default?",
-                        okDangerous: true,
-                        okLabel: "Reset",
-                      })
-                    )
-                      localStorage.removeItem(editorLayoutKey);
-                    dockLayout.current?.loadLayout(defaultLayout);
-                  },
+              },
+              {
+                label: "Reset Editor Layout",
+                onClick: async () => {
+                  if (
+                    await confirm({
+                      title: "Reset Editor Layout",
+                      confirmation:
+                        "Really set the editor layout back to the default?",
+                      okDangerous: true,
+                      okLabel: "Reset",
+                    })
+                  )
+                    localStorage.removeItem(editorLayoutKey);
+                  dockLayout.current?.loadLayout(defaultLayout);
                 },
-              ]}
-            />
-          </Stack>
-        </div>
-
-        <DockLayout
-          ref={(x) => {
-            dockLayout.current = x;
-            const layout = localStorage.getItem(editorLayoutKey);
-            if (layout !== null) x?.loadLayout(JSON.parse(layout));
-          }}
-          defaultLayout={defaultLayout}
-          onLayoutChange={(layout) =>
-            localStorage.setItem(editorLayoutKey, JSON.stringify(layout))
-          }
-          style={{ flexGrow: 1 }}
-        />
+              },
+            ]}
+          />
+        </Stack>
       </div>
-    </EditorStateContext.Provider>
+
+      <DockLayout
+        ref={(x) => {
+          dockLayout.current = x;
+          const layout = localStorage.getItem(editorLayoutKey);
+          if (layout !== null) x?.loadLayout(JSON.parse(layout));
+        }}
+        defaultLayout={defaultLayout}
+        onLayoutChange={(layout) =>
+          localStorage.setItem(editorLayoutKey, JSON.stringify(layout))
+        }
+        style={{ flexGrow: 1 }}
+      />
+    </div>
   );
 }

@@ -1,9 +1,9 @@
 import { Editor, editorLayoutKey } from "@/editor/Editor";
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 import { Button, Card, Spinner } from "react-bootstrap";
 import { HashRouter, Route, Routes } from "react-router";
 import { ToastContainer } from "react-toastify";
-import { editorState } from "./editor/EditorState";
+import { editorState, EditorStateContext } from "./editor/EditorState";
 import { Play } from "./Play";
 import { ErrorBoundary } from "./util/ErrorBoundary";
 import "./widgets/PageItemTypeRegistry";
@@ -57,11 +57,16 @@ function RootError({ clear }: { clear: () => void }) {
 }
 
 export function InnerApp({ downloadName }: { downloadName?: string }) {
+  const state = use(editorState);
+
   return (
-    <Routes>
-      <Route path="/" element={<Editor downloadName={downloadName} />} />
-      <Route path="/play" element={<Play />} />
-    </Routes>
+    <EditorStateContext.Provider value={state}>
+      <Routes>
+        <Route path="/" element={<Editor downloadName={downloadName} />} />
+        <Route path="/play" element={<Play />} />
+        <Route path="/xwiki/*" element={<XwikiPageMockups />} />
+      </Routes>
+    </EditorStateContext.Provider>
   );
 }
 export default function App() {
@@ -69,10 +74,7 @@ export default function App() {
     <HashRouter>
       <ErrorBoundary fallback={(clear) => <RootError clear={clear} />}>
         <Suspense fallback={<Spinner />}>
-          <Routes>
-            <Route path="/*" element={<InnerApp />} />
-            <Route path="/xwiki/*" element={<XwikiPageMockups />} />
-          </Routes>
+          <InnerApp />
         </Suspense>
         <ToastContainer autoClose={2000} />
       </ErrorBoundary>
