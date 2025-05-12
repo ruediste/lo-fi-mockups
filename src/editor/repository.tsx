@@ -87,6 +87,7 @@ export class Repository {
   async createZip() {
     const zip = new JSZip();
     zip.file("project.json", JSON.stringify(this.projectData));
+    zip.file("version.txt", "1");
 
     await this.generatePageImages(async ({ element, pageNr }) => {
       const dataUrl = await htmlToImage.toPng(await element(1));

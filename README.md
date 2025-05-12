@@ -6,7 +6,58 @@ The goal of this project is to create a tool for low fidelity UI mockups. The fo
 
 ## Current Status
 
-The project is still in it's early stages, far from production ready. The basic architecture is already present, along with some widgets.
+The project is ready for some beta testing. The basic features are implemented.
+
+## Manual
+
+### User Interface Overview
+
+The user interface is divided into several key sections:
+
+- **Pages Panel:** This panel allows you to manage different pages within your mockup project.
+- **Palette:** The Palette contains a collection of pre-defined UI elements that you can add to your mockup.
+- **Editor:** The area where you arrange and edit the UI elements to create your mockup.
+- **Properties Panel:** This panel displays and allows you to modify the properties of the currently selected UI element.
+- **Top Bar:** Contains buttons for actions like "Play", "Download", and "Upload", along with the application title "LoFi Mockup".
+
+### Working with Pages
+
+The Pages panel allows you to structure your design into distinct sections or screens, making it easier to navigate and manage complex projects.
+
+A key concept within the Pages panel is the ability for every page to have a designated master page. A master page acts as a template or a base layer for other pages. When a page is assigned a master page, the elements present on the master page are also displayed on the child page. However, these elements inherited from the master page are not directly editable on the child page. This ensures consistency across multiple pages that share a common layout or set of elements.
+
+While the elements from a master page are generally not editable on a child page, there is a mechanism to override this limitation for specific properties. Properties of elements on a master page can be "unlocked" for child pages. This action, performed within the properties panel, makes those specific properties overrideable on the child page while the rest of the element remains controlled by the master page. This is particularly useful for scenarios where you want to maintain a consistent layout defined on the master page but need to adjust certain aspects, such as text content or image sources, on individual child pages.
+
+This ability to unlock properties is especially beneficial for creating layouts and defining the page structure on a master page. You can design a foundational layout with elements like headers, footers, sidebars, or content containers on a master page. Then, on child pages, you can unlock specific properties of these layout elements to change their content or appearance as needed, while the overall structure remains consistent with the master.
+
+Furthermore, elements placed directly on a child page can snap to elements from the master page. This snapping functionality aids in precise alignment and positioning, allowing you to easily arrange child page elements in relation to the master page layout.
+
+The concept of master pages is also transitive. This means that if a master page itself has a master page, the elements from that higher-level master page will also be displayed on the original child page. This creates a hierarchical structure where changes to a master page can propagate down through multiple levels of child pages, ensuring a high degree of consistency and making global design updates more efficient.
+
+### Using the Palette
+
+The Palette provides a variety of common UI elements that you can drag and drop onto the Editor. Examples of available elements include List items, Tabs, Buttons, Titles, Labels, and Text Inputs.
+
+### Editor Functionality
+
+The Editor is where you visually construct your mockup by arranging elements from the Palette. You can select, move, and resize elements within the editor. A key feature of the editor is the snapping functionality, which helps align elements precisely. When moving elements they will snap to other stationary elements to aid in alignment. There are three types of snapping:
+
+- **Edge Snapping:** Elements generate snap boxes along their edges. When a moving element's edge comes close to these lines, it will snap into alignment.
+- **Margin Snapping:** Elements create snap boxes at a specified distance (margin) from their edges. Moving elements will snap their references to these margin lines.
+- **Middle Snapping:** Elements provide a snap box through their center line. Moving elements will snap their center reference to this line.
+
+### Properties Panel
+
+The Properties panel displays the configurable attributes of the currently selected element in the Editor. You can use this panel to change properties such as text, labels, colors, and other element-specific settings.
+
+### Links and Play
+
+TODO
+
+### Download Upload
+
+- **Download:** This button allows you to download your mockup project.
+- **Upload:** This button allows you to upload an existing mockup project file.
 
 ## Architecture
 
