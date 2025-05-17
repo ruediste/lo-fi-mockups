@@ -52,12 +52,62 @@ The Properties panel displays the configurable attributes of the currently selec
 
 ### Links and Play
 
-TODO
+You can set links to pages on most page elements. If click on play, the current page is shown full screen, and you can navigate between the pages based on the link set on the elements.
 
 ### Download Upload
 
 - **Download:** This button allows you to download your mockup project.
 - **Upload:** This button allows you to upload an existing mockup project file.
+
+### Data Grid
+
+The Data Grid widget allows you to display tabular data. The content and structure of the data grid are defined by the "Grid Contents" property, which accepts a string input. This input string is parsed to determine the rows, columns, and cell values of the grid.
+
+There are two modes for defining the grid content: Simple and Complex.
+
+**Simple Mode:**
+
+In Simple Mode, each line of the input string represents a row in the data grid. Cells within a row are separated by tab characters (`\t`). The first line of the input should _not_ start with an exclamation mark (`!`).
+
+Example Simple Mode input:
+
+```
+H1	H2
+R1C1	R1C2
+R2C1	R2C2
+```
+
+**Complex Mode:**
+
+Complex Mode provides more control over column and row properties, such as sizing and marking rows/columns as headers. To use Complex Mode, the first line of the input string must start with an exclamation mark (`!`).
+
+The first line defines the columns. The first cell (`!`) is a marker for Complex Mode and is ignored for column definition. Subsequent cells in the first line define the properties of each column, separated by tabs. Column properties can include:
+
+- `auto`: The column will automatically size to fit its content.
+- `<number>fr`: The column will take up a flexible fraction of the available space (e.g., `1fr`, `2fr`).
+- `<number>px`: The column will have a fixed size in pixels (e.g., `100px`).
+- `h` or `H`: Marks the column as a header column. Header columns have a different background color.
+
+Multiple properties for a single column can be combined in its definition cell (e.g., `1fr h`).
+
+Subsequent lines in Complex Mode define the rows and their cell contents. The first cell of each row line can define row properties, similar to column properties:
+
+- `auto`: The row will automatically size to fit its content.
+- `<number>fr`: The row will take up a flexible fraction of the available space.
+- `<number>px`: The row will have a fixed size in pixels.
+- `h` or `H`: Marks the row as a header row. Header rows have a different background color.
+
+Multiple properties for a single row can be combined in its definition cell (e.g., `auto h`).
+
+The remaining cells in a row line, separated by tabs, contain the cell content for that row.
+
+Example Complex Mode input:
+
+```
+!	1fr h	auto	100px
+h	R1C1	R1C2	R1C3
+auto	R2C1	R2C2	R2C3
+```
 
 ## Architecture
 

@@ -1,7 +1,11 @@
-import { MemoValue, StringProperty } from "@/model/PageItemProperty";
+import {
+  MemoValue,
+  PageReferenceProperty,
+  StringProperty,
+} from "@/model/PageItemProperty";
 import { parseDataGridContents } from "./DataGridWidgetHelper";
 import { BoxWidget } from "./Widget";
-import { WidgetBounds } from "./WidgetHelpers";
+import { PageLink, WidgetBounds } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 
 export class DataGridWidget extends BoxWidget {
@@ -22,6 +26,8 @@ h\tFirst Name\tLast Name
     () => parseDataGridContents(this.contentsText.get()),
     [this.contentsText]
   );
+
+  link = new PageReferenceProperty(this, "link", "Link");
 
   renderContent(): React.ReactNode {
     const box = this.box;
@@ -64,9 +70,11 @@ h\tFirst Name\tLast Name
             )}
           </div>
         </foreignObject>
+        <PageLink {...box} pageId={this.link.get().pageId} />
       </WidgetBounds>
     );
   }
+
   initializeAfterAdd(): void {
     this.box = { x: 0, y: 0, width: 150, height: 80 };
   }
