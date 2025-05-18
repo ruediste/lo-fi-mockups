@@ -79,7 +79,7 @@ export class BoxWidgetInteraction extends PageItemInteraction {
   }
 
   override renderMasterInteraction({}: RenderInteractionArgs): React.ReactNode {
-    if (!this.item.properties.some((x) => x.isEditable)) return null;
+    if (!this.item.properties.some((x) => x.shouldRender)) return null;
     return (
       <SelectableBox
         box={this.box.get()}
@@ -141,7 +141,7 @@ export class PositionWidgetInteraction extends PageItemInteraction {
   }
 
   override renderMasterInteraction({}: RenderInteractionArgs): React.ReactNode {
-    if (!this.item.properties.some((x) => x.isEditable)) return null;
+    if (!this.item.properties.some((x) => x.shouldRender)) return null;
 
     return (
       <SelectableBox

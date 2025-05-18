@@ -3,14 +3,14 @@ import { SortableList } from "../util/SortableList";
 import { PageItem } from "./PageItem";
 import { Item, ItemListPropertyItem } from "./PageItemHelpers";
 import { PropertyOverrideControls } from "./PageItemInteractionHelpers";
-import { PageItemProperty } from "./PageItemProperty";
+import { PageItemProperty, PageItemPropertyBase } from "./PageItemProperty";
 
 interface ItemListSelectionPropertyValue {
   multiSelection: boolean;
   selectedItems: { [id: number]: true };
 }
 
-export class ItemListSelectionProperty extends PageItemProperty<ItemListSelectionPropertyValue> {
+export class ItemListSelectionProperty extends PageItemPropertyBase<ItemListSelectionPropertyValue> {
   constructor(
     item: PageItem,
     id: string,
@@ -45,7 +45,7 @@ export class ItemListSelectionProperty extends PageItemProperty<ItemListSelectio
   }
 }
 
-export class ItemListProperty extends PageItemProperty<Item[]> {
+export class ItemListProperty extends PageItemPropertyBase<Item[]> {
   constructor(
     item: PageItem,
     id: string,
@@ -95,6 +95,7 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
           >
             {(item, idx) => (
               <ItemListPropertyItem
+                hideGrip={!this.isEditable}
                 key={item.id}
                 item={item}
                 idx={idx}
@@ -149,6 +150,78 @@ export class ItemListProperty extends PageItemProperty<Item[]> {
               label="Multi Select"
             />
           )}
+        </div>
+      </>
+    );
+  }
+}
+
+export class ExtensibleItemListProperty extends PageItemProperty {
+  private value: Item[] = [];
+  private masterItems: Item[] = [];
+  constructor(item: PageItem, id: string, private label: string) {
+    super(item, id);
+    for (const values of item.masterPropertyValues) {
+      const masterValue = values[id];
+      if (Array.isArray(masterValue)) {
+        this.masterItems.push(...masterValue);
+      }
+    }
+    this.value = this.item.propertyValues?.[this.id] ?? [];
+  }
+
+  shouldRender(): boolean {
+    return true;
+  }
+
+  getAll(): Item[] {
+    return this.masterItems.concat(this.value);
+  }
+
+  set(value: Item[]): void {
+    this.item.editablePropertyValues[this.id] = value;
+    this.value = value;
+    this.notify();
+  }
+
+  render() {
+    const items = this.value;
+    return (
+      <>
+        <Form.Group className="mb-3">
+          <div style={{ display: "flex", alignItems: "baseline" }}>
+            <span>{this.label}</span>
+          </div>
+          <SortableList<Item> items={items} setItems={(v) => this.set(v)}>
+            {(item, idx) => (
+              <ItemListPropertyItem
+                key={item.id}
+                item={item}
+                idx={idx}
+                project={this.item.page.project}
+                itemEditable={true}
+                selectionEditable={false}
+                setLabel={(value) => {
+                  items[idx].label = value;
+                  this.notify();
+                }}
+                setLink={(value) => {
+                  items[idx].link = value;
+                  this.notify();
+                }}
+                removeItem={(id) => this.set(items.filter((x) => x.id !== id))}
+              />
+            )}
+          </SortableList>
+        </Form.Group>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <Button
+            onClick={() =>
+              this.set([...items, { id: this.nextId(), label: "New Item" }])
+            }
+          >
+            Add
+          </Button>
         </div>
       </>
     );

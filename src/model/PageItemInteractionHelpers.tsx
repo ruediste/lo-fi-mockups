@@ -20,7 +20,7 @@ import { useRerenderOnEvent } from "../util/hooks";
 import { toSet } from "../util/utils";
 import { Rectangle } from "../widgets/Widget";
 import { dragPositionRectAttrs } from "../widgets/widgetUtils";
-import { PageItemProperty } from "./PageItemProperty";
+import { PageItemPropertyBase } from "./PageItemProperty";
 import { SnapIndex } from "./SnapIndex";
 
 export function MoveWidgetBox(
@@ -647,7 +647,7 @@ const Test = forwardRef<HTMLDivElement, IconButtonProps>((props, ref) => (
 export function PropertyOverrideControls({
   property,
 }: {
-  property: PageItemProperty<any>;
+  property: PageItemPropertyBase<any>;
 }) {
   return (
     <>
@@ -669,7 +669,7 @@ export function PropertyOverrideControls({
 export function PropertyOverrideableInputGroupControls({
   property,
 }: {
-  property: PageItemProperty<any>;
+  property: PageItemPropertyBase<any>;
 }) {
   property.isEditable;
   return (

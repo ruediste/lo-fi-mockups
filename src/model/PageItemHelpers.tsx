@@ -23,6 +23,7 @@ export function ItemListPropertyItem({
   selectionEditable,
   removeItem,
   project,
+  hideGrip,
 }: {
   item: Item;
   idx: number;
@@ -34,6 +35,7 @@ export function ItemListPropertyItem({
   selectionEditable: boolean;
   removeItem: (id: number) => void;
   project: Project;
+  hideGrip?: boolean;
 }) {
   return (
     <SortableListItem
@@ -41,7 +43,7 @@ export function ItemListPropertyItem({
       idx={idx}
       style={{ display: "flex", alignItems: "center" }}
     >
-      <GripVertical style={{ marginLeft: "-12px" }} />
+      {!hideGrip && <GripVertical style={{ marginLeft: "-12px" }} />}
       <InlineEdit
         text={item.label}
         disabled={!itemEditable}

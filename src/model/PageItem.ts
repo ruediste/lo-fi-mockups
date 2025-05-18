@@ -30,8 +30,8 @@ export abstract class PageItem {
   public interaction!: PageItemInteraction;
   protected snapMiddle: MiddleSnapSpecification = "none";
 
-  properties: PageItemProperty<any>[] = [];
-  propertyMap = new Map<string, PageItemProperty<any>>();
+  properties: PageItemProperty[] = [];
+  propertyMap = new Map<string, PageItemProperty>();
   masterPropertyValues: { [propertyId: string]: any }[] = [];
   propertyValues?: { [propertyId: string]: any };
 
@@ -63,6 +63,8 @@ export abstract class PageItem {
       page.directMasterPageData?.overrideableProperties[data.id];
   }
 
+  // Return the property values map for this item.
+  // Changes to the returned map will be persisted.
   get editablePropertyValues() {
     if (this.propertyValues === undefined) {
       this.propertyValues = {};

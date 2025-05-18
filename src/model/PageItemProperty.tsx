@@ -9,6 +9,27 @@ import { ModelEvent } from "./ModelEvent";
 import { PageItem } from "./PageItem";
 import { PropertyOverrideableInputGroupControls } from "./PageItemInteractionHelpers";
 
+export abstract class PageItemProperty {
+  valueChanged = new ModelEvent();
+
+  constructor(protected item: PageItem, public id: string) {
+    item.properties.push(this);
+    item.propertyMap.set(id, this);
+  }
+
+  abstract render(): React.ReactNode;
+  abstract shouldRender(): boolean;
+
+  protected notify() {
+    this.item.onDataChanged();
+    this.valueChanged.notify();
+    this.item.notifyChange();
+  }
+
+  protected nextId() {
+    return this.item.nextId();
+  }
+}
 /*
 The value comes from 
 - property values of the current page
@@ -20,7 +41,9 @@ If the property is overrideable is defined by the current page.
 A property is editable if either the containing item is defined in the current page or
 if the direct master page defines the property as overrideable.
 */
-export abstract class PageItemProperty<T extends {} | null> {
+export abstract class PageItemPropertyBase<
+  T extends {} | null
+> extends PageItemProperty {
   private masterValue?: T;
   private value: T;
   isHidden: () => boolean = () => false;
@@ -31,13 +54,8 @@ export abstract class PageItemProperty<T extends {} | null> {
 
   isOverridden: boolean;
 
-  constructor(
-    protected item: PageItem,
-    public id: string,
-    private defaultValue: T
-  ) {
-    item.properties.push(this);
-    item.propertyMap.set(id, this);
+  constructor(item: PageItem, id: string, private defaultValue: T) {
+    super(item, id);
 
     // find the first master value
     for (const values of item.masterPropertyValues) {
@@ -123,16 +141,6 @@ export abstract class PageItemProperty<T extends {} | null> {
     this.notify();
   }
 
-  protected notify() {
-    this.item.onDataChanged();
-    this.valueChanged.notify();
-    this.item.notifyChange();
-  }
-
-  nextId() {
-    return this.item.nextId();
-  }
-
   hidden(value: () => boolean) {
     this.isHidden = value;
     return this;
@@ -155,7 +163,7 @@ export class MemoValue<T> {
 
   constructor(
     private factory: () => T,
-    events: (ModelEvent | PageItemProperty<any> | MemoValue<any>)[] = []
+    events: (ModelEvent | PageItemPropertyBase<any> | MemoValue<any>)[] = []
   ) {
     for (const e of events) {
       if (e instanceof ModelEvent) {
@@ -185,7 +193,9 @@ export class MemoValue<T> {
   }
 }
 
-export class ObjectProperty<T extends {} | null> extends PageItemProperty<T> {
+export class ObjectProperty<
+  T extends {} | null
+> extends PageItemPropertyBase<T> {
   constructor(item: PageItem, id: string, defaultValue: T) {
     super(item, id, defaultValue);
     this.isHidden = () => true;
@@ -196,7 +206,7 @@ export class ObjectProperty<T extends {} | null> extends PageItemProperty<T> {
   }
 }
 
-export class StringProperty extends PageItemProperty<string> {
+export class StringProperty extends PageItemPropertyBase<string> {
   isTextArea = false;
   isAcceptTabs = false;
   constructor(
@@ -257,7 +267,7 @@ export class StringProperty extends PageItemProperty<string> {
   }
 }
 
-export class NumberProperty extends PageItemProperty<number> {
+export class NumberProperty extends PageItemPropertyBase<number> {
   constructor(
     item: PageItem,
     id: string,
@@ -280,7 +290,7 @@ export class NumberProperty extends PageItemProperty<number> {
   }
 }
 
-export class IconProperty extends PageItemProperty<number | null> {
+export class IconProperty extends PageItemPropertyBase<number | null> {
   constructor(
     item: PageItem,
     id: string,
@@ -330,7 +340,7 @@ export class IconProperty extends PageItemProperty<number | null> {
   }
 }
 
-export class CheckboxProperty extends PageItemProperty<boolean> {
+export class CheckboxProperty extends PageItemPropertyBase<boolean> {
   constructor(
     item: PageItem,
     id: string,
@@ -358,7 +368,7 @@ export class CheckboxProperty extends PageItemProperty<boolean> {
   }
 }
 
-export class PageReferenceProperty extends PageItemProperty<{
+export class PageReferenceProperty extends PageItemPropertyBase<{
   pageId?: number;
 }> {
   constructor(item: PageItem, id: string, private label: string) {
@@ -385,7 +395,7 @@ export class PageReferenceProperty extends PageItemProperty<{
 
 export class SelectProperty<
   T extends string | number
-> extends PageItemProperty<T | null> {
+> extends PageItemPropertyBase<T | null> {
   constructor(
     item: PageItem,
     id: string,
