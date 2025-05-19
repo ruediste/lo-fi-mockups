@@ -290,6 +290,36 @@ export class NumberProperty extends PageItemPropertyBase<number> {
   }
 }
 
+export class RangeProperty extends PageItemPropertyBase<number> {
+  constructor(
+    item: PageItem,
+    id: string,
+    private label: string,
+    defaultValue: number,
+    private min: number,
+    private max: number
+  ) {
+    super(item, id, defaultValue);
+  }
+
+  render(): JSX.Element {
+    return (
+      <Form.Group className="mb-3">
+        <Form.Label>{this.label}</Form.Label>
+        <InputGroup>
+          <Form.Range
+            min={this.min}
+            max={this.max}
+            value={this.get()}
+            onChange={(e) => this.set(parseFloat(e.target.value))}
+          />
+          <PropertyOverrideableInputGroupControls property={this} />
+        </InputGroup>
+      </Form.Group>
+    );
+  }
+}
+
 export class IconProperty extends PageItemPropertyBase<number | null> {
   constructor(
     item: PageItem,

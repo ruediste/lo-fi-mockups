@@ -8,6 +8,7 @@ import { CollapsedCardWidget } from "./CollapsedCardWidget";
 import { DataGridWidget } from "./DataGridWidget";
 import { ComboboxWidget, DropdownWidget } from "./DropdownWidget";
 import { ExpandedCardWidget } from "./ExpandedCardWidget";
+import { HorizontalScrollBarWidget } from "./HorizontalScrollBarWidget";
 import { IconWidget } from "./IconWidget";
 import { LabelWidget } from "./LabelWidget";
 import { ListWidget } from "./ListWidget";
@@ -15,6 +16,7 @@ import { RadioButtonWidget } from "./RadioButtonWidget";
 import { TabsWidget } from "./TabsWidget";
 import { TextInputWidget } from "./TextInputWidget";
 import { TitleWidget } from "./TitleWidget";
+import { VerticalScrollBarWidget } from "./VerticalScrollBarWidget";
 import { Widget } from "./Widget";
 
 export class PageItemTypeRegistry {
@@ -68,3 +70,5 @@ register("radioButton", RadioButtonWidget);
 register("breadcrumb", BreadcrumbWidget);
 register("expandedCard", ExpandedCardWidget);
 register("collapsedCard", CollapsedCardWidget);
+register("horizontalScrollBar", HorizontalScrollBarWidget);
+register("verticalScrollBar", VerticalScrollBarWidget);

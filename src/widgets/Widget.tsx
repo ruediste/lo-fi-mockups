@@ -62,3 +62,21 @@ export abstract class WidthWidget extends Widget {
     return this.box;
   }
 }
+
+export abstract class HeightWidget extends Widget {
+  private boxInteraction = new BoxWidgetInteraction(this).heightOnly();
+
+  get box() {
+    return { ...this.boxInteraction.box.get(), width: this.width };
+  }
+
+  abstract get width(): number;
+
+  set box(value: Rectangle) {
+    this.boxInteraction.box.set(value);
+  }
+
+  override get boundingBox(): Rectangle {
+    return this.box;
+  }
+}

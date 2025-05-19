@@ -19,7 +19,6 @@ export class CollapsedCardWidget extends WidthWidget {
 
     return (
       <WidgetBounds box={box}>
-        {/* Header */}
         <rect
           x={box.x}
           y={box.y}
@@ -35,7 +34,6 @@ export class CollapsedCardWidget extends WidthWidget {
         >
           {title}
         </text>
-        {/* Icon */}
         <WidgetIcon
           x={box.x + box.width - 24}
           y={box.y + headerHeight - 10}

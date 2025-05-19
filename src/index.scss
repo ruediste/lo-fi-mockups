@@ -80,3 +80,7 @@ body > .export-helper {
     url("../node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff")
       format("woff");
 }
+.form-range {
+  width: unset;
+  flex-grow: 1;
+}
