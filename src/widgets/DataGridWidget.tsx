@@ -53,6 +53,8 @@ h\tFirst Name\tLast Name
                     backgroundColor:
                       row.isHeading || contents.columns[columnIdx].isHeading
                         ? widgetTheme.selectedGray
+                        : row.isSelected
+                        ? widgetTheme.selectedBlue
                         : undefined,
                     borderWidth: widgetTheme.strokeWidth + "px",
                     borderColor: widgetTheme.stroke,

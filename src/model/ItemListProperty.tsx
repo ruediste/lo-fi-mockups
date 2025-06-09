@@ -161,7 +161,7 @@ export class ExtensibleItemListProperty extends PageItemProperty {
   private masterItems: Item[] = [];
   constructor(item: PageItem, id: string, private label: string) {
     super(item, id);
-    for (const values of item.masterPropertyValues) {
+    for (const values of [...item.masterPropertyValues].reverse()) {
       const masterValue = values[id];
       if (Array.isArray(masterValue)) {
         this.masterItems.push(...masterValue);

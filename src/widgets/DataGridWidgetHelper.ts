@@ -34,7 +34,12 @@ function parseSimpleDataGrid(lines: string[], result: DataGridContents) {
     ...lines
       .filter((line) => line !== "")
       .map((line) => {
-        const row: DataGridRow = { isHeading: false, size: "auto", cells: [] };
+        const row: DataGridRow = {
+          isHeading: false,
+          isSelected: false,
+          size: "auto",
+          cells: [],
+        };
         const cells = line.split("\t");
         cells.forEach((text, idx) => {
           row.cells.push({ text });
@@ -70,14 +75,19 @@ function parseComplexDataGrid(
 
   // build rows and cells
   lines.slice(1).forEach((line, idx) => {
-    const row: DataGridRow = { isHeading: false, size: "auto", cells: [] };
+    const row: DataGridRow = {
+      isHeading: false,
+      isSelected: false,
+      size: "auto",
+      cells: [],
+    };
     const cells = line.split("\t");
     if (cells.length > 0) {
       const parts = cells[0].split(/[^a-zA-z0-9]/);
 
       parts.forEach((part) => {
         const groups =
-          /^((?<auto>auto)|(?<size>\d+(fr|px))|(?<header>[hH]))$/.exec(
+          /^((?<auto>auto)|(?<size>\d+(fr|px))|(?<header>[hH])|(?<selected>[sS]))$/.exec(
             part
           )?.groups;
         if (!groups) return;
@@ -85,6 +95,7 @@ function parseComplexDataGrid(
           row.size = groups["size"];
         }
         row.isHeading ||= groups["header"] !== undefined;
+        row.isSelected ||= groups["selected"] !== undefined;
       });
     }
     result.rows.push(row);
@@ -109,6 +120,7 @@ export interface DataGridColumn {
 export interface DataGridRow {
   size: string;
   isHeading: boolean;
+  isSelected: boolean;
   cells: DataGridCell[];
 }
 export interface DataGridCell {

@@ -96,6 +96,7 @@ Subsequent lines in Complex Mode define the rows and their cell contents. The fi
 - `<number>fr`: The row will take up a flexible fraction of the available space.
 - `<number>px`: The row will have a fixed size in pixels.
 - `h` or `H`: Marks the row as a header row. Header rows have a different background color.
+- `s` or `S`: Marks the row as selected using a different background color.
 
 Multiple properties for a single row can be combined in its definition cell (e.g., `auto h`).
 
