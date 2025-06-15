@@ -161,6 +161,15 @@ export function Canvas({
       >
         <ProjectionContext.Provider value={projection}>
           <svg
+            ref={(svg) => {
+              svg?.addEventListener(
+                "wheel",
+                (e) => {
+                  e.preventDefault();
+                },
+                { passive: false }
+              );
+            }}
             viewBox={`${projection.offset.x} ${projection.offset.y} ${worldViewSize.x}  ${worldViewSize.y}`}
             onPointerDown={(e) => {
               if (!e.ctrlKey) {

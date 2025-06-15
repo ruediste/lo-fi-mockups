@@ -67,8 +67,12 @@ function Page({
         <InlineEdit
           text={page.name}
           disabled={!selected}
+          style={{ flexGrow: 1 }}
           edit={(stop) => (
-            <span onPointerDown={(e) => e.stopPropagation()}>
+            <span
+              onPointerDown={(e) => e.stopPropagation()}
+              style={{ flexGrow: 1 }}
+            >
               <Form.Control
                 autoFocus
                 value={page.name}
@@ -87,7 +91,6 @@ function Page({
         />
 
         <InlinePageReferenceInput
-          style={{ marginLeft: "auto" }}
           project={project}
           pageId={page.masterPageId}
           setPageId={(e) => project.setMasterPage(page.id, e)}

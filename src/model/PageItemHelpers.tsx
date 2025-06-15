@@ -47,8 +47,12 @@ export function ItemListPropertyItem({
       <InlineEdit
         text={item.label}
         disabled={!itemEditable}
+        style={{ flexGrow: 1 }}
         edit={(stop) => (
-          <span onPointerDown={(e) => e.stopPropagation()}>
+          <span
+            onPointerDown={(e) => e.stopPropagation()}
+            style={{ flexGrow: 1 }}
+          >
             <Form.Control
               autoFocus
               value={item.label}
@@ -61,8 +65,8 @@ export function ItemListPropertyItem({
           </span>
         )}
       />
-      <div style={{ marginLeft: "auto" }}></div>
 
+      <div style={{ width: "12px" }} />
       <InlinePageReferenceInput
         project={project}
         setPageId={(e) => setLink(e)}

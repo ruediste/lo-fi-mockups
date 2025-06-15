@@ -15,6 +15,7 @@ export function InlineEdit(props: {
       css={{
         margin: "-4px",
         padding: "4px",
+        minHeight: "2em",
         borderRadius: "4px",
         ...(props.disabled
           ? {}

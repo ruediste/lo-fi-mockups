@@ -56,7 +56,12 @@ export function DraggableBox<TState>({
   box: Rectangle;
   onDragStart: () => TState;
   onDragEnd?: () => void;
-  update: (offset: Vec2d, diff: Vec2d, state: TState) => void;
+  update: (
+    offset: Vec2d,
+    diff: Vec2d,
+    state: TState,
+    snapDisabled: boolean
+  ) => void;
   projection: CanvasProjection;
   visible: boolean;
   select?: (toggle: boolean) => void;
@@ -93,7 +98,7 @@ export function DraggableBox<TState>({
           const offset = projection.scaleToWorld(
             Vec2d.fromEvent(e).sub(state.startEventPos)
           );
-          update(offset, offset.sub(state.lastOffset), state.state);
+          update(offset, offset.sub(state.lastOffset), state.state, e.ctrlKey);
           state.lastOffset = offset;
         }
       }}
@@ -202,15 +207,21 @@ export function DraggableSnapBox({
               ),
             };
           },
-          update: (offset, diff, state) => {
-            const snapResult = state.snapIndex.snapBoxes(state.refs, offset);
-            const snappedOffset = offset.add(snapResult.offset);
+          update: (offset, diff, state, snapDisabled) => {
+            let snappedOffset: Vec2d;
+            if (snapDisabled) {
+              snappedOffset = offset;
+              setSnapResult(undefined);
+            } else {
+              const snapResult = state.snapIndex.snapBoxes(state.refs, offset);
+              snappedOffset = offset.add(snapResult.offset);
+              setSnapResult(snapResult);
+            }
             const move = snappedOffset.sub(state.lastSnappedOffset);
             state.lastSnappedOffset = snappedOffset;
 
             items().forEach((i) => i.interaction.moveBy(move));
             page.onItemPositionChange.notify();
-            setSnapResult(snapResult);
           },
           onDragEnd: () => setSnapResult(undefined),
         }}
@@ -259,16 +270,24 @@ export function DraggableSnapCornerBox({
             appliedOffset: new Vec2d(0, 0),
             refs: snapReferences(),
           }),
-          update: (offset, diff, state) => {
-            const snapResult = state.snapIndex.snapBoxes(
-              snapReferences(),
-              diff.sub(state.appliedOffset)
-            );
-            const snappedOffset = offset.add(snapResult.offset);
+          update: (offset, diff, state, snapDisabled) => {
+            let snappedOffset: Vec2d;
+            if (snapDisabled) {
+              snappedOffset = offset;
+              setSnapResult(undefined);
+              state.appliedOffset = new Vec2d(0, 0);
+            } else {
+              const snapResult = state.snapIndex.snapBoxes(
+                snapReferences(),
+                diff.sub(state.appliedOffset)
+              );
+              snappedOffset = offset.add(snapResult.offset);
+              setSnapResult(snapResult);
+              state.appliedOffset = snapResult.offset;
+            }
+
             update(state.startBox, snappedOffset);
-            state.appliedOffset = snapResult.offset;
             item.page.onItemPositionChange.notify();
-            setSnapResult(snapResult);
           },
           onDragEnd: () => setSnapResult(undefined),
         }}
