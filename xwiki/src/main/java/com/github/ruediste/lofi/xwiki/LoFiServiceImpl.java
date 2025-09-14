@@ -27,7 +27,7 @@ public class LoFiServiceImpl implements LoFiService {
         var page = String.join("/", document.getSpaceReferences().stream()
                 .map(x -> URLEncoder.encode(x.getName(), StandardCharsets.UTF_8)).toList());
         return "/rest/lofimockups/page?wiki=" + URLEncoder.encode(wiki, StandardCharsets.UTF_8)
-                + "&page=" + page + "&attachment="
+                + "&page=" + URLEncoder.encode(page, StandardCharsets.UTF_8) + "&attachment="
                 + URLEncoder.encode(attachment, StandardCharsets.UTF_8)
                 + "&pageNr=" + pageNr;
     }
@@ -74,7 +74,7 @@ public class LoFiServiceImpl implements LoFiService {
                 default:
                     throw new RuntimeException("Unsupported type " + ref.getType());
             }
-            segments.add(type + "/" + ref.getName());
+            segments.add(type + "/" + URLEncoder.encode(ref.getName(), StandardCharsets.UTF_8));
             ref = ref.getParent();
         }
         Collections.reverse(segments);

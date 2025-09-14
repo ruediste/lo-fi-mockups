@@ -1,0 +1,35 @@
+services:
+  web:
+    image: "xwiki:stable-mysql-tomcat"
+    container_name: xwiki-mysql-tomcat-web
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8078:8080"
+    environment:
+      - DB_USER=xwiki
+      - DB_PASSWORD=xwiki
+      - DB_HOST=xwiki-mysql-db
+    volumes:
+      - ./xwiki-data:/usr/local/xwiki
+      - ./xwiki.properties:/usr/local/tomcat/webapps/ROOT/WEB-INF/xwiki.properties
+      - ${HOME}/.m2/repository:/repository
+      - ./logback.xml:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/logback.xml
+
+  db:
+    image: "mysql:9.1"
+    container_name: xwiki-mysql-db
+    restart: unless-stopped
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - MYSQL_ROOT_PASSWORD=xwiki
+      - MYSQL_USER=xwiki
+      - MYSQL_PASSWORD=xwiki
+      - MYSQL_DATABASE=xwiki
+    command:
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_bin"
+      - "--explicit-defaults-for-timestamp=1"

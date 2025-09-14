@@ -2,7 +2,9 @@ package com.github.ruediste.lofi.xwiki;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -27,7 +29,8 @@ public class LoFiRestResource extends XWikiResource {
       @QueryParam("attachment") String attachmentName, @QueryParam("pageNr") int pageNr) {
     try {
       var xcontext = xcontextProvider.get();
-      var pageRef = new PageReference(wiki, List.of(page.split("/")));
+      var pageRef = new PageReference(wiki,
+          Stream.of(page.split("/")).map(x -> URLDecoder.decode(x, StandardCharsets.UTF_8)).toList());
       var doc = xcontext.getWiki().getDocument(pageRef, xcontext);
       var attachment = doc.getAttachment(attachmentName);
       var is = attachment.getContentInputStream(xcontext);
