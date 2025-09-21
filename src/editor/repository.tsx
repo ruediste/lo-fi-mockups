@@ -3,7 +3,7 @@ import { Project, ProjectData } from "../model/Project";
 
 import { PageData } from "@/model/Page";
 import { toSet } from "@/util/utils";
-import * as htmlToImage from "html-to-image";
+import * as htmlToImage from "@ruediste/html-to-image";
 import { DBSchema, IDBPDatabase, openDB } from "idb";
 import jsPDF from "jspdf";
 import { Fragment } from "react";
