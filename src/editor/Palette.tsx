@@ -1,4 +1,5 @@
 import { calculateViewBox } from "@/editor/paletteHelper";
+import { createPageItemData } from "@/model/createPageItem";
 import { PageItemData } from "@/model/PageItem";
 import { Project, ProjectData } from "@/model/Project";
 import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
@@ -51,6 +52,8 @@ function PaletteEntry({
     }
   }, [isDragging, activatorEvent, node]);
 
+  console.log(overlayTransform);
+  console.log(boundingBox);
   return (
     <>
       <div
@@ -91,10 +94,9 @@ export const Palette = memo(function Palette() {
   const widgets = useMemo(() => {
     let nextId = 1;
 
-    const items: PageItemData[] = pageItemTypeRegistry.palette.map((type) => ({
-      id: nextId,
-      type: type.key,
-    }));
+    const items: PageItemData[] = pageItemTypeRegistry.palette.map((type) =>
+      createPageItemData(nextId++, type.key)
+    );
 
     const projectData: ProjectData = {
       currentPageId: nextId,

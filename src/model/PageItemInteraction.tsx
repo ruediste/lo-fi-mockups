@@ -17,6 +17,7 @@ export abstract class PageItemInteraction {
   abstract renderEditorInteraction(
     props: RenderInteractionArgs
   ): React.ReactNode;
+
   abstract renderMasterInteraction(
     props: RenderInteractionArgs
   ): React.ReactNode;

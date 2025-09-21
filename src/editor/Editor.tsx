@@ -23,6 +23,7 @@ import { Pages } from "./Pages";
 import { Palette } from "./Palette";
 
 import { ItemProperties } from "@/editor/ItemProperties";
+import { createPageItemData } from "@/model/createPageItem";
 import { confirm } from "@/util/confirm";
 import { ThreeDotMenu } from "@/util/Inputs";
 import "rc-dock/dist/rc-dock.css";
@@ -36,6 +37,7 @@ function RenderItem({
   projection: CanvasProjection;
 }) {
   useRerenderOnEvent(item.onChange);
+  useRerenderOnEvent(projection.onChange);
   return (
     <>
       {item.renderContent()}
@@ -143,10 +145,12 @@ function EditorCanvasInner({
           droppableRect.top +
           dragOffset.y;
 
-        const item = page.addItem({
-          id: page.project.data.nextId++,
-          type: event.active!.data.current!.itemType,
-        }) as Widget;
+        const item = page.addItem(
+          createPageItemData(
+            page.project.data.nextId++,
+            event.active!.data.current!.itemType
+          )
+        ) as Widget;
 
         item.initializeAfterAdd();
 

@@ -12,6 +12,8 @@ export interface ProjectData {
 
 export class Project {
   pageDataMap: { [id: number]: PageData } = {};
+
+  /// raised when there are any changes to the page list or when the current page switches to a different page
   onChange = new ModelEvent();
 
   currentPage?: Page;
