@@ -26,6 +26,7 @@ export interface PageData {
 export class Page {
   masterItems: PageItem[];
   ownItems: PageItem[];
+  allItems = new Map<number, PageItem>();
 
   // master from closest to furthest away
   directMasterPageData?: PageData;
@@ -70,6 +71,10 @@ export class Page {
         ...masterPage.items.map((i) => this.toPageItem(i, true))
       );
     }
+
+    const allItemList = [...this.masterItems, ...this.ownItems];
+    allItemList.forEach((x) => this.allItems.set(x.id, x));
+    allItemList.forEach((x) => x.initializeItemReferences());
   }
 
   setSelection(value: Selection) {
@@ -93,6 +98,8 @@ export class Page {
   addItem(data: PageItemData) {
     this.data.items.push(data);
     const item = this.toPageItem(data, false);
+    this.allItems.set(item.id, item);
+    item.initializeItemReferences();
     this.ownItems.push(item);
     this.onDataChanged();
     this.onChange.notify();
@@ -110,6 +117,8 @@ export class Page {
     clone.interaction.moveBy({ x: 20, y: 20 });
     this.data.items.push(cloneData);
     this.ownItems.push(clone);
+    this.allItems.set(clone.id, clone);
+    clone.initializeItemReferences();
     this.onDataChanged();
     this.onChange.notify();
     return clone;
@@ -124,6 +133,7 @@ export class Page {
   private removeItemImpl(id: number) {
     this.data.items = this.data.items.filter((x) => x.id != id);
     this.ownItems = this.ownItems.filter((x) => x.data.id != id);
+    this.allItems.delete(id);
   }
 
   removeSelectedItems() {

@@ -1,6 +1,5 @@
 import { IconButton, IconButtonProps } from "@/util/Inputs";
 import { Vec2d } from "@/util/Vec2d";
-import Flatbush from "flatbush";
 import {
   forwardRef,
   JSX,
@@ -24,7 +23,7 @@ import {
 import { ProjectionContext } from "../util/Contexts";
 import { useRerenderOnEvent } from "../util/hooks";
 import { toSet } from "../util/utils";
-import { Rectangle } from "../widgets/Widget";
+import { Position, Rectangle } from "../widgets/Widget";
 import { dragPositionRectAttrs } from "../widgets/widgetUtils";
 import { PageItemPropertyBase } from "./PageItemProperty";
 import { SnapIndex } from "./SnapIndex";
@@ -219,7 +218,10 @@ export function DraggableSnapBox({
               snappedOffset = offset;
               setSnapResult(undefined);
             } else {
-              const snapResult = state.snapIndex.snapBoxes(state.refs, offset);
+              const snapResult = state.snapIndex.snapReferences(
+                state.refs,
+                offset
+              );
               snappedOffset = offset.add(snapResult.offset);
               setSnapResult(snapResult);
             }
@@ -261,7 +263,6 @@ export function DraggableSnapCornerBox({
         snapIndex: SnapIndex;
         startBox: Rectangle;
         appliedOffset: Vec2d;
-        refs: Partial<SnapReferencesArgs>;
       }>
         {...{
           box,
@@ -274,7 +275,6 @@ export function DraggableSnapCornerBox({
             snapIndex: new SnapIndex(item.page, projection, (i) => i != item),
             startBox: item.boundingBox,
             appliedOffset: new Vec2d(0, 0),
-            refs: snapReferences(),
           }),
           update: (offset, diff, state, snapDisabled) => {
             let snappedOffset: Vec2d;
@@ -283,7 +283,7 @@ export function DraggableSnapCornerBox({
               setSnapResult(undefined);
               state.appliedOffset = new Vec2d(0, 0);
             } else {
-              const snapResult = state.snapIndex.snapBoxes(
+              const snapResult = state.snapIndex.snapReferences(
                 snapReferences(),
                 diff.sub(state.appliedOffset)
               );
@@ -303,6 +303,97 @@ export function DraggableSnapCornerBox({
   );
 }
 
+export function DraggableConnectorSnapBox({
+  projection,
+  position: position,
+  select,
+  item,
+  cursor,
+  update,
+  visible,
+}: {
+  projection: CanvasProjection;
+  position: Position;
+  select?: (toggle: boolean) => void;
+  item: PageItem;
+  cursor?: CursorValue;
+  visible: boolean;
+  update: (
+    startPosition: Position,
+    diff: Vec2d,
+    snapResult?: SnapResult
+  ) => void;
+}): JSX.Element {
+  const [snapResult, setSnapResult] = useState<SnapResult>();
+  const handleSize = projection.lengthToWorld(12);
+  return (
+    <>
+      <DraggableBox<{
+        snapIndex: SnapIndex;
+        startPosition: Position;
+        appliedOffset: Vec2d;
+      }>
+        {...{
+          box: {
+            x: position.x - handleSize / 2,
+            y: position.y - handleSize / 2,
+            width: handleSize,
+            height: handleSize,
+          },
+          projection,
+          visible,
+          select,
+          cursor,
+          filled: visible,
+          onDragStart: () => ({
+            snapIndex: new SnapIndex(item.page, projection, (i) => i != item),
+            startPosition: position,
+            appliedOffset: new Vec2d(0, 0),
+          }),
+          update: (offset, diff, state, snapDisabled) => {
+            let snappedOffset: Vec2d;
+            if (snapDisabled) {
+              snappedOffset = offset;
+              setSnapResult(undefined);
+              state.appliedOffset = new Vec2d(0, 0);
+            } else {
+              const snapResult = state.snapIndex.snapReferences(
+                {
+                  otherHorizontal: [
+                    new HorizontalSnapReference(
+                      position.x - handleSize / 2,
+                      position.y,
+                      handleSize,
+                      "connector"
+                    ),
+                  ],
+                  otherVertical: [
+                    new VerticalSnapReference(
+                      position.x,
+                      position.y - handleSize / 2,
+                      handleSize,
+                      "connector"
+                    ),
+                  ],
+                } satisfies Partial<SnapReferencesArgs>,
+                diff.sub(state.appliedOffset)
+              );
+              snappedOffset = offset.add(snapResult.offset);
+              setSnapResult(snapResult);
+              state.appliedOffset = snapResult.offset;
+            }
+
+            update(state.startPosition, snappedOffset, snapResult);
+            item.page.onItemPositionChange.notify();
+          },
+          onDragEnd: () => setSnapResult(undefined),
+        }}
+      />
+      {snapResult && <SnapResultDisplay snap={snapResult} />}
+    </>
+  );
+}
+
 function pick<T, K extends (keyof T)[]>(
   value: T,
   ...props: K
@@ -312,275 +403,6 @@ function pick<T, K extends (keyof T)[]>(
     result[p] = value[p];
   }
   return result;
-}
-
-export function DraggableBoundingBoxSnapBox<TState>({
-  box,
-  onDragStart,
-  update,
-  projection,
-  visible,
-  page,
-  excludeItems,
-  onDragEnd,
-  cursor,
-  filled,
-}: {
-  box: Rectangle;
-  onDragStart: () => TState;
-  update: (
-    offset: Vec2d,
-    diff: Vec2d,
-    state: TState,
-    snapDisabled: boolean
-  ) => void;
-  projection: CanvasProjection;
-  visible: boolean;
-  page: Page;
-  excludeItems?: Set<PageItem>;
-  onDragEnd?: () => void;
-  cursor?: CursorValue;
-  filled?: boolean;
-}): JSX.Element {
-  const [snapResult, setSnapResult] = useState<SnapResult>();
-
-  return (
-    <>
-      <DraggableBox<{
-        boundingBoxIndex: Flatbush | null;
-        lastSnappedOffset: Vec2d;
-        initialBox: Rectangle;
-        boundingLines: ({ x: number; y: number } & (
-          | { dir: "horizontal"; width: number }
-          | { dir: "vertical"; height: number }
-        ))[];
-        state: TState;
-      }>
-        {...{
-          box,
-          projection,
-          visible,
-          cursor,
-          filled,
-          onDragStart: () => {
-            // Get all page items except excluded ones
-            const allItems = [...page.masterItems, ...page.ownItems];
-            const itemsToIndex = excludeItems
-              ? allItems.filter(
-                  (item) =>
-                    !excludeItems.has(item) && item.data.type !== "connector"
-                )
-              : allItems;
-
-            const boundingLines: ({ x: number; y: number } & (
-              | { dir: "horizontal"; width: number }
-              | { dir: "vertical"; height: number }
-            ))[] = [];
-            // Create Flatbush index for individual lines
-            let boundingBoxIndex: Flatbush | null = null;
-            if (itemsToIndex.length > 0) {
-              // Each bounding box contributes 4 lines (top, right, bottom, left)
-              boundingBoxIndex = new Flatbush(itemsToIndex.length * 4);
-              itemsToIndex.forEach((item) => {
-                const bbox = item.boundingBox;
-                // Top edge (horizontal line)
-                boundingBoxIndex!.add(
-                  bbox.x,
-                  bbox.y,
-                  bbox.x + bbox.width,
-                  bbox.y
-                );
-                boundingLines.push({
-                  x: bbox.x,
-                  y: bbox.y,
-                  dir: "horizontal",
-                  width: bbox.width,
-                });
-
-                // Right edge (vertical line)
-                boundingBoxIndex!.add(
-                  bbox.x + bbox.width,
-                  bbox.y,
-                  bbox.x + bbox.width,
-                  bbox.y + bbox.height
-                );
-                boundingLines.push({
-                  x: bbox.x + bbox.width,
-                  y: bbox.y,
-                  dir: "vertical",
-                  height: bbox.height,
-                });
-
-                // Bottom edge (horizontal line)
-                boundingBoxIndex!.add(
-                  bbox.x,
-                  bbox.y + bbox.height,
-                  bbox.x + bbox.width,
-                  bbox.y + bbox.height
-                );
-                boundingLines.push({
-                  x: bbox.x,
-                  y: bbox.y + bbox.height,
-                  dir: "horizontal",
-                  width: bbox.width,
-                });
-
-                // Left edge (vertical line)
-                boundingBoxIndex!.add(
-                  bbox.x,
-                  bbox.y,
-                  bbox.x,
-                  bbox.y + bbox.height
-                );
-                boundingLines.push({
-                  x: bbox.x,
-                  y: bbox.y,
-                  dir: "vertical",
-                  height: bbox.height,
-                });
-              });
-              boundingBoxIndex.finish();
-            }
-
-            return {
-              boundingBoxIndex,
-              lastSnappedOffset: new Vec2d(0, 0),
-              boundingLines,
-              state: onDragStart(),
-              initialBox: { ...box },
-            };
-          },
-          update: (offset, diff, dragState, snapDisabled) => {
-            let snappedOffset: Vec2d;
-
-            if (snapDisabled || !dragState.boundingBoxIndex) {
-              snappedOffset = offset;
-              setSnapResult(undefined);
-            } else {
-              const initialBox = dragState.initialBox;
-              // Calculate current position of the dragged box
-              const currentBox = {
-                x: initialBox.x + offset.x,
-                y: initialBox.y + offset.y,
-                width: initialBox.width,
-                height: initialBox.height,
-              };
-
-              // Find nearby bounding boxes
-              const snapThreshold = 20; // pixels
-              const center = {
-                x: currentBox.x + currentBox.width / 2,
-                y: currentBox.y + currentBox.height / 2,
-              };
-
-              const initialCenter = {
-                x: initialBox.x + initialBox.width / 2,
-                y: initialBox.y + initialBox.height / 2,
-              };
-              const searchArea = {
-                minX: center.x - snapThreshold,
-                minY: center.y - snapThreshold,
-                maxX: center.x + snapThreshold,
-                maxY: center.y + snapThreshold,
-              };
-
-              const nearbyIndices = dragState.boundingBoxIndex.search(
-                searchArea.minX,
-                searchArea.minY,
-                searchArea.maxX,
-                searchArea.maxY
-              );
-
-              let bestSnapX: number | undefined;
-              let bestSnapY: number | undefined;
-              let snapDistanceX = Infinity;
-              let snapDistanceY = Infinity;
-              let horizontalSnap: SnapResult["h"];
-              let verticalSnap: SnapResult["v"];
-
-              // Check snapping to each nearby bounding line
-              for (const idx of nearbyIndices) {
-                const boundingLine = dragState.boundingLines[idx];
-
-                if (boundingLine.dir === "horizontal") {
-                  const delta = center.y - boundingLine.y;
-                  if (
-                    Math.abs(delta) < Math.abs(snapDistanceY) &&
-                    Math.abs(delta) <= snapThreshold
-                  ) {
-                    snapDistanceY = delta;
-                    bestSnapY = boundingLine.y;
-                    horizontalSnap = {
-                      box: {
-                        x: boundingLine.x,
-                        y: boundingLine.y,
-                        width: boundingLine.width,
-                        type: "edge",
-                        snapRange: snapThreshold,
-                      },
-                      ref: new HorizontalSnapReference(
-                        currentBox.x,
-                        center.y - delta,
-                        currentBox.width,
-                        "edge"
-                      ),
-                    };
-                  }
-                } else if (boundingLine.dir === "vertical") {
-                  const delta = center.x - boundingLine.x;
-                  if (
-                    Math.abs(delta) < Math.abs(snapDistanceX) &&
-                    Math.abs(delta) <= snapThreshold
-                  ) {
-                    snapDistanceX = delta;
-                    bestSnapX = boundingLine.x;
-                    verticalSnap = {
-                      box: {
-                        x: boundingLine.x,
-                        y: boundingLine.y,
-                        height: boundingLine.height,
-                        type: "edge",
-                        snapRange: snapThreshold,
-                      },
-                      ref: new VerticalSnapReference(
-                        center.x - delta,
-                        currentBox.y,
-                        currentBox.height,
-                        "edge"
-                      ),
-                    };
-                  }
-                }
-              }
-
-              snappedOffset = new Vec2d(
-                bestSnapX !== undefined
-                  ? bestSnapX - initialCenter.x
-                  : offset.x,
-                bestSnapY !== undefined ? bestSnapY - initialCenter.y : offset.y
-              );
-
-              setSnapResult({
-                offset: snappedOffset.sub(offset),
-                h: horizontalSnap,
-                v: verticalSnap,
-              });
-            }
-
-            const move = snappedOffset.sub(dragState.lastSnappedOffset);
-            dragState.lastSnappedOffset = snappedOffset;
-
-            update(snappedOffset, move, dragState.state, snapDisabled);
-          },
-          onDragEnd: () => {
-            setSnapResult(undefined);
-            onDragEnd?.();
-          },
-        }}
-      />
-      {snapResult && <SnapResultDisplay snap={snapResult} />}
-    </>
-  );
 }
 
 export function DraggableSnapResizeBox({

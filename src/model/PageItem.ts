@@ -106,6 +106,9 @@ export abstract class PageItem {
   // invoked after construction
   initialize() {}
 
+  // invoked after all items have been created
+  initializeItemReferences(): void {}
+
   getSnapBoxes(args: SnapBoxesArgs) {
     this.createSnapBoxes(args, this.boundingBox, this.snapMiddle);
   }
@@ -118,6 +121,7 @@ export abstract class PageItem {
     args.addEdges(box);
     args.addMarginBox(box);
     args.addMiddle(box, middle);
+    args.addConnector(box, this);
   }
 
   static getSnapReferences(items: PageItem[], viewToWorld: number) {
@@ -265,6 +269,45 @@ export class SnapBoxesArgs {
       )
     );
   }
+
+  addConnector(box: Rectangle, source: PageItem) {
+    this.horizontal.push(
+      new HorizontalSnapBox(
+        box.x,
+        box.y,
+        box.width,
+        "connector",
+        snapConfiguration.snapRange,
+        source
+      ),
+      new HorizontalSnapBox(
+        box.x,
+        box.y + box.height,
+        box.width,
+        "connector",
+        snapConfiguration.snapRange,
+        source
+      )
+    );
+    this.vertical.push(
+      new VerticalSnapBox(
+        box.x,
+        box.y,
+        box.height,
+        "connector",
+        snapConfiguration.snapRange,
+        source
+      ),
+      new VerticalSnapBox(
+        box.x + box.width,
+        box.y,
+        box.height,
+        "connector",
+        snapConfiguration.snapRange,
+        source
+      )
+    );
+  }
 }
 
 export class SnapReferencesArgs {
@@ -334,7 +377,8 @@ export class HorizontalSnapBox {
     public y: number,
     public width: number,
     public type: SnapType,
-    public snapRange: number = snapConfiguration.snapRange
+    public snapRange: number = snapConfiguration.snapRange,
+    public sourceItem?: PageItem
   ) {}
 }
 export class VerticalSnapBox {
@@ -343,10 +387,11 @@ export class VerticalSnapBox {
     public y: number,
     public height: number,
     public type: SnapType,
-    public snapRange: number = snapConfiguration.snapRange
+    public snapRange: number = snapConfiguration.snapRange,
+    public sourceItem?: PageItem
   ) {}
 }
-export type SnapType = "margin" | "edge" | "middle";
+export type SnapType = "margin" | "edge" | "middle" | "connector";
 export class HorizontalSnapReference {
   constructor(
     public x: number,

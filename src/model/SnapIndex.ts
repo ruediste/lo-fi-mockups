@@ -19,11 +19,13 @@ export class SnapIndex {
     edge: [],
     margin: [],
     middle: [],
+    connector: [],
   };
   verticalBoxes: { [key in SnapType]: VerticalSnapBox[] } = {
     edge: [],
     margin: [],
     middle: [],
+    connector: [],
   };
 
   horizontalIndices: { [key in SnapType]?: Flatbush } = {};
@@ -78,10 +80,10 @@ export class SnapIndex {
   ) {
     const refs = PageItem.getSnapReferences(items, viewToWorld);
 
-    return this.snapBoxes(refs, currentOffset);
+    return this.snapReferences(refs, currentOffset);
   }
 
-  snapBoxes(
+  snapReferences(
     refs: Partial<SnapReferencesArgs>,
     currentOffset: { x: number; y: number }
   ): SnapResult {
@@ -93,6 +95,7 @@ export class SnapIndex {
     let verticalSnap:
       | { box: VerticalSnapBox; ref: VerticalSnapReference }
       | undefined = undefined;
+
     for (const ref of [
       ...(refs.left ?? []),
       ...(refs.right ?? []),

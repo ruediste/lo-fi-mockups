@@ -52,8 +52,6 @@ function PaletteEntry({
     }
   }, [isDragging, activatorEvent, node]);
 
-  console.log(overlayTransform);
-  console.log(boundingBox);
   return (
     <>
       <div

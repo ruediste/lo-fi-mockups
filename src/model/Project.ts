@@ -125,7 +125,6 @@ export class Project {
   }
 
   setMasterPage(pageId: number, masterPageId?: number) {
-    console.log("setMasterPage", masterPageId);
     this.pageDataMap[pageId].masterPageId = masterPageId;
     this.recreateCurrentPage();
   }
