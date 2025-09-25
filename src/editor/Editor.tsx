@@ -85,6 +85,8 @@ function MultiItemSelectionBox({
           projection,
           visible: true,
           page,
+          onDuplicate: () =>
+            page.selection.items.forEach((i) => page.duplicateItem(i)),
         }}
       />
     )

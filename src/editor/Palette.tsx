@@ -3,7 +3,7 @@ import { createPageItemData } from "@/model/createPageItem";
 import { PageItemData } from "@/model/PageItem";
 import { Project, ProjectData } from "@/model/Project";
 import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
-import { Widget } from "@/widgets/Widget";
+import { globalSvgContent, Widget } from "@/widgets/Widget";
 import { DragOverlay, useDraggable } from "@dnd-kit/core";
 import { memo, useEffect, useMemo, useState } from "react";
 import { EditorState, useEditorState } from "./EditorState";
@@ -65,6 +65,7 @@ function PaletteEntry({
           width={paletteItemSize.width + "px"}
           height={paletteItemSize.height + "px"}
         >
+          {globalSvgContent}
           {widget.renderContent()}
         </svg>
         <div style={{ textAlign: "center", fontWeight: "bold" }}>

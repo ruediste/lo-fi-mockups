@@ -1,7 +1,7 @@
 import { Selection } from "@/editor/Selection";
 import { Page } from "@/model/Page";
 import { Vec2d } from "@/util/Vec2d";
-import { Rectangle } from "@/widgets/Widget";
+import { globalSvgContent, Rectangle } from "@/widgets/Widget";
 import classNames from "classnames";
 import { PointerEventHandler, useRef } from "react";
 import { Fullscreen, Icon1Square } from "react-bootstrap-icons";
@@ -225,6 +225,7 @@ export function Canvas({
               }
             }}
           >
+            {globalSvgContent}
             {children}
           </svg>
         </ProjectionContext.Provider>

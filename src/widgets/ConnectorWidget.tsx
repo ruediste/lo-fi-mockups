@@ -11,10 +11,25 @@ import { PageItemInteraction } from "@/model/PageItemInteraction";
 import { DraggableConnectorSnapBox } from "@/model/PageItemInteractionHelpers";
 import { useRerenderOnEvent } from "@/util/hooks";
 import { WithHooks } from "@/util/WithHooks";
-import { StringProperty } from "../model/PageItemProperty";
+import { SelectProperty, StringProperty } from "../model/PageItemProperty";
 import { Position, Rectangle, Widget } from "./Widget";
 import { widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
+
+export type UmlMarkerType =
+  | "None"
+  | "Association"
+  | "Aggregation"
+  | "Composition"
+  | "Inheritance";
+
+export const UML_MARKER_OPTIONS: [UmlMarkerType, string][] = [
+  ["None", "None"],
+  ["Association", "Association"],
+  ["Inheritance", "Inheritance"],
+  ["Aggregation", "Aggregation"],
+  ["Composition", "Composition"],
+];
 
 export interface ConnectorWidgetData extends PageItemData {
   source: ConnectorEndpointData;
@@ -25,10 +40,37 @@ interface ConnectorEndpointData {
   position: { x: number; y: number };
   connectedItemId?: number;
 }
+
 export class ConnectorWidget extends Widget {
   label = "Connector";
   protected connectorInteraction = new ConnectorInteraction(this);
-  text = new StringProperty(this, "text", "Label", "");
+  labelText = new StringProperty(this, "label", "Label", "");
+  sourceMultiplicity = new StringProperty(
+    this,
+    "sourceMultiplicity",
+    "Source Multiplicity",
+    ""
+  );
+  targetMultiplicity = new StringProperty(
+    this,
+    "targetMultiplicity",
+    "Target Multiplicity",
+    ""
+  );
+  sourceMarkerType = new SelectProperty<UmlMarkerType>(
+    this,
+    "sourceMarkerType",
+    "Source Marker",
+    () => UML_MARKER_OPTIONS,
+    "None"
+  );
+  targetMarkerType = new SelectProperty<UmlMarkerType>(
+    this,
+    "targetMarkerType",
+    "Target Marker",
+    () => UML_MARKER_OPTIONS,
+    "Association"
+  );
 
   source!: ConnectorEndpoint;
   target!: ConnectorEndpoint;
@@ -44,13 +86,36 @@ export class ConnectorWidget extends Widget {
     return this.data as ConnectorWidgetData;
   }
 
+  private getMarkerUrl(markerType: UmlMarkerType | null): string | undefined {
+    if (markerType === null) return undefined;
+
+    switch (markerType) {
+      case "None":
+        return undefined;
+      case "Association":
+        return "url(#connector-association)";
+      case "Aggregation":
+        return "url(#connector-aggregation)";
+      case "Composition":
+        return "url(#connector-composition)";
+      case "Inheritance":
+        return "url(#connector-inheritance)";
+      default:
+        return undefined;
+    }
+  }
+
   renderContent(): React.ReactNode {
     return (
       <WithHooks>
         {() => {
           useRerenderOnEvent(this.page.onItemPositionChange);
           const { source, target } = this;
-          const text = this.text.get();
+          const text = this.labelText.get();
+          const sourceMulti = this.sourceMultiplicity.get();
+          const targetMulti = this.targetMultiplicity.get();
+          const sourceMarkerType = this.sourceMarkerType.get();
+          const targetMarkerType = this.targetMarkerType.get();
 
           // Calculate middle position of the connector line
           const midX = (source.position.x + target.position.x) / 2;
@@ -61,19 +126,13 @@ export class ConnectorWidget extends Widget {
           const textHeight = widgetTheme.fontSize;
           const padding = 6;
 
+          // Get marker URLs
+          const sourceMarkerUrl = this.getMarkerUrl(sourceMarkerType);
+          const targetMarkerUrl = this.getMarkerUrl(targetMarkerType);
+
           return (
             <>
               <defs>
-                <marker
-                  id={`arrowhead-${this.data.id}`}
-                  markerWidth="10"
-                  markerHeight="7"
-                  refX="9"
-                  refY="3.5"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
-                </marker>
                 <filter
                   id={`blur-${this.data.id}`}
                   x="-50%"
@@ -84,6 +143,19 @@ export class ConnectorWidget extends Widget {
                   <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
                 </filter>
               </defs>
+              {/* make sure multiplicity background is behind connector line */}
+              {sourceMulti &&
+                sourceMulti.length > 0 &&
+                this.renderMultiplicity(sourceMulti, source.position, {
+                  x: target.position.x - source.position.x,
+                  y: target.position.y - source.position.y,
+                })}
+              {targetMulti &&
+                targetMulti.length > 0 &&
+                this.renderMultiplicity(targetMulti, target.position, {
+                  x: source.position.x - target.position.x,
+                  y: source.position.y - target.position.y,
+                })}
               <line
                 x1={source.position.x}
                 y1={source.position.y}
@@ -91,7 +163,17 @@ export class ConnectorWidget extends Widget {
                 y2={target.position.y}
                 stroke="#333"
                 strokeWidth="2"
-                markerEnd={`url(#arrowhead-${this.data.id})`}
+                markerEnd={targetMarkerUrl}
+              />
+              {/* invisible line to draw the source marker */}
+              <line
+                x1={target.position.x}
+                y1={target.position.y}
+                x2={source.position.x}
+                y2={source.position.y}
+                stroke="none"
+                strokeWidth="2"
+                markerEnd={sourceMarkerUrl}
               />
               {text && text.length > 0 && (
                 <>
@@ -119,6 +201,56 @@ export class ConnectorWidget extends Widget {
           );
         }}
       </WithHooks>
+    );
+  }
+
+  private renderMultiplicity(
+    text: string,
+    position: Position,
+    direction: Position
+  ): React.ReactNode {
+    const dx = direction.x;
+    const dy = direction.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    let offsetX = 0;
+    let offsetY = 0;
+    if (dist > 0) {
+      const ux = dx / dist;
+      const uy = dy / dist;
+      if (ux < 0) {
+        offsetX = 10 * ux - 10 * uy;
+        offsetY = 10 * uy + 10 * ux;
+      } else {
+        offsetX = 10 * ux + 10 * uy;
+        offsetY = 10 * uy - 10 * ux;
+      }
+    }
+
+    // Calculate text dimensions for background
+    const textWidth = getTextWidth(text, widgetTheme.fontSize);
+    const textHeight = widgetTheme.fontSize;
+    const padding = 6;
+    return (
+      <>
+        <rect
+          x={position.x + offsetX - textWidth / 2 - padding}
+          y={position.y + offsetY - textHeight / 2 - padding}
+          width={textWidth + 2 * padding}
+          height={textHeight + 2 * padding}
+          fill="rgba(255, 255, 255, 1)"
+          rx="4"
+          filter={`url(#blur-${this.data.id})`}
+        />
+        <text
+          x={position.x + offsetX}
+          y={position.y + offsetY + widgetTheme.fontSize / 4}
+          fontSize={widgetTheme.fontSize}
+          textAnchor="middle"
+          fill="#333"
+        >
+          {text}
+        </text>
+      </>
     );
   }
 
@@ -231,6 +363,7 @@ class ConnectorInteraction extends PageItemInteraction {
                 stroke={visible ? "#00FF0040" : "transparent"}
                 strokeWidth={projection.lengthToWorld(20)}
                 style={{ cursor: "move" }}
+                onDoubleClick={() => this.item.page.duplicateItem(this.item)}
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   this.item.page.setSelection(

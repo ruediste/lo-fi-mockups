@@ -80,3 +80,69 @@ export abstract class HeightWidget extends Widget {
     return this.box;
   }
 }
+
+export const globalSvgContent = (
+  <>
+    <marker
+      id="connector-association"
+      markerWidth="10"
+      markerHeight="7"
+      refX="9"
+      refY="3.5"
+      orient="auto"
+    >
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+
+    {/* Aggregation marker (hollow diamond) */}
+    <marker
+      id="connector-aggregation"
+      markerWidth="12"
+      markerHeight="8"
+      refX="11"
+      refY="4"
+      orient="auto"
+    >
+      <polygon
+        points="0 4, 6 0, 12 4, 6 8"
+        fill="white"
+        stroke="#333"
+        strokeWidth="1"
+      />
+    </marker>
+
+    {/* Composition marker (filled diamond) */}
+    <marker
+      id="connector-composition"
+      markerWidth="12"
+      markerHeight="8"
+      refX="11"
+      refY="4"
+      orient="auto"
+    >
+      <polygon
+        points="0 4, 6 0, 12 4, 6 8"
+        fill="#333"
+        stroke="#333"
+        strokeWidth="1"
+      />
+    </marker>
+
+    {/* Inheritance marker (hollow triangle) */}
+    <marker
+      id="connector-inheritance"
+      markerWidth="12"
+      markerHeight="10"
+      refX="11"
+      refY="5"
+      orient="auto"
+    >
+      <polygon
+        points="0 0, 12 5, 0 10"
+        fill="white"
+        stroke="#333"
+        strokeWidth="1"
+      />
+    </marker>
+  </>
+);

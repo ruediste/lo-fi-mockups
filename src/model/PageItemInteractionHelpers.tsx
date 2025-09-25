@@ -57,6 +57,7 @@ export function DraggableBox<TState>({
   cursor,
   filled,
   onDragEnd,
+  onDuplicate,
 }: {
   box: Rectangle;
   onDragStart: () => TState;
@@ -72,6 +73,7 @@ export function DraggableBox<TState>({
   select?: (toggle: boolean) => void;
   cursor?: CursorValue;
   filled?: boolean;
+  onDuplicate: () => void;
 }) {
   const dragState = useRef<{
     startEventPos: Vec2d;
@@ -85,6 +87,7 @@ export function DraggableBox<TState>({
       {...(visible ? dragPositionRectAttrs(projection) : {})}
       cursor={cursor}
       fill={filled === true ? "#00ff00" : "transparent"}
+      onDoubleClick={onDuplicate}
       onPointerDown={(e) => {
         e.stopPropagation();
         if (!visible) {
@@ -176,6 +179,7 @@ export function DraggableSnapBox({
   page,
   select,
   items,
+  onDuplicate,
 }: {
   projection: CanvasProjection;
   box: Rectangle;
@@ -183,6 +187,7 @@ export function DraggableSnapBox({
   page: Page;
   select?: (toggle: boolean) => void;
   items: () => Set<PageItem>;
+  onDuplicate: () => void;
 }): JSX.Element {
   const [snapResult, setSnapResult] = useState<SnapResult>();
   return (
@@ -197,6 +202,7 @@ export function DraggableSnapBox({
           projection,
           visible,
           select,
+          onDuplicate,
           onDragStart: () => {
             const tmp = items();
             return {
@@ -271,6 +277,7 @@ export function DraggableSnapCornerBox({
           select,
           cursor,
           filled: true,
+          onDuplicate: () => {},
           onDragStart: () => ({
             snapIndex: new SnapIndex(item.page, projection, (i) => i != item),
             startBox: item.boundingBox,
@@ -345,6 +352,7 @@ export function DraggableConnectorSnapBox({
           select,
           cursor,
           filled: visible,
+          onDuplicate: () => {},
           onDragStart: () => ({
             snapIndex: new SnapIndex(item.page, projection, (i) => i != item),
             startPosition: position,
@@ -412,6 +420,7 @@ export function DraggableSnapResizeBox({
   item,
   update,
   widthOnly,
+  onDuplicate,
 }: {
   projection: CanvasProjection;
   visible: boolean;
@@ -419,6 +428,7 @@ export function DraggableSnapResizeBox({
   item: PageItem;
   update: (newBox: Rectangle) => void;
   widthOnly: boolean;
+  onDuplicate: () => void;
 }): JSX.Element {
   const handleSize = projection.lengthToWorld(12);
   const minSize = { width: 20, height: 20 };
@@ -690,6 +700,7 @@ export function DraggableSnapResizeBox({
           page: item.page,
           select,
           items: () => toSet(item),
+          onDuplicate,
         }}
       />
       {corners}

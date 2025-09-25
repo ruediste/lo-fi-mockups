@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight } from "react-bootstrap-icons";
 import { PageItem, PageItemRenderContext } from "./model/PageItem";
 import { useRerenderOnEvent } from "./util/hooks";
 import { IconButton } from "./util/Inputs";
+import { globalSvgContent } from "./widgets/Widget";
 
 function RenderItem({ item }: { item: PageItem }) {
   useRerenderOnEvent(item.onChange);
@@ -64,6 +65,7 @@ export function Play() {
               height: "100%",
             }}
           >
+            {globalSvgContent}
             {page.masterItems.concat(page.ownItems).map((item) => (
               <RenderItem key={item.id} item={item} />
             ))}

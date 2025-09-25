@@ -107,13 +107,24 @@ export class Page {
   }
 
   duplicateItem(item: PageItem) {
-    const cloneData = { ...item.data, id: this.project.data.nextId++ };
+    const cloneData = item.cloneData();
 
     // serialization roundtrip to copy the property values
-    this.data.propertyValues[cloneData.id] = JSON.parse(
-      JSON.stringify(this.data.propertyValues[item.id])
-    );
+    {
+      const value = this.data.propertyValues[item.id];
+      if (value !== undefined) {
+        const serialized = JSON.stringify(value);
+        try {
+          this.data.propertyValues[cloneData.id] = JSON.parse(serialized);
+        } catch (e) {
+          console.log("Error while deserializing", serialized);
+          throw e;
+        }
+      }
+    }
     const clone = this.toPageItem(cloneData, false);
+    clone.initialize();
+    clone.initializeItemReferences();
     clone.interaction.moveBy({ x: 20, y: 20 });
     this.data.items.push(cloneData);
     this.ownItems.push(clone);

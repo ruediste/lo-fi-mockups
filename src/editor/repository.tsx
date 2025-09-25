@@ -10,7 +10,7 @@ import { Fragment } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { ModelEvent } from "../model/ModelEvent";
-import { Rectangle } from "../widgets/Widget";
+import { globalSvgContent, Rectangle } from "../widgets/Widget";
 
 interface MyDB extends DBSchema {
   project: {
@@ -138,6 +138,7 @@ export class Repository {
                 width={box.width * scale}
                 height={box.height * scale}
               >
+                {globalSvgContent}
                 {page.masterItems.concat(page.ownItems).map((item, idx) => (
                   <Fragment key={idx}>{item.renderContent()}</Fragment>
                 ))}

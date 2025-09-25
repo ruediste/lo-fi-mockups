@@ -58,6 +58,7 @@ export class BoxWidgetInteraction extends PageItemInteraction {
               toggle ? selection.toggle(this.item) : Selection.of(this.item)
             ),
           items: () => this.item.page.selection.items,
+          onDuplicate: () => this.item.page.duplicateItem(this.item),
         }}
       />
     ) : (
@@ -76,6 +77,7 @@ export class BoxWidgetInteraction extends PageItemInteraction {
           },
           widthOnly: this._widthOnly,
           heightOnly: this._heightOnly,
+          onDuplicate: () => this.item.page.duplicateItem(this.item),
         }}
       />
     );
@@ -143,6 +145,7 @@ export class PositionWidgetInteraction extends PageItemInteraction {
               toggle ? selection.toggle(this.item) : Selection.of(this.item)
             ),
           items: () => this.item.page.selection.items,
+          onDuplicate: () => this.item.page.duplicateItem(this.item),
         }}
       />
     );

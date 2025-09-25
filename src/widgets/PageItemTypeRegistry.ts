@@ -24,6 +24,7 @@ import { RadioButtonWidget } from "./RadioButtonWidget";
 import { TabsWidget } from "./TabsWidget";
 import { TextInputWidget } from "./TextInputWidget";
 import { TitleWidget } from "./TitleWidget";
+import { UmlClassWidget } from "./UmlClassWidget";
 import { VerticalScrollBarWidget } from "./VerticalScrollBarWidget";
 import { Widget } from "./Widget";
 
@@ -106,3 +107,4 @@ register(
       target: { position: { x: 80, y: 0 } },
     } satisfies ConnectorWidgetData)
 );
+register("umlClass", UmlClassWidget);
