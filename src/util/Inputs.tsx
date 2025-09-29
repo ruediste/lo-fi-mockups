@@ -86,7 +86,10 @@ export function ThreeDotMenu({
   items,
   style,
 }: {
-  items: { label: string; onClick: () => void; checked?: boolean }[];
+  items: ({ label: string; checked?: boolean } & (
+    | { onClick: () => void }
+    | { href: string }
+  ))[];
   style?: React.CSSProperties;
 }) {
   const id = useId();
@@ -97,9 +100,11 @@ export function ThreeDotMenu({
         {items.map((item, idx) => (
           <Dropdown.Item
             key={idx}
+            {...("href" in item ? { href: item.href, target: "_blank" } : {})}
             onClick={(e) => {
               e.stopPropagation();
-              if (item.checked === undefined) item.onClick();
+              if (item.checked === undefined && "onClick" in item)
+                item.onClick();
             }}
           >
             {item.checked !== undefined ? (
@@ -107,7 +112,9 @@ export function ThreeDotMenu({
                 id={id + "-" + idx}
                 checked={item.checked}
                 label={item.label}
-                onChange={item.onClick}
+                onChange={() => {
+                  if ("onClick" in item) item.onClick();
+                }}
               />
             ) : (
               item.label

@@ -408,6 +408,10 @@ export function Editor({ downloadName }: { downloadName?: string }) {
                   dockLayout.current?.loadLayout(defaultLayout);
                 },
               },
+              {
+                label: "Help",
+                href: "https://github.com/ruediste/lo-fi-mockups/blob/main/README.md",
+              },
             ]}
           />
         </Stack>
