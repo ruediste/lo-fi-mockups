@@ -20,7 +20,7 @@
     "@emotion/babel-plugin": "^11.13.5",
     "@emotion/react": "^11.14.0",
     "@popperjs/core": "^2.11.8",
-    "@ruediste/html-to-image": "1.11.14",
+    "@ruediste/html-to-image": "1.13.0",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "classnames": "^2.5.1",
