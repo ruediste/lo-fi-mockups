@@ -409,6 +409,7 @@ class ConnectorInteraction extends PageItemInteraction {
                   );
                 }}
                 projection={projection}
+                cursor="grab"
               />
               <DraggableConnectorSnapBox
                 position={target.position}
@@ -424,6 +425,7 @@ class ConnectorInteraction extends PageItemInteraction {
                   );
                 }}
                 projection={projection}
+                cursor="grab"
               />
             </>
           );

@@ -84,16 +84,3 @@ body > .export-helper {
   width: unset;
   flex-grow: 1;
 }
-
-.umlClassWidget {
-  white-space: nowrap;
-  overflow: hidden;
-  padding-left: 4px;
-  .classHeader {
-    display: flex;
-    justify-content: center;
-  }
-  hr {
-    margin: 0;
-  }
-}

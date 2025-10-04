@@ -45,7 +45,8 @@ type CursorValue =
   | "n-resize"
   | "s-resize"
   | "w-resize"
-  | "e-resize";
+  | "e-resize"
+  | "grab";
 
 export function DraggableBox<TState>({
   box,
