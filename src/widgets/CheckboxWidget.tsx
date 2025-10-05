@@ -4,7 +4,7 @@ import {
   SelectProperty,
   StringProperty,
 } from "../model/PageItemProperty";
-import { PositionWidget, Rectangle } from "./Widget";
+import { IRectangle, PositionWidget } from "./Widget";
 import { PageLink, WidgetIcon } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
@@ -28,7 +28,7 @@ export class CheckboxWidget extends PositionWidget {
   );
   link = new PageReferenceProperty(this, "link", "Link");
 
-  get boundingBox(): Rectangle {
+  get boundingBox(): IRectangle {
     return {
       ...this.position,
       width: Math.max(

@@ -4,7 +4,7 @@ import {
   PageReferenceProperty,
   StringProperty,
 } from "../model/PageItemProperty";
-import { PositionWidget, Rectangle } from "./Widget";
+import { IRectangle, PositionWidget } from "./Widget";
 import { PageLink, WidgetIcon } from "./WidgetHelpers";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
@@ -19,7 +19,7 @@ export class ButtonWidget extends PositionWidget {
   link = new PageReferenceProperty(this, "link", "Link");
   icon = new IconProperty(this, "icon", "Icon", null).clearable();
 
-  get boundingBox(): Rectangle {
+  get boundingBox(): IRectangle {
     const icon = this.icon.get();
     return {
       ...this.position,

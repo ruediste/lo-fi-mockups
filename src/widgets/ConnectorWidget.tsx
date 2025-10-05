@@ -9,17 +9,27 @@ import {
 } from "@/model/PageItem";
 import { PageItemInteraction } from "@/model/PageItemInteraction";
 import { DraggableConnectorSnapBox } from "@/model/PageItemInteractionHelpers";
+import {
+  ConnectionEndConfiguration,
+  getRoutePoints,
+} from "@/util/connection-routing";
 import { useRerenderOnEvent } from "@/util/hooks";
+import { Rectangle } from "@/util/rectangle";
+import { getDirectionOutside, Vec2d } from "@/util/Vec2d";
 import { WithHooks } from "@/util/WithHooks";
-import { SelectProperty, StringProperty } from "../model/PageItemProperty";
-import { Position, Rectangle, Widget } from "./Widget";
+import {
+  CheckboxProperty,
+  MemoValue,
+  SelectProperty,
+  StringProperty,
+} from "../model/PageItemProperty";
+import { IRectangle, IVec2d, Widget } from "./Widget";
 import { widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
 export type UmlMarkerType =
   | "None"
   | "Association"
-  | "Aggregation"
   | "Composition"
   | "Inheritance";
 
@@ -27,7 +37,6 @@ export const UML_MARKER_OPTIONS: [UmlMarkerType, string][] = [
   ["None", "None"],
   ["Association", "Association"],
   ["Inheritance", "Inheritance"],
-  ["Aggregation", "Aggregation"],
   ["Composition", "Composition"],
 ];
 
@@ -72,6 +81,67 @@ export class ConnectorWidget extends Widget {
     "Association"
   );
 
+  orthogonalRouting = new CheckboxProperty(
+    this,
+    "orthogonalRouting",
+    "OrthogonalRouting",
+    true
+  );
+
+  routePointsMemo = new MemoValue<Vec2d[]>(() => {
+    const orthogonalRouting = this.orthogonalRouting.get();
+    let routePoints: Vec2d[] | null = null;
+
+    if (orthogonalRouting) {
+      // Calculate route
+      const sourceBoundingBox =
+        this.source.connectedItem &&
+        Rectangle.fromRect(this.source.connectedItem.boundingBox);
+
+      const sourceConf: ConnectionEndConfiguration = sourceBoundingBox
+        ? {
+            pos: Vec2d.from(this.source.position),
+            inside: false,
+            direction: getDirectionOutside(
+              sourceBoundingBox,
+              Vec2d.from(this.source.position).sub(
+                this.source.connectedItem!.boundingBox
+              )
+            ),
+            rectangle: sourceBoundingBox,
+          }
+        : { pos: Vec2d.from(this.source.position) };
+
+      const targetBoundingBox =
+        this.target.connectedItem &&
+        Rectangle.fromRect(this.target.connectedItem.boundingBox);
+
+      const targetConf: ConnectionEndConfiguration = targetBoundingBox
+        ? {
+            pos: Vec2d.from(this.target.position),
+            inside: false,
+            direction: getDirectionOutside(
+              targetBoundingBox,
+              Vec2d.from(this.target.position).sub(
+                this.target.connectedItem!.boundingBox
+              )
+            ),
+            rectangle: targetBoundingBox,
+          }
+        : { pos: Vec2d.from(this.target.position) };
+
+      routePoints = getRoutePoints(sourceConf, targetConf);
+    }
+    if (!routePoints) {
+      routePoints = [
+        new Vec2d(this.source.position.x, this.source.position.y),
+        new Vec2d(this.target.position.x, this.target.position.y),
+      ];
+    }
+
+    return routePoints;
+  }, [this.page.onItemPositionChange, this.orthogonalRouting]);
+
   source!: ConnectorEndpoint;
   target!: ConnectorEndpoint;
 
@@ -94,8 +164,6 @@ export class ConnectorWidget extends Widget {
         return undefined;
       case "Association":
         return "url(#connector-association)";
-      case "Aggregation":
-        return "url(#connector-aggregation)";
       case "Composition":
         return "url(#connector-composition)";
       case "Inheritance":
@@ -109,17 +177,48 @@ export class ConnectorWidget extends Widget {
     return (
       <WithHooks>
         {() => {
-          useRerenderOnEvent(this.page.onItemPositionChange);
+          useRerenderOnEvent(this.routePointsMemo.invalidated);
           const { source, target } = this;
           const text = this.labelText.get();
           const sourceMulti = this.sourceMultiplicity.get();
           const targetMulti = this.targetMultiplicity.get();
           const sourceMarkerType = this.sourceMarkerType.get();
           const targetMarkerType = this.targetMarkerType.get();
+          const routePoints = this.routePointsMemo.value;
 
-          // Calculate middle position of the connector line
-          const midX = (source.position.x + target.position.x) / 2;
-          const midY = (source.position.y + target.position.y) / 2;
+          // Find the center by segment length
+          let midX = 0;
+          let midY = 0;
+          if (routePoints.length >= 2) {
+            // Calculate total path length
+            let totalLength = 0;
+            const segmentLengths: number[] = [];
+            for (let i = 0; i < routePoints.length - 1; i++) {
+              const p1 = routePoints[i];
+              const p2 = routePoints[i + 1];
+              const length = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+              segmentLengths.push(length);
+              totalLength += length;
+            }
+
+            // Find the point at half the total length
+            const halfLength = totalLength / 2;
+            let accumulatedLength = 0;
+            for (let i = 0; i < segmentLengths.length; i++) {
+              const p1 = routePoints[i];
+              const p2 = routePoints[i + 1];
+              const segmentLength = segmentLengths[i];
+              if (accumulatedLength + segmentLength >= halfLength) {
+                // Interpolate along this segment
+                const remaining = halfLength - accumulatedLength;
+                const ratio = remaining / segmentLength;
+                midX = p1.x + (p2.x - p1.x) * ratio;
+                midY = p1.y + (p2.y - p1.y) * ratio;
+                break;
+              }
+              accumulatedLength += segmentLength;
+            }
+          }
 
           // Calculate text dimensions for background
           const textWidth = getTextWidth(text, widgetTheme.fontSize);
@@ -130,47 +229,55 @@ export class ConnectorWidget extends Widget {
           const sourceMarkerUrl = this.getMarkerUrl(sourceMarkerType);
           const targetMarkerUrl = this.getMarkerUrl(targetMarkerType);
 
+          // Calculate direction from first segment for source multiplicity
+          const sourceDirection = routePoints[1].sub(routePoints[0]);
+
+          // Calculate direction from last segment for target multiplicity
+          const targetDirection = routePoints[routePoints.length - 2].sub(
+            routePoints[routePoints.length - 1]
+          );
+
           return (
             <>
-              <defs>
-                <filter
-                  id={`blur-${this.data.id}`}
-                  x="-50%"
-                  y="-50%"
-                  width="200%"
-                  height="200%"
-                >
-                  <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
-                </filter>
-              </defs>
               {/* make sure multiplicity background is behind connector line */}
               {sourceMulti &&
                 sourceMulti.length > 0 &&
-                this.renderMultiplicity(sourceMulti, source.position, {
-                  x: target.position.x - source.position.x,
-                  y: target.position.y - source.position.y,
-                })}
+                this.renderMultiplicity(
+                  sourceMulti,
+                  source.position,
+                  sourceDirection
+                )}
               {targetMulti &&
                 targetMulti.length > 0 &&
-                this.renderMultiplicity(targetMulti, target.position, {
-                  x: source.position.x - target.position.x,
-                  y: source.position.y - target.position.y,
-                })}
+                this.renderMultiplicity(
+                  targetMulti,
+                  target.position,
+                  targetDirection
+                )}
+
+              {/* Draw connector lines using route points */}
+              {routePoints.slice(0, -1).map((point, index) => (
+                <line
+                  key={index}
+                  x1={point.x}
+                  y1={point.y}
+                  x2={routePoints[index + 1].x}
+                  y2={routePoints[index + 1].y}
+                  stroke="#333"
+                  strokeWidth="2"
+                  markerEnd={
+                    index === routePoints.length - 2
+                      ? targetMarkerUrl
+                      : undefined
+                  }
+                />
+              ))}
+              {/* Invisible line to draw the source marker */}
               <line
-                x1={source.position.x}
-                y1={source.position.y}
-                x2={target.position.x}
-                y2={target.position.y}
-                stroke="#333"
-                strokeWidth="2"
-                markerEnd={targetMarkerUrl}
-              />
-              {/* invisible line to draw the source marker */}
-              <line
-                x1={target.position.x}
-                y1={target.position.y}
-                x2={source.position.x}
-                y2={source.position.y}
+                x1={routePoints[routePoints.length - 1].x}
+                y1={routePoints[routePoints.length - 1].y}
+                x2={routePoints[0].x}
+                y2={routePoints[0].y}
                 stroke="none"
                 strokeWidth="2"
                 markerEnd={sourceMarkerUrl}
@@ -184,7 +291,7 @@ export class ConnectorWidget extends Widget {
                     height={textHeight + 2 * padding}
                     fill="rgba(255, 255, 255, 1)"
                     rx="4"
-                    filter={`url(#blur-${this.data.id})`}
+                    filter={`url(#connector-text-background-blur)`}
                   />
                   <text
                     x={midX}
@@ -206,8 +313,8 @@ export class ConnectorWidget extends Widget {
 
   private renderMultiplicity(
     text: string,
-    position: Position,
-    direction: Position
+    position: IVec2d,
+    direction: IVec2d
   ): React.ReactNode {
     const dx = direction.x;
     const dy = direction.y;
@@ -254,7 +361,8 @@ export class ConnectorWidget extends Widget {
     );
   }
 
-  get boundingBox(): Rectangle {
+  get boundingBox(): IRectangle {
+    // For bounding box, use a simple fallback since routing is done in render
     const { source, target } = this;
 
     const minX = Math.min(source.position.x, target.position.x);
@@ -285,7 +393,7 @@ class ConnectorEndpoint {
       this.connectedItem = widget.page.allItems.get(data.connectedItemId);
   }
 
-  get position() {
+  get position(): IVec2d {
     if (this.connectedItem === undefined) {
       return this.data.position;
     } else {
@@ -297,7 +405,7 @@ class ConnectorEndpoint {
     }
   }
 
-  moveBy(delta: Position) {
+  moveBy(delta: IVec2d) {
     const pos = this.position;
     const newPos = { x: pos.x + delta.x, y: pos.y + delta.y };
     this.data.position = newPos;
@@ -305,7 +413,7 @@ class ConnectorEndpoint {
     this.connectedItem = undefined;
   }
 
-  setPosition(position: Position, snap?: SnapResult) {
+  setPosition(position: IVec2d, snap?: SnapResult) {
     const hSource = snap?.h?.box.sourceItem;
     const vSource = snap?.v?.box.sourceItem;
 
@@ -346,21 +454,21 @@ class ConnectorInteraction extends PageItemInteraction {
     return (
       <WithHooks>
         {() => {
-          useRerenderOnEvent(this.item.page.onItemPositionChange);
+          useRerenderOnEvent(this.item_.routePointsMemo.invalidated);
           const { source, target } = this.item_;
           const selection = this.item.page.selection;
           const handleSize = projection.lengthToWorld(12);
 
           const visible = selection.has(this.item);
 
+          const routePoints = this.item_.routePointsMemo.value;
+
           return (
             <>
-              <line
-                x1={source.position.x}
-                y1={source.position.y}
-                x2={target.position.x}
-                y2={target.position.y}
+              <polyline
+                points={routePoints.map((p) => `${p.x},${p.y}`).join(" ")}
                 stroke={visible ? "#00FF0040" : "transparent"}
+                fill="none"
                 strokeWidth={projection.lengthToWorld(20)}
                 style={{ cursor: "move" }}
                 onDoubleClick={() => this.item.page.duplicateItem(this.item)}
@@ -371,29 +479,7 @@ class ConnectorInteraction extends PageItemInteraction {
                       ? selection.toggle(this.item)
                       : Selection.of(this.item)
                   );
-                  // e.currentTarget.setPointerCapture(e.pointerId);
-                  // (this as any).dragState = {
-                  //   startEventPos: Vec2d.fromEvent(e),
-                  //   lastOffset: new Vec2d(0, 0),
-                  // };
                 }}
-                // onPointerMove={(e) => {
-                //   const dragState = (this as any).dragState;
-                //   if (dragState) {
-                //     const offset = projection.scaleToWorld(
-                //       Vec2d.fromEvent(e).sub(dragState.startEventPos)
-                //     );
-                //     const diff = offset.sub(dragState.lastOffset);
-                //     this.moveBy({ x: diff.x, y: diff.y });
-                //     dragState.lastOffset = offset;
-                //   }
-                // }}
-                // onPointerUp={(e) => {
-                //   if ((this as any).dragState) {
-                //     e.currentTarget.releasePointerCapture(e.pointerId);
-                //     (this as any).dragState = undefined;
-                //   }
-                // }}
               />
               <DraggableConnectorSnapBox
                 position={source.position}
@@ -436,14 +522,14 @@ class ConnectorInteraction extends PageItemInteraction {
   renderMasterInteraction(props: RenderInteractionArgs): React.ReactNode {
     return <></>;
   }
-  moveBy(delta: Position): void {
+  moveBy(delta: IVec2d): void {
     this.item_.source.moveBy(delta);
     this.item_.target.moveBy(delta);
     this.item.onChange.notify();
     this.item.onDataChanged();
     this.item.page.onItemPositionChange.notify();
   }
-  setPosition(pos: Position): void {
+  setPosition(pos: IVec2d): void {
     (this.item_.data_.source.position = { x: pos.x + 10, y: pos.y + 10 }),
       (this.item_.data_.target.position = { x: pos.x + 90, y: pos.y + 10 });
   }

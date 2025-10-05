@@ -1,7 +1,7 @@
 import { SnapBoxesArgs, SnapReferencesArgs } from "@/model/PageItem";
 import { IconProperty, NumberProperty } from "@/model/PageItemProperty";
 import { icons } from "@/util/utils";
-import { PositionWidget, Rectangle } from "./Widget";
+import { IRectangle, PositionWidget } from "./Widget";
 import { WidgetIcon } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 
@@ -11,7 +11,7 @@ export class IconWidget extends PositionWidget {
   icon = new IconProperty(this, "icon", "Icon", icons["info-square"]);
   size = new NumberProperty(this, "size", "Size", widgetTheme.fontSize);
 
-  get boundingBox(): Rectangle {
+  get boundingBox(): IRectangle {
     const size = Math.max(24, this.size.get());
     return {
       ...this.position,
@@ -34,7 +34,7 @@ export class IconWidget extends PositionWidget {
     );
   }
 
-  get iconBox(): Rectangle {
+  get iconBox(): IRectangle {
     const box = this.boundingBox;
     const size = Math.max(10, this.size.get());
     return {

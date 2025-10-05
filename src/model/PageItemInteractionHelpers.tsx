@@ -23,7 +23,7 @@ import {
 import { ProjectionContext } from "../util/Contexts";
 import { useRerenderOnEvent } from "../util/hooks";
 import { toSet } from "../util/utils";
-import { Position, Rectangle } from "../widgets/Widget";
+import { IRectangle, IVec2d } from "../widgets/Widget";
 import { dragPositionRectAttrs } from "../widgets/widgetUtils";
 import { PageItemPropertyBase } from "./PageItemProperty";
 import { SnapIndex } from "./SnapIndex";
@@ -60,7 +60,7 @@ export function DraggableBox<TState>({
   onDragEnd,
   onDuplicate,
 }: {
-  box: Rectangle;
+  box: IRectangle;
   onDragStart: () => TState;
   onDragEnd?: () => void;
   update: (
@@ -183,7 +183,7 @@ export function DraggableSnapBox({
   onDuplicate,
 }: {
   projection: CanvasProjection;
-  box: Rectangle;
+  box: IRectangle;
   visible: boolean;
   page: Page;
   select?: (toggle: boolean) => void;
@@ -256,19 +256,19 @@ export function DraggableSnapCornerBox({
   snapReferences,
 }: {
   projection: CanvasProjection;
-  box: Rectangle;
+  box: IRectangle;
   select?: (toggle: boolean) => void;
   item: PageItem;
   cursor?: CursorValue;
   snapReferences: () => Partial<SnapReferencesArgs>;
-  update: (box: Rectangle, diff: Vec2d) => void;
+  update: (box: IRectangle, diff: Vec2d) => void;
 }): JSX.Element {
   const [snapResult, setSnapResult] = useState<SnapResult>();
   return (
     <>
       <DraggableBox<{
         snapIndex: SnapIndex;
-        startBox: Rectangle;
+        startBox: IRectangle;
         appliedOffset: Vec2d;
       }>
         {...{
@@ -321,16 +321,12 @@ export function DraggableConnectorSnapBox({
   visible,
 }: {
   projection: CanvasProjection;
-  position: Position;
+  position: IVec2d;
   select?: (toggle: boolean) => void;
   item: PageItem;
   cursor?: CursorValue;
   visible: boolean;
-  update: (
-    startPosition: Position,
-    diff: Vec2d,
-    snapResult?: SnapResult
-  ) => void;
+  update: (startPosition: IVec2d, diff: Vec2d, snapResult?: SnapResult) => void;
 }): JSX.Element {
   const [snapResult, setSnapResult] = useState<SnapResult>();
   const handleSize = projection.lengthToWorld(12);
@@ -338,7 +334,7 @@ export function DraggableConnectorSnapBox({
     <>
       <DraggableBox<{
         snapIndex: SnapIndex;
-        startPosition: Position;
+        startPosition: IVec2d;
         appliedOffset: Vec2d;
       }>
         {...{
@@ -427,7 +423,7 @@ export function DraggableSnapResizeBox({
   visible: boolean;
   select?: (toggle: boolean) => void;
   item: PageItem;
-  update: (newBox: Rectangle) => void;
+  update: (newBox: IRectangle) => void;
   widthOnly: boolean;
   onDuplicate: () => void;
 }): JSX.Element {
@@ -716,7 +712,7 @@ export function SelectableBox({
   onPointerDown,
   onContextMenu,
 }: {
-  box: Rectangle;
+  box: IRectangle;
   showHandles: boolean;
   onClick?: MouseEventHandler;
   onPointerDown?: MouseEventHandler;

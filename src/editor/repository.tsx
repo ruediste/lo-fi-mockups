@@ -10,7 +10,7 @@ import { Fragment } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { ModelEvent } from "../model/ModelEvent";
-import { globalSvgContent, Rectangle } from "../widgets/Widget";
+import { globalSvgContent, IRectangle } from "../widgets/Widget";
 
 interface MyDB extends DBSchema {
   project: {
@@ -106,7 +106,7 @@ export class Repository {
       masterPages: Set<number>;
       element: (scale: number) => Promise<HTMLElement>;
       pageNr: number;
-      box: Rectangle;
+      box: IRectangle;
     }) => Promise<void>
   ) {
     const data = { ...this.projectData };

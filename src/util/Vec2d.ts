@@ -1,6 +1,11 @@
-import { Rectangle } from "@/widgets/Widget";
+import { IRectangle, IVec2d } from "@/widgets/Widget";
+import { Rectangle } from "./rectangle";
 
-export class Vec2d {
+export type Direction = "up" | "left" | "right" | "down";
+
+export type Orientation = "horizontal" | "vertical";
+
+export class Vec2d implements IVec2d {
   readonly x: number;
   readonly y: number;
   constructor(x: number, y: number) {
@@ -26,7 +31,20 @@ export class Vec2d {
     return new Vec2d(value.width, value.height);
   }
 
-  static boundingBox(...items: Vec2d[]): Rectangle {
+  static fromDirection(direction: Direction) {
+    switch (direction) {
+      case "right":
+        return new Vec2d(1, 0);
+      case "left":
+        return new Vec2d(-1, 0);
+      case "up":
+        return new Vec2d(0, -1);
+      case "down":
+        return new Vec2d(0, 1);
+    }
+  }
+
+  static boundingBox(...items: Vec2d[]): IRectangle {
     let minX = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
     let minY = Number.POSITIVE_INFINITY;
@@ -39,7 +57,7 @@ export class Vec2d {
     });
     return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   }
-  static boundingBoxRect(...items: Rectangle[]): Rectangle {
+  static boundingBoxRect(...items: IRectangle[]): IRectangle {
     let minX = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
     let minY = Number.POSITIVE_INFINITY;
@@ -53,11 +71,11 @@ export class Vec2d {
     return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   }
 
-  add(v: { x: number; y: number }) {
+  add(v: IVec2d) {
     return new Vec2d(this.x + v.x, this.y + v.y);
   }
 
-  sub(v: { x: number; y: number }) {
+  sub(v: IVec2d) {
     return new Vec2d(this.x - v.x, this.y - v.y);
   }
 
@@ -100,5 +118,71 @@ export class Vec2d {
 
   static determinant(a: Vec2d, b: Vec2d) {
     return a.x * b.y - b.x * a.y;
+  }
+}
+
+export function getDirectionOutside(
+  shape: Rectangle,
+  relativePosition: IVec2d
+): Direction {
+  const fractionPosition = Vec2d.from(relativePosition).div(shape.size);
+
+  const upperRight = fractionPosition.x > fractionPosition.y;
+  const lowerRight = fractionPosition.x + fractionPosition.y > 1;
+  if (upperRight) {
+    return lowerRight ? "right" : "up";
+  } else {
+    return lowerRight ? "down" : "left";
+  }
+}
+
+export function reverseDirection(d: Direction) {
+  switch (d) {
+    case "up":
+      return "down";
+    case "down":
+      return "up";
+    case "left":
+      return "right";
+    case "right":
+      return "left";
+  }
+}
+
+export function getDirectionInside(
+  shape: Rectangle,
+  relativePosition: IVec2d
+): Direction {
+  return reverseDirection(getDirectionOutside(shape, relativePosition));
+}
+
+export function getOrientation(direction: Direction): Orientation;
+export function getOrientation(
+  shape: Rectangle,
+  relativePosition: IVec2d
+): Orientation;
+export function getOrientation(
+  directionOrShape: Direction | Rectangle,
+  relativePosition: IVec2d = { x: 0, y: 0 }
+) {
+  switch (directionOrShape) {
+    case "up":
+      return "vertical";
+    case "down":
+      return "vertical";
+    case "left":
+      return "horizontal";
+    case "right":
+      return "horizontal";
+  }
+
+  switch (getDirectionOutside(directionOrShape, relativePosition)) {
+    case "left":
+    case "right":
+      return "horizontal";
+
+    case "up":
+    case "down":
+      return "vertical";
   }
 }

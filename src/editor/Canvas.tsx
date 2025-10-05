@@ -1,7 +1,7 @@
 import { Selection } from "@/editor/Selection";
 import { Page } from "@/model/Page";
 import { Vec2d } from "@/util/Vec2d";
-import { globalSvgContent, Rectangle } from "@/widgets/Widget";
+import { globalSvgContent, IRectangle } from "@/widgets/Widget";
 import classNames from "classnames";
 import { PointerEventHandler, useRef } from "react";
 import { Fullscreen, Icon1Square } from "react-bootstrap-icons";
@@ -41,7 +41,7 @@ export class CanvasProjection {
     this.changeScale(1, this.viewCenterPos);
   }
 
-  setScaleFit(rect: Rectangle) {
+  setScaleFit(rect: IRectangle) {
     // Calculate the scale needed to fit the rectangle within the viewport
     const scaleX = this.viewPortSize.x / rect.width;
     const scaleY = this.viewPortSize.y / rect.height;
@@ -54,13 +54,13 @@ export class CanvasProjection {
     this.onChange.notify();
   }
 
-  setScaleOneAndAlign(rect: Rectangle) {
+  setScaleOneAndAlign(rect: IRectangle) {
     this.scale = 1;
     this.alignViewPortCenterWithRectCenter(rect);
     this.onChange.notify();
   }
 
-  private alignViewPortCenterWithRectCenter(rect: Rectangle) {
+  private alignViewPortCenterWithRectCenter(rect: IRectangle) {
     // Calculate the new offset to center the rectangle in the viewport
     const rectCenter = new Vec2d(
       rect.x + rect.width / 2,

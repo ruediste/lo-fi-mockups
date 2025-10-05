@@ -1,5 +1,5 @@
 import { StringProperty } from "../model/PageItemProperty";
-import { PositionWidget, Rectangle } from "./Widget";
+import { IRectangle, PositionWidget } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
@@ -13,7 +13,7 @@ export class TitleWidget extends PositionWidget {
     return widgetTheme.fontSize * 2;
   }
 
-  get boundingBox(): Rectangle {
+  get boundingBox(): IRectangle {
     return {
       ...this.position,
       width: getTextWidth(this.text.get(), this.fontSize) + 2 * margin,

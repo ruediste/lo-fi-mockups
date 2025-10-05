@@ -6,11 +6,11 @@ import {
 
 // class ItemGroup extends PageItem {}
 
-export interface Position {
+export interface IVec2d {
   x: number;
   y: number;
 }
-export interface Rectangle extends Position {
+export interface IRectangle extends IVec2d {
   width: number;
   height: number;
 }
@@ -26,11 +26,11 @@ export abstract class BoxWidget extends Widget {
   get box() {
     return this.boxInteraction.box.get();
   }
-  set box(value: Rectangle) {
+  set box(value: IRectangle) {
     this.boxInteraction.box.set(value);
   }
 
-  override get boundingBox(): Rectangle {
+  override get boundingBox(): IRectangle {
     return this.box;
   }
 }
@@ -41,7 +41,7 @@ export abstract class PositionWidget extends Widget {
   get position() {
     return this.positionInteraction.position.get();
   }
-  set position(value: Position) {
+  set position(value: IVec2d) {
     this.positionInteraction.position.set(value);
   }
 }
@@ -54,11 +54,11 @@ export abstract class WidthWidget extends Widget {
 
   abstract get height(): number;
 
-  set box(value: Rectangle) {
+  set box(value: IRectangle) {
     this.boxInteraction.box.set(value);
   }
 
-  override get boundingBox(): Rectangle {
+  override get boundingBox(): IRectangle {
     return this.box;
   }
 }
@@ -72,11 +72,11 @@ export abstract class HeightWidget extends Widget {
 
   abstract get width(): number;
 
-  set box(value: Rectangle) {
+  set box(value: IRectangle) {
     this.boxInteraction.box.set(value);
   }
 
-  override get boundingBox(): Rectangle {
+  override get boundingBox(): IRectangle {
     return this.box;
   }
 }
@@ -92,23 +92,6 @@ export const globalSvgContent = (
       orient="auto"
     >
       <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
-    </marker>
-
-    {/* Aggregation marker (hollow diamond) */}
-    <marker
-      id="connector-aggregation"
-      markerWidth="12"
-      markerHeight="8"
-      refX="11"
-      refY="4"
-      orient="auto"
-    >
-      <polygon
-        points="0 4, 6 0, 12 4, 6 8"
-        fill="white"
-        stroke="#333"
-        strokeWidth="1"
-      />
     </marker>
 
     {/* Composition marker (filled diamond) */}
@@ -144,5 +127,16 @@ export const globalSvgContent = (
         strokeWidth="1"
       />
     </marker>
+    <defs>
+      <filter
+        id="connector-text-background-blur"
+        x="-50%"
+        y="-50%"
+        width="200%"
+        height="200%"
+      >
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+      </filter>
+    </defs>
   </>
 );

@@ -1,5 +1,5 @@
 import { StringProperty } from "../model/PageItemProperty";
-import { PositionWidget, Rectangle } from "./Widget";
+import { IRectangle, PositionWidget } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
@@ -9,7 +9,7 @@ export class LabelWidget extends PositionWidget {
 
   text = new StringProperty(this, "text", "Text", "Name");
 
-  get boundingBox(): Rectangle {
+  get boundingBox(): IRectangle {
     return {
       ...this.position,
       width: getTextWidth(this.text.get()) + 2 * margin,

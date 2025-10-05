@@ -1,6 +1,6 @@
 import React from "react";
 import { ExtensibleItemListProperty } from "../model/ItemListProperty";
-import { PositionWidget, Rectangle } from "./Widget";
+import { IRectangle, PositionWidget } from "./Widget";
 import { PageLink } from "./WidgetHelpers";
 import { widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
@@ -29,7 +29,7 @@ export class BreadcrumbWidget extends PositionWidget {
     this.layout = this.calculateBreadcrumbLayout();
   }
 
-  get boundingBox(): Rectangle {
+  get boundingBox(): IRectangle {
     return {
       ...this.position,
       width: Math.max(20, this.layout.totalWidth),

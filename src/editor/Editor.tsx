@@ -4,7 +4,7 @@ import { PageItem } from "@/model/PageItem";
 import { DraggableSnapBox } from "@/model/PageItemInteractionHelpers";
 import { useRerenderOnEvent } from "@/util/hooks";
 import { Vec2d } from "@/util/Vec2d";
-import { Rectangle, Widget } from "@/widgets/Widget";
+import { IRectangle, Widget } from "@/widgets/Widget";
 import { dragPositionRectAttrs } from "@/widgets/widgetUtils";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import Flatbush from "flatbush";
@@ -61,7 +61,7 @@ function MultiItemSelectionBox({
 }) {
   useRerenderOnEvent(page.onItemPositionChange);
 
-  let drawBox: Rectangle | undefined = undefined;
+  let drawBox: IRectangle | undefined = undefined;
   if (page.selection.size > 1) {
     const margin = projection.lengthToWorld(32);
     const box = Vec2d.boundingBoxRect(
@@ -169,10 +169,11 @@ function EditorCanvasInner({
   });
 
   const dragState = useRef<
-    { startPos: Vec2d; index: Flatbush; boundingBoxes: Rectangle[] } | undefined
+    | { startPos: Vec2d; index: Flatbush; boundingBoxes: IRectangle[] }
+    | undefined
   >(undefined);
 
-  const [dragSelectionBox, setDragSelectionBox] = useState<Rectangle>();
+  const [dragSelectionBox, setDragSelectionBox] = useState<IRectangle>();
 
   const attrs = dragPositionRectAttrs(projection);
 

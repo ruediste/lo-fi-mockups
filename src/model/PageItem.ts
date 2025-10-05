@@ -1,7 +1,7 @@
 import { snapConfiguration } from "@/widgets/widgetTheme";
 import React, { createContext } from "react";
 import { CanvasProjection } from "../editor/Canvas";
-import { Rectangle } from "../widgets/Widget";
+import { IRectangle } from "../widgets/Widget";
 import { ModelEvent } from "./ModelEvent";
 import { Page } from "./Page";
 import { PageItemInteraction } from "./PageItemInteraction";
@@ -105,7 +105,7 @@ export abstract class PageItem {
   }
   abstract renderContent(): React.ReactNode;
 
-  abstract get boundingBox(): Rectangle;
+  abstract get boundingBox(): IRectangle;
 
   renderProperties(): React.ReactNode {
     return null;
@@ -123,7 +123,7 @@ export abstract class PageItem {
 
   protected createSnapBoxes(
     args: SnapBoxesArgs,
-    box: Rectangle,
+    box: IRectangle,
     middle: MiddleSnapSpecification
   ) {
     args.addEdges(box);
@@ -144,7 +144,7 @@ export abstract class PageItem {
 
   protected createSnapReferences(
     args: SnapReferencesArgs,
-    box: Rectangle,
+    box: IRectangle,
     middle: MiddleSnapSpecification
   ) {
     args.addEdges(box);
@@ -158,7 +158,7 @@ export class SnapBoxesArgs {
   vertical: VerticalSnapBox[] = [];
   constructor(public viewToWorld: number) {}
 
-  addEdges(box: Rectangle) {
+  addEdges(box: IRectangle) {
     this.horizontal.push(
       new HorizontalSnapBox(
         box.x - snapConfiguration.snapSideLength,
@@ -220,7 +220,7 @@ export class SnapBoxesArgs {
       )
     );
   }
-  addMiddle(box: Rectangle, spec: MiddleSnapSpecification) {
+  addMiddle(box: IRectangle, spec: MiddleSnapSpecification) {
     (spec == "both" || spec == "horizontal") &&
       this.horizontal.push(
         new HorizontalSnapBox(
@@ -243,7 +243,7 @@ export class SnapBoxesArgs {
         )
       );
   }
-  addMarginBox(box: Rectangle, margin = snapConfiguration.snapMargin) {
+  addMarginBox(box: IRectangle, margin = snapConfiguration.snapMargin) {
     this.horizontal.push(
       new HorizontalSnapBox(
         box.x,
@@ -278,7 +278,7 @@ export class SnapBoxesArgs {
     );
   }
 
-  addConnector(box: Rectangle, source: PageItem) {
+  addConnector(box: IRectangle, source: PageItem) {
     this.horizontal.push(
       new HorizontalSnapBox(
         box.x,
@@ -327,7 +327,7 @@ export class SnapReferencesArgs {
   otherVertical: VerticalSnapReference[] = [];
   constructor(public viewToWorld: number) {}
 
-  addEdges(box: Rectangle) {
+  addEdges(box: IRectangle) {
     this.top.push(new HorizontalSnapReference(box.x, box.y, box.width, "edge"));
     this.bottom.push(
       new HorizontalSnapReference(box.x, box.y + box.height, box.width, "edge")
@@ -337,7 +337,7 @@ export class SnapReferencesArgs {
       new VerticalSnapReference(box.x + box.width, box.y, box.height, "edge")
     );
   }
-  addMiddle(box: Rectangle, spec: MiddleSnapSpecification) {
+  addMiddle(box: IRectangle, spec: MiddleSnapSpecification) {
     (spec == "both" || spec == "horizontal") &&
       this.otherHorizontal.push(
         new HorizontalSnapReference(box.x, box.y, box.width, "middle")
@@ -349,7 +349,7 @@ export class SnapReferencesArgs {
       );
   }
 
-  addMarginBox(box: Rectangle, margin = snapConfiguration.snapMargin) {
+  addMarginBox(box: IRectangle, margin = snapConfiguration.snapMargin) {
     this.top.push(
       new HorizontalSnapReference(box.x, box.y - margin, box.width, "margin")
     );

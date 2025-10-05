@@ -2,7 +2,7 @@ import { JSX } from "react";
 import { Selection } from "../editor/Selection";
 import { PageItem, RenderInteractionArgs } from "../model/PageItem";
 import { ObjectProperty } from "../model/PageItemProperty";
-import { Position, Rectangle } from "../widgets/Widget";
+import { IRectangle, IVec2d } from "../widgets/Widget";
 import {
   DraggableSnapBox,
   DraggableSnapResizeBox,
@@ -22,13 +22,13 @@ export abstract class PageItemInteraction {
     props: RenderInteractionArgs
   ): React.ReactNode;
 
-  abstract moveBy(delta: Position): void;
+  abstract moveBy(delta: IVec2d): void;
 
-  abstract setPosition(pos: Position): void;
+  abstract setPosition(pos: IVec2d): void;
 }
 
 export class BoxWidgetInteraction extends PageItemInteraction {
-  box = new ObjectProperty<Rectangle>(this.item, "box", {
+  box = new ObjectProperty<IRectangle>(this.item, "box", {
     x: 0,
     y: 0,
     width: 40,
@@ -38,7 +38,7 @@ export class BoxWidgetInteraction extends PageItemInteraction {
   private _widthOnly = false;
   private _heightOnly = false;
 
-  override setPosition(pos: Position): void {
+  override setPosition(pos: IVec2d): void {
     this.box.set({ ...this.box.get(), ...pos });
   }
 
@@ -108,19 +108,19 @@ export class BoxWidgetInteraction extends PageItemInteraction {
     return this;
   }
 
-  override moveBy(delta: Position): void {
+  override moveBy(delta: IVec2d): void {
     const box = this.box.get();
     this.box.set({ ...box, x: box.x + delta.x, y: box.y + delta.y });
   }
 }
 
 export class PositionWidgetInteraction extends PageItemInteraction {
-  position = new ObjectProperty<Position>(this.item, "position", {
+  position = new ObjectProperty<IVec2d>(this.item, "position", {
     x: 0,
     y: 0,
   }).hidden(() => true);
 
-  override setPosition(pos: Position): void {
+  override setPosition(pos: IVec2d): void {
     this.position.set({ ...pos });
   }
 
@@ -167,7 +167,7 @@ export class PositionWidgetInteraction extends PageItemInteraction {
     );
   }
 
-  override moveBy(delta: Position): void {
+  override moveBy(delta: IVec2d): void {
     const position = this.position.get();
     this.position.set({ x: position.x + delta.x, y: position.y + delta.y });
   }

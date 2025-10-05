@@ -1,5 +1,5 @@
 import { Vec2d } from "@/util/Vec2d";
-import { Rectangle } from "@/widgets/Widget";
+import { IRectangle } from "@/widgets/Widget";
 import { Selection } from "../editor/Selection";
 import { arraySwapInPlace } from "../util/utils";
 import { ModelEvent } from "./ModelEvent";
@@ -206,7 +206,7 @@ export class Page {
 
   boundingBox(margin: number = 32) {
     const items = this.masterItems.concat(this.ownItems);
-    let drawBox: Rectangle | undefined;
+    let drawBox: IRectangle | undefined;
     if (items.length > 0) {
       const box = Vec2d.boundingBoxRect(
         ...items.map((item) => item.boundingBox)

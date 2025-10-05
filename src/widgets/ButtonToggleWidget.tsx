@@ -3,7 +3,7 @@ import {
   ItemListProperty,
   ItemListSelectionProperty,
 } from "../model/ItemListProperty";
-import { PositionWidget, Rectangle } from "./Widget";
+import { IRectangle, PositionWidget } from "./Widget";
 import { PageLink, WidgetBounds } from "./WidgetHelpers";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
@@ -21,7 +21,7 @@ export class ButtonToggleWidget extends PositionWidget {
 
   private itemGap = 1;
 
-  get boundingBox(): Rectangle {
+  get boundingBox(): IRectangle {
     const items = this.itemList.get();
     const itemWidths = items.map(
       (item) => getTextWidth(item.label) + 2 * widgetTheme.margin

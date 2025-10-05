@@ -1,6 +1,6 @@
 import { PageItemRenderContext } from "@/model/PageItem";
 import { useContext, useId } from "react";
-import { Rectangle } from "./Widget";
+import { IRectangle } from "./Widget";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 
 export function PageLink({
@@ -44,7 +44,7 @@ export function WidgetBounds({
   box,
   children,
 }: {
-  box: Rectangle;
+  box: IRectangle;
   children?: React.ReactNode;
 }) {
   const id = useId();

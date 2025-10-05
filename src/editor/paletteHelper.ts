@@ -1,9 +1,9 @@
-import { Rectangle } from "../widgets/Widget";
+import { IRectangle } from "../widgets/Widget";
 
 export function calculateViewBox(
   targetAspectRatio: number,
-  widgetBox: Rectangle
-): Rectangle {
+  widgetBox: IRectangle
+): IRectangle {
   const boxRatio = widgetBox.width / widgetBox.height;
 
   let width: number;
