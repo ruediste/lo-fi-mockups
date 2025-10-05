@@ -2,6 +2,7 @@ import react from "@vitejs/plugin-react";
 import * as path from "path";
 import { defineConfig } from "vite";
 import checker from "vite-plugin-checker";
+import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -15,6 +16,34 @@ export default defineConfig({
     checker({
       typescript: {
         tsconfigPath: "tsconfig.app.json",
+      },
+    }),
+    VitePWA({
+      registerType: "autoUpdate",
+      devOptions: {
+        enabled: false,
+      },
+      includeAssets: "**/*",
+      manifest: {
+        name: "Lo Fi Mockups",
+        short_name: "LoFi",
+        description: "Quickly Sketch UIs in Lo Fidelity",
+        theme_color: "#ffffff",
+        launch_handler: {
+          client_mode: "focus-existing",
+        },
+        icons: [
+          {
+            src: "icon192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "icon512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+        ],
       },
     }),
   ],

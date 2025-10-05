@@ -9,7 +9,7 @@
     "build-pages": "tsc -b && vite build --base=/lo-fi-mockups/",
     "typecheck": "tsc --noEmit --watch --project tsconfig.app.json",
     "lint": "eslint .",
-    "preview": "vite preview",
+    "preview": "vite build && vite preview",
     "test": "jest --watch",
     "build-webjar": "tsc -b && vite build --base=./ && rm -rf xwiki/src/main/webjar && mkdir -p xwiki/src/main/webjar && cp -r dist/* xwiki/src/main/webjar/"
   },
@@ -61,6 +61,7 @@
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.22.0",
     "vite": "^6.1.0",
-    "vite-plugin-checker": "^0.9.0"
+    "vite-plugin-checker": "^0.9.0",
+    "vite-plugin-pwa": "^1.0.3"
   }
 }

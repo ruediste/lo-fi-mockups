@@ -8,6 +8,12 @@ The goal of this project is to create a tool for low fidelity UI mockups. The fo
 
 The project is ready for some beta testing. The basic features are implemented.
 
+## Offline Installation
+
+The application is a PWA and can be installed locally. For Chrome/Edge simply open https://ruediste.github.io/lo-fi-mockups/ and click install in the address bar. For Firefox, you might need to install https://addons.mozilla.org/en-US/firefox/addon/pwas-for-firefox/
+
+Alternatively, you can just add a bookmark. The application will launch happily while you're offline.
+
 ## Manual
 
 ### User Interface Overview
