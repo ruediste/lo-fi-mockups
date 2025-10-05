@@ -426,6 +426,8 @@ export class PageReferenceProperty extends PageItemPropertyBase<{
 export class SelectProperty<
   T extends string | number
 > extends PageItemPropertyBase<T | null> {
+  private useRadio = false;
+
   constructor(
     item: PageItem,
     id: string,
@@ -436,31 +438,75 @@ export class SelectProperty<
     super(item, id, defaultValue);
   }
 
+  radio() {
+    this.useRadio = true;
+    return this;
+  }
+
   render(): JSX.Element {
     const options = this.getOptions();
     const value = this.get();
-    return (
-      <Form.Group className="mb-3">
-        <Form.Label>{this.label}</Form.Label>
-        <InputGroup>
-          <Form.Select
-            autoFocus
-            value={value == null ? undefined : value}
-            onChange={(e) => {
-              const index = e.target.selectedIndex;
-              const value = options[index][0];
-              this.set(value === undefined ? null : value);
+    if (this.useRadio) {
+      return (
+        <Form.Group className="mb-3">
+          <div style={{ display: "flex" }}>
+            <Form.Label>{this.label}</Form.Label>
+            <div style={{ marginLeft: "auto" }}>
+              <PropertyOverrideableInputGroupControls property={this} />
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: "16px",
             }}
           >
             {options.map((o, idx) => (
-              <option key={idx} value={o[0] === null ? undefined : o[0]}>
-                {o[1]}
-              </option>
+              <Form.Check
+                key={idx}
+                type="radio"
+                id={`${this.item.data.id}-${this.id}-${idx}`}
+                name={`${this.item.data.id}-${this.id}`}
+                label={o[1]}
+                value={o[0] === null ? undefined : o[0]}
+                checked={value === o[0]}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    this.set(o[0] === undefined ? null : o[0]);
+                  }
+                }}
+                inline
+              />
             ))}
-          </Form.Select>
-          <PropertyOverrideableInputGroupControls property={this} />
-        </InputGroup>
-      </Form.Group>
-    );
+          </div>
+        </Form.Group>
+      );
+    } else {
+      return (
+        <Form.Group className="mb-3">
+          <Form.Label>{this.label}</Form.Label>
+          <InputGroup>
+            <Form.Select
+              autoFocus
+              value={value == null ? undefined : value}
+              onChange={(e) => {
+                const index = e.target.selectedIndex;
+                const value = options[index][0];
+                this.set(value === undefined ? null : value);
+              }}
+            >
+              {options.map((o, idx) => (
+                <option key={idx} value={o[0] === null ? undefined : o[0]}>
+                  {o[1]}
+                </option>
+              ))}
+            </Form.Select>
+            <PropertyOverrideableInputGroupControls property={this} />
+          </InputGroup>
+        </Form.Group>
+      );
+    }
   }
 }

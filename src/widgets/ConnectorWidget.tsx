@@ -72,14 +72,14 @@ export class ConnectorWidget extends Widget {
     "Source Marker",
     () => UML_MARKER_OPTIONS,
     "None"
-  );
+  ).radio();
   targetMarkerType = new SelectProperty<UmlMarkerType>(
     this,
     "targetMarkerType",
     "Target Marker",
     () => UML_MARKER_OPTIONS,
     "Association"
-  );
+  ).radio();
 
   orthogonalRouting = new CheckboxProperty(
     this,
@@ -274,8 +274,8 @@ export class ConnectorWidget extends Widget {
               ))}
               {/* Invisible line to draw the source marker */}
               <line
-                x1={routePoints[routePoints.length - 1].x}
-                y1={routePoints[routePoints.length - 1].y}
+                x1={routePoints[1].x}
+                y1={routePoints[1].y}
                 x2={routePoints[0].x}
                 y2={routePoints[0].y}
                 stroke="none"
@@ -321,15 +321,17 @@ export class ConnectorWidget extends Widget {
     const dist = Math.sqrt(dx * dx + dy * dy);
     let offsetX = 0;
     let offsetY = 0;
+    const l1 = 10;
+    const l2 = 15;
     if (dist > 0) {
       const ux = dx / dist;
       const uy = dy / dist;
       if (ux < 0) {
-        offsetX = 10 * ux - 10 * uy;
-        offsetY = 10 * uy + 10 * ux;
+        offsetX = l1 * ux - l2 * uy;
+        offsetY = l1 * uy + l2 * ux;
       } else {
-        offsetX = 10 * ux + 10 * uy;
-        offsetY = 10 * uy - 10 * ux;
+        offsetX = l1 * ux + l2 * uy;
+        offsetY = l1 * uy - l2 * ux;
       }
     }
 
