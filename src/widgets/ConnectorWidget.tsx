@@ -40,6 +40,14 @@ export const UML_MARKER_OPTIONS: [UmlMarkerType, string][] = [
   ["Composition", "Composition"],
 ];
 
+export type LineStyle = "Normal" | "Dashed" | "Dotted";
+
+export const LINE_STYLE_OPTIONS: [LineStyle, string][] = [
+  ["Normal", "Normal"],
+  ["Dashed", "Dashed"],
+  ["Dotted", "Dotted"],
+];
+
 export interface ConnectorWidgetData extends PageItemData {
   source: ConnectorEndpointData;
   target: ConnectorEndpointData;
@@ -66,6 +74,7 @@ export class ConnectorWidget extends Widget {
     "Target Multiplicity",
     ""
   );
+
   sourceMarkerType = new SelectProperty<UmlMarkerType>(
     this,
     "sourceMarkerType",
@@ -73,12 +82,21 @@ export class ConnectorWidget extends Widget {
     () => UML_MARKER_OPTIONS,
     "None"
   ).radio();
+
   targetMarkerType = new SelectProperty<UmlMarkerType>(
     this,
     "targetMarkerType",
     "Target Marker",
     () => UML_MARKER_OPTIONS,
     "Association"
+  ).radio();
+
+  lineStyle = new SelectProperty<LineStyle>(
+    this,
+    "lineStyle",
+    "Line Style",
+    () => LINE_STYLE_OPTIONS,
+    "Normal"
   ).radio();
 
   orthogonalRouting = new CheckboxProperty(
@@ -173,6 +191,19 @@ export class ConnectorWidget extends Widget {
     }
   }
 
+  private getDashArray(lineStyle: LineStyle): string | undefined {
+    switch (lineStyle) {
+      case "Normal":
+        return undefined;
+      case "Dashed":
+        return "10,5";
+      case "Dotted":
+        return "2,5";
+      default:
+        return undefined;
+    }
+  }
+
   renderContent(): React.ReactNode {
     return (
       <WithHooks>
@@ -184,6 +215,9 @@ export class ConnectorWidget extends Widget {
           const targetMulti = this.targetMultiplicity.get();
           const sourceMarkerType = this.sourceMarkerType.get();
           const targetMarkerType = this.targetMarkerType.get();
+          const lineDashArray = this.getDashArray(
+            this.lineStyle.get() || "Normal"
+          );
           const routePoints = this.routePointsMemo.value;
 
           // Find the center by segment length
@@ -265,6 +299,7 @@ export class ConnectorWidget extends Widget {
                   y2={routePoints[index + 1].y}
                   stroke="#333"
                   strokeWidth="2"
+                  strokeDasharray={lineDashArray}
                   markerEnd={
                     index === routePoints.length - 2
                       ? targetMarkerUrl
