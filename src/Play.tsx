@@ -40,10 +40,12 @@ export function Play() {
   const page = project.currentPage;
 
   const ctx = useMemo(
-    () => ({
-      isPlay: true,
-      openPage: (pageId: number) => project.selectPageId(pageId),
-    }),
+    () =>
+      ({
+        isExport: false,
+        isPlay: true,
+        openPage: (pageId: number) => project.selectPageId(pageId),
+      } as const),
     [project]
   );
 

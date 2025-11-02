@@ -20,6 +20,10 @@ export function PageLink({
 
   if (pageId === undefined) return;
 
+  if (ctx?.isExport) {
+    ctx.links.push({ box: { x, y, width, height }, pageId });
+  }
+
   if (!ctx?.isPlay) return;
   return (
     <rect

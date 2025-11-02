@@ -18,11 +18,19 @@ export interface PageItemsArgs {
   fromMasterPage: boolean;
 }
 
-export const PageItemRenderContext = createContext<
-  | { isPlay: true; openPage: (pageId: number) => void }
-  | { isPlay: false }
-  | undefined
->(undefined);
+export type PageItemRenderContextType =
+  | ({ isExport: false } & (
+      | { isPlay: true; openPage: (pageId: number) => void }
+      | { isPlay: false }
+    ))
+  | {
+      isExport: true;
+      isPlay: false;
+      links: { box: IRectangle; pageId: number }[];
+    }
+  | undefined;
+export const PageItemRenderContext =
+  createContext<PageItemRenderContextType>(undefined);
 
 type MiddleSnapSpecification = "horizontal" | "vertical" | "both" | "none";
 
