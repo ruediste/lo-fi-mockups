@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import { Project, ProjectData } from "../model/Project";
 
-import { PageData } from "@/model/Page";
+import { Page, PageData } from "@/model/Page";
 import { toSet } from "@/util/utils";
 import * as htmlToImage from "@ruediste/html-to-image";
 import { DBSchema, IDBPDatabase, openDB } from "idb";
@@ -99,6 +99,42 @@ export class Repository {
     return await zip.generateAsync({ type: "blob" });
   }
 
+  async createPng() {
+    const data = { ...this.projectData };
+    const project = new Project(data, () => {});
+    const [root, element] = this.renderPage(project.currentPage!, 2);
+    const dataUrl = await htmlToImage.toPng(element);
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    root.remove();
+    return blob;
+  }
+
+  private renderPage(page: Page, scale: number) {
+    const box = page.boundingBox();
+
+    const rootElement = document.createElement("div");
+    rootElement.className = "export-helper";
+    document.body.append(rootElement);
+    const root = createRoot(rootElement);
+    flushSync(() => {
+      root.render(
+        <svg
+          style={{ background: "white" }}
+          viewBox={`${box.x} ${box.y} ${box.width} ${box.height}`}
+          width={box.width * scale}
+          height={box.height * scale}
+        >
+          {globalSvgContent}
+          {page.masterItems.concat(page.ownItems).map((item, idx) => (
+            <Fragment key={idx}>{item.renderContent()}</Fragment>
+          ))}
+        </svg>
+      );
+    });
+    return [rootElement, rootElement.firstChild as HTMLElement];
+  }
+
   async generatePageImages(
     handle: (args: {
       pageName: string;
@@ -119,7 +155,7 @@ export class Repository {
       project.selectPage(pageData);
       const page = project.currentPage!;
       const box = page.boundingBox();
-      const rootElement = document.createElement("div");
+      const rootElements: HTMLElement[] = [];
       await handle({
         box,
         pageName: page.data.name,
@@ -127,30 +163,13 @@ export class Repository {
         pageData: page.data,
         masterPages,
         element: async (scale) => {
-          rootElement.className = "export-helper";
-          document.body.append(rootElement);
-          const root = createRoot(rootElement);
-          flushSync(() => {
-            root.render(
-              <svg
-                style={{ background: "white" }}
-                viewBox={`${box.x} ${box.y} ${box.width} ${box.height}`}
-                width={box.width * scale}
-                height={box.height * scale}
-              >
-                {globalSvgContent}
-                {page.masterItems.concat(page.ownItems).map((item, idx) => (
-                  <Fragment key={idx}>{item.renderContent()}</Fragment>
-                ))}
-              </svg>
-            );
-          });
-
-          return rootElement.firstChild as HTMLElement;
+          const [rootElement, element] = this.renderPage(page, scale);
+          rootElements.push(rootElement);
+          return element;
         },
       });
 
-      rootElement.remove();
+      rootElements.forEach((x) => x.remove());
 
       pageNr++;
     }

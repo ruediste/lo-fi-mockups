@@ -497,6 +497,22 @@ export function Editor({ downloadName }: { downloadName?: string }) {
                 },
               },
               {
+                label: "Export PNG Image",
+                onClick: async () => {
+                  saveAs(await state.repository.createPng(), "project.png");
+                },
+              },
+              {
+                label: "Copy Image to Clipboard",
+                onClick: async () => {
+                  const blob = await state.repository.createPng();
+                  await navigator.clipboard.write([
+                    new ClipboardItem({ "image/png": blob }),
+                  ]);
+                  toast.success("Image copied to the clipboard");
+                },
+              },
+              {
                 label: "Clear Project",
                 onClick: async () => {
                   if (
