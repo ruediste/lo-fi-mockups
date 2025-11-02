@@ -20,9 +20,9 @@ export class CheckboxWidget extends PositionWidget {
     "state",
     "State",
     () => [
-      ["unchecked", "Unchecked"],
-      ["indeterminate", "Indeterminate"],
-      ["checked", "Checked"],
+      { value: "unchecked", label: "Unchecked" },
+      { value: "indeterminate", label: "Indeterminate" },
+      { value: "checked", label: "Checked" },
     ],
     "unchecked"
   );

@@ -21,32 +21,87 @@ import {
   CheckboxProperty,
   MemoValue,
   SelectProperty,
+  SelectPropertyOption,
   StringProperty,
 } from "../model/PageItemProperty";
-import { IRectangle, IVec2d, Widget } from "./Widget";
+import { globalSvgContent, IRectangle, IVec2d, Widget } from "./Widget";
 import { widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
-export type UmlMarkerType =
-  | "None"
-  | "Association"
-  | "Composition"
-  | "Inheritance";
+type UmlMarkerType = "None" | "Association" | "Composition" | "Inheritance";
 
-export const UML_MARKER_OPTIONS: [UmlMarkerType, string][] = [
-  ["None", "None"],
-  ["Association", "Association"],
-  ["Inheritance", "Inheritance"],
-  ["Composition", "Composition"],
-];
+const UML_MARKER_OPTIONS: SelectPropertyOption<UmlMarkerType>[] = (
+  ["None", "Association", "Composition", "Inheritance"] as const
+).map((x) => ({
+  value: x,
+  label: x,
+  icon: () => (
+    <svg width="32" height="16" viewBox="0 0 40 20">
+      {globalSvgContent}
+      <line
+        x1="2"
+        y1="10"
+        x2="36"
+        y2="10"
+        stroke="#666"
+        strokeWidth="2"
+        markerEnd={getMarkerUrl(x)}
+      />
+    </svg>
+  ),
+}));
 
-export type LineStyle = "Normal" | "Dashed" | "Dotted";
+type LineStyle = "Normal" | "Dashed" | "Dotted";
 
-export const LINE_STYLE_OPTIONS: [LineStyle, string][] = [
-  ["Normal", "Normal"],
-  ["Dashed", "Dashed"],
-  ["Dotted", "Dotted"],
-];
+const LINE_STYLE_OPTIONS: SelectPropertyOption<LineStyle>[] = (
+  ["Normal", "Dashed", "Dotted"] as const
+).map((x) => ({
+  value: x,
+  label: x,
+  icon: () => (
+    <svg width="32" height="16" viewBox="0 0 32 16">
+      <line
+        x1="2"
+        y1="8"
+        x2="30"
+        y2="8"
+        stroke="#666"
+        strokeWidth="2"
+        strokeDasharray={getDashArray(x)}
+      />
+    </svg>
+  ),
+}));
+
+function getMarkerUrl(markerType: UmlMarkerType | null): string | undefined {
+  if (markerType === null) return undefined;
+
+  switch (markerType) {
+    case "None":
+      return undefined;
+    case "Association":
+      return "url(#connector-association)";
+    case "Composition":
+      return "url(#connector-composition)";
+    case "Inheritance":
+      return "url(#connector-inheritance)";
+    default:
+      return undefined;
+  }
+}
+
+function getDashArray(lineStyle: LineStyle): string | undefined {
+  switch (lineStyle) {
+    case "Normal":
+      return undefined;
+    case "Dashed":
+      return "10,5";
+    case "Dotted":
+      return "2,5";
+    default:
+      return undefined;
+  }
+}
 
 export interface ConnectorWidgetData extends PageItemData {
   source: ConnectorEndpointData;
@@ -81,7 +136,9 @@ export class ConnectorWidget extends Widget {
     "Source Marker",
     () => UML_MARKER_OPTIONS,
     "None"
-  ).radio();
+  )
+    .buttonGroup()
+    .noLabel();
 
   targetMarkerType = new SelectProperty<UmlMarkerType>(
     this,
@@ -89,7 +146,9 @@ export class ConnectorWidget extends Widget {
     "Target Marker",
     () => UML_MARKER_OPTIONS,
     "Association"
-  ).radio();
+  )
+    .buttonGroup()
+    .noLabel();
 
   lineStyle = new SelectProperty<LineStyle>(
     this,
@@ -97,7 +156,9 @@ export class ConnectorWidget extends Widget {
     "Line Style",
     () => LINE_STYLE_OPTIONS,
     "Normal"
-  ).radio();
+  )
+    .buttonGroup()
+    .noLabel();
 
   orthogonalRouting = new CheckboxProperty(
     this,
@@ -174,36 +235,6 @@ export class ConnectorWidget extends Widget {
     return this.data as ConnectorWidgetData;
   }
 
-  private getMarkerUrl(markerType: UmlMarkerType | null): string | undefined {
-    if (markerType === null) return undefined;
-
-    switch (markerType) {
-      case "None":
-        return undefined;
-      case "Association":
-        return "url(#connector-association)";
-      case "Composition":
-        return "url(#connector-composition)";
-      case "Inheritance":
-        return "url(#connector-inheritance)";
-      default:
-        return undefined;
-    }
-  }
-
-  private getDashArray(lineStyle: LineStyle): string | undefined {
-    switch (lineStyle) {
-      case "Normal":
-        return undefined;
-      case "Dashed":
-        return "10,5";
-      case "Dotted":
-        return "2,5";
-      default:
-        return undefined;
-    }
-  }
-
   renderContent(): React.ReactNode {
     return (
       <WithHooks>
@@ -215,9 +246,7 @@ export class ConnectorWidget extends Widget {
           const targetMulti = this.targetMultiplicity.get();
           const sourceMarkerType = this.sourceMarkerType.get();
           const targetMarkerType = this.targetMarkerType.get();
-          const lineDashArray = this.getDashArray(
-            this.lineStyle.get() || "Normal"
-          );
+          const lineDashArray = getDashArray(this.lineStyle.get() || "Normal");
           const routePoints = this.routePointsMemo.value;
 
           // Find the center by segment length
@@ -260,8 +289,8 @@ export class ConnectorWidget extends Widget {
           const padding = 6;
 
           // Get marker URLs
-          const sourceMarkerUrl = this.getMarkerUrl(sourceMarkerType);
-          const targetMarkerUrl = this.getMarkerUrl(targetMarkerType);
+          const sourceMarkerUrl = getMarkerUrl(sourceMarkerType);
+          const targetMarkerUrl = getMarkerUrl(targetMarkerType);
 
           // Calculate direction from first segment for source multiplicity
           const sourceDirection = routePoints[1].sub(routePoints[0]);

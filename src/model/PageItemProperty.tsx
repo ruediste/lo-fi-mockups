@@ -1,8 +1,9 @@
 import { FontIcon } from "@/util/FontIcon";
 import { PageReferenceInput } from "@/util/PageReferenceInput";
 import { iconNumberToName, iconsList } from "@/util/utils";
+import { BackgroundColor, backgroundPalette } from "@/widgets/widgetTheme";
 import React, { Fragment, JSX } from "react";
-import { Form, InputGroup } from "react-bootstrap";
+import { ButtonGroup, Form, InputGroup, ToggleButton } from "react-bootstrap";
 import AsyncSelect from "react-select/async";
 import { NumberInput } from "../util/Inputs";
 import { ModelEvent } from "./ModelEvent";
@@ -190,6 +191,58 @@ export class MemoValue<T> {
       this._value = undefined;
       this.invalidated.notify();
     }
+  }
+}
+
+export class BackgroundColorProperty extends PageItemPropertyBase<BackgroundColor> {
+  constructor(
+    item: PageItem,
+    id: string,
+    private label: string,
+    defaultValue: BackgroundColor
+  ) {
+    super(item, id, defaultValue);
+  }
+
+  render(): JSX.Element {
+    const currentValue = this.get();
+    return (
+      <Form.Group className="mb-3">
+        <Form.Label>{this.label}</Form.Label>
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            justifyContent: "space-between",
+            alignItems: "stretch",
+          }}
+        >
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {backgroundPalette.map((colorOption) => (
+              <button
+                key={colorOption.name}
+                type="button"
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  backgroundColor: colorOption.color,
+                  border:
+                    currentValue === colorOption.name
+                      ? "2px solid #007bff"
+                      : "2px solid #ccc",
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+                title={colorOption.name}
+                onClick={() => this.set(colorOption.name)}
+              />
+            ))}
+          </div>
+          <PropertyOverrideableInputGroupControls property={this} />
+        </div>
+      </Form.Group>
+    );
   }
 }
 
@@ -423,30 +476,48 @@ export class PageReferenceProperty extends PageItemPropertyBase<{
   }
 }
 
+export interface SelectPropertyOption<T> {
+  value: T | null;
+  label: string;
+  icon?: () => React.ReactNode;
+}
+
+type SelectPropertyType = "select" | "radio" | "button-group";
+
 export class SelectProperty<
   T extends string | number
 > extends PageItemPropertyBase<T | null> {
-  private useRadio = false;
+  private type: SelectPropertyType = "select";
+  private _noLabel = false;
 
   constructor(
     item: PageItem,
     id: string,
     private label: string,
-    private getOptions: () => [T | null, string][],
+    private getOptions: () => SelectPropertyOption<T>[],
     defaultValue: T | null
   ) {
     super(item, id, defaultValue);
   }
 
   radio() {
-    this.useRadio = true;
+    this.type = "radio";
+    return this;
+  }
+
+  buttonGroup() {
+    this.type = "button-group";
+    return this;
+  }
+  noLabel() {
+    this._noLabel = true;
     return this;
   }
 
   render(): JSX.Element {
     const options = this.getOptions();
     const value = this.get();
-    if (this.useRadio) {
+    if (this.type === "radio") {
       return (
         <Form.Group className="mb-3">
           <div style={{ display: "flex" }}>
@@ -469,18 +540,59 @@ export class SelectProperty<
                 type="radio"
                 id={`${this.item.data.id}-${this.id}-${idx}`}
                 name={`${this.item.data.id}-${this.id}`}
-                label={o[1]}
-                value={o[0] === null ? undefined : o[0]}
-                checked={value === o[0]}
+                label={
+                  o.icon ? (
+                    <>
+                      {o.icon()} {o.label}
+                    </>
+                  ) : (
+                    o.label
+                  )
+                }
+                value={o.value === null ? undefined : o.value}
+                checked={value === o.value}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    this.set(o[0] === undefined ? null : o[0]);
+                    this.set(o.value === undefined ? null : o.value);
                   }
                 }}
                 inline
               />
             ))}
           </div>
+        </Form.Group>
+      );
+    } else if (this.type === "button-group") {
+      return (
+        <Form.Group className="mb-3">
+          <div style={{ display: "flex" }}>
+            <Form.Label>{this.label}</Form.Label>
+            <div style={{ marginLeft: "auto" }}>
+              <PropertyOverrideableInputGroupControls property={this} />
+            </div>
+          </div>
+          <ButtonGroup>
+            {options.map((o, idx) => (
+              <ToggleButton
+                key={idx}
+                id={`${this.item.data.id}-${this.id}-${idx}`}
+                value={idx}
+                type="radio"
+                variant="outline-secondary"
+                checked={value === o.value}
+                onClick={() => this.set(o.value)}
+              >
+                {o.icon ? (
+                  <>
+                    {o.icon()}
+                    {this._noLabel ? undefined : " " + o.label}
+                  </>
+                ) : (
+                  o.label
+                )}
+              </ToggleButton>
+            ))}
+          </ButtonGroup>
         </Form.Group>
       );
     } else {
@@ -493,13 +605,16 @@ export class SelectProperty<
               value={value == null ? undefined : value}
               onChange={(e) => {
                 const index = e.target.selectedIndex;
-                const value = options[index][0];
+                const value = options[index].value;
                 this.set(value === undefined ? null : value);
               }}
             >
               {options.map((o, idx) => (
-                <option key={idx} value={o[0] === null ? undefined : o[0]}>
-                  {o[1]}
+                <option
+                  key={idx}
+                  value={o.value === null ? undefined : o.value}
+                >
+                  {o.label}
                 </option>
               ))}
             </Form.Select>

@@ -43,9 +43,11 @@ export function PageLink({
 export function WidgetBounds({
   box,
   children,
+  background,
 }: {
   box: IRectangle;
   children?: React.ReactNode;
+  background?: string;
 }) {
   const id = useId();
   return (
@@ -63,7 +65,7 @@ export function WidgetBounds({
       </defs>
 
       <g clipPath={`url(#${id})`}>
-        <rect {...widgetRectAttrs} fill="white" {...box} />
+        <rect {...widgetRectAttrs} fill={background ?? "white"} {...box} />
         {children}
         <rect {...widgetRectAttrs} fill="none" {...box} />
       </g>

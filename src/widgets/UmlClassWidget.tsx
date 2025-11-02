@@ -1,4 +1,5 @@
 import {
+  BackgroundColorProperty,
   MemoValue,
   PageReferenceProperty,
   StringProperty,
@@ -6,6 +7,7 @@ import {
 import { parseUmlClassWidgetContents } from "./UmlClassWidgetHelper";
 import { BoxWidget } from "./Widget";
 import { PageLink, WidgetBounds } from "./WidgetHelpers";
+import { backgroundPaletteMap } from "./widgetTheme";
 
 export class UmlClassWidget extends BoxWidget {
   label = "UML Class";
@@ -27,13 +29,21 @@ id: long
     [this.contentsText]
   );
 
+  backgroundColor = new BackgroundColorProperty(
+    this,
+    "backgroundColor",
+    "Background Color",
+    "White"
+  );
+
   link = new PageReferenceProperty(this, "link", "Link");
 
   renderContent(): React.ReactNode {
     const box = this.box;
     const contents = this.contents.value;
+    const bgColor = backgroundPaletteMap[this.backgroundColor.get()];
     return (
-      <WidgetBounds box={box}>
+      <WidgetBounds box={box} background={bgColor}>
         <foreignObject {...box}>
           <div
             css={{

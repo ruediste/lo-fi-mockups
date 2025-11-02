@@ -19,8 +19,8 @@ export class RadioButtonWidget extends PositionWidget {
     "state",
     "State",
     () => [
-      ["unselected", "Unselected"],
-      ["selected", "Selected"],
+      { label: "unselected", value: "Unselected" },
+      { label: "selected", value: "Selected" },
     ],
     "unselected"
   );
@@ -57,7 +57,7 @@ export class RadioButtonWidget extends PositionWidget {
           fill="none"
           strokeWidth="1"
         />
-        {this.state.get() === "selected" && (
+        {this.state.get() === "Selected" && (
           <circle
             cx={box.x + widgetTheme.margin + widgetTheme.fontSize / 2}
             cy={box.y + box.height - widgetTheme.fontSize / 2}

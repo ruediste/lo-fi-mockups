@@ -25,3 +25,19 @@ export const widgetRectAttrs = {
   stroke: widgetTheme.stroke,
   rx: widgetTheme.rx,
 };
+
+export const backgroundPalette = [
+  { name: "White", color: "#fff" },
+  { name: "Red", color: "#fef2f2" },
+  { name: "Blue", color: "#eff6ff" },
+  { name: "Green", color: "#f0fdf4" },
+  { name: "Yellow", color: "#fefce8" },
+  { name: "Purple", color: "#faf5ff" },
+  { name: "Pink", color: "#fdf2f8" },
+  { name: "Gray", color: "#f9fafb" },
+  { name: "Orange", color: "#fff7ed" },
+] as const;
+
+export type BackgroundColor = (typeof backgroundPalette)[number]["name"];
+export const backgroundPaletteMap: { [key in BackgroundColor]: string } =
+  Object.fromEntries(backgroundPalette.map((x) => [x.name, x.color])) as any;
