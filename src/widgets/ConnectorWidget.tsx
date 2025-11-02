@@ -510,6 +510,8 @@ class ConnectorInteraction extends PageItemInteraction {
                 style={{ cursor: "move" }}
                 onDoubleClick={() => this.item.page.duplicateItem(this.item)}
                 onPointerDown={(e) => {
+                  if (e.shiftKey) return;
+
                   e.stopPropagation();
                   this.item.page.setSelection(
                     e.ctrlKey
@@ -518,38 +520,42 @@ class ConnectorInteraction extends PageItemInteraction {
                   );
                 }}
               />
-              <DraggableConnectorSnapBox
-                position={source.position}
-                item={this.item}
-                visible={selection.has(this.item)}
-                update={(start, delta, result) => {
-                  this.item_.source.setPosition(
-                    {
-                      x: start.x + delta.x,
-                      y: start.y + delta.y,
-                    },
-                    result
-                  );
-                }}
-                projection={projection}
-                cursor="grab"
-              />
-              <DraggableConnectorSnapBox
-                position={target.position}
-                item={this.item}
-                visible={selection.has(this.item)}
-                update={(start, delta, result) => {
-                  this.item_.target.setPosition(
-                    {
-                      x: start.x + delta.x,
-                      y: start.y + delta.y,
-                    },
-                    result
-                  );
-                }}
-                projection={projection}
-                cursor="grab"
-              />
+              {selection.size == 1 && (
+                <>
+                  <DraggableConnectorSnapBox
+                    position={source.position}
+                    item={this.item}
+                    visible={selection.has(this.item)}
+                    update={(start, delta, result) => {
+                      this.item_.source.setPosition(
+                        {
+                          x: start.x + delta.x,
+                          y: start.y + delta.y,
+                        },
+                        result
+                      );
+                    }}
+                    projection={projection}
+                    cursor="grab"
+                  />
+                  <DraggableConnectorSnapBox
+                    position={target.position}
+                    item={this.item}
+                    visible={selection.has(this.item)}
+                    update={(start, delta, result) => {
+                      this.item_.target.setPosition(
+                        {
+                          x: start.x + delta.x,
+                          y: start.y + delta.y,
+                        },
+                        result
+                      );
+                    }}
+                    projection={projection}
+                    cursor="grab"
+                  />
+                </>
+              )}
             </>
           );
         }}

@@ -90,6 +90,7 @@ export function DraggableBox<TState>({
       fill={filled === true ? "#00ff00" : "transparent"}
       onDoubleClick={onDuplicate}
       onPointerDown={(e) => {
+        if (e.shiftKey) return;
         e.stopPropagation();
         if (!visible) {
           select?.(e.ctrlKey);

@@ -1,6 +1,10 @@
 import { Selection } from "@/editor/Selection";
 import { Page } from "@/model/Page";
-import { PageItem } from "@/model/PageItem";
+import {
+  HorizontalSnapReference,
+  PageItem,
+  VerticalSnapReference,
+} from "@/model/PageItem";
 import { DraggableSnapBox } from "@/model/PageItemInteractionHelpers";
 import { useRerenderOnEvent } from "@/util/hooks";
 import { Vec2d } from "@/util/Vec2d";
@@ -8,7 +12,7 @@ import { IRectangle, Widget } from "@/widgets/Widget";
 import { dragPositionRectAttrs } from "@/widgets/widgetUtils";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import Flatbush from "flatbush";
-import { useEffect, useRef, useState } from "react";
+import { PointerEvent, useEffect, useRef, useState } from "react";
 import { Canvas, CanvasProjection } from "./Canvas";
 
 import useSearchHref from "@/util/useSearchHref";
@@ -24,8 +28,10 @@ import { Palette } from "./Palette";
 
 import { ItemProperties } from "@/editor/ItemProperties";
 import { createPageItemData } from "@/model/createPageItem";
+import { SnapIndex } from "@/model/SnapIndex";
 import { confirm } from "@/util/confirm";
 import { ThreeDotMenu } from "@/util/Inputs";
+import { ConnectorWidget } from "@/widgets/ConnectorWidget";
 import "rc-dock/dist/rc-dock.css";
 import { EditorState, useEditorState } from "./EditorState";
 
@@ -116,6 +122,145 @@ function EditorCanvas() {
   return <EditorCanvasInner {...{ state, page }} />;
 }
 
+class SelectBoxDragHandler {
+  startPos: Vec2d;
+  index: Flatbush;
+  boundingBoxes: IRectangle[];
+
+  constructor(
+    e: PointerEvent<SVGElement>,
+    private projection: CanvasProjection,
+    private page: Page,
+    private setDragSelectionBox: (
+      value: { box: IRectangle; boundingBoxes: IRectangle[] } | undefined
+    ) => void
+  ) {
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    this.startPos = projection.pointToWorld(Vec2d.fromEvent(e));
+
+    this.index = new Flatbush(page.ownItems.length);
+    this.boundingBoxes = page.ownItems.map((item) => item.boundingBox);
+    this.boundingBoxes.map((box) => {
+      this.index.add(box.x, box.y, box.x + box.width, box.y + box.height);
+    });
+    this.index.finish();
+
+    page.setSelection(Selection.empty);
+
+    this.updateDragSelectionBox({
+      x: this.startPos.x,
+      y: this.startPos.y,
+      width: 0,
+      height: 0,
+    });
+  }
+  onPointerMove(e: PointerEvent<SVGElement>) {
+    const pos = this.projection.pointToWorld(Vec2d.fromEvent(e));
+    this.updateDragSelectionBox(Vec2d.boundingBox(pos, this.startPos));
+  }
+  onPointerUp(e: PointerEvent<SVGElement>) {
+    const pos = this.projection.pointToWorld(Vec2d.fromEvent(e));
+    const dragSelectionBox = Vec2d.boundingBox(pos, this.startPos);
+    this.setDragSelectionBox(undefined);
+    this.page.setSelection(
+      Selection.of(
+        ...this.index
+          .search(
+            dragSelectionBox!.x,
+            dragSelectionBox!.y,
+            dragSelectionBox!.x + dragSelectionBox!.width,
+            dragSelectionBox!.y + dragSelectionBox!.height
+          )
+          .map((idx) => this.page.ownItems[idx])
+      )
+    );
+  }
+  private updateDragSelectionBox(box: IRectangle) {
+    this.setDragSelectionBox({
+      box,
+      boundingBoxes: this.index
+        .search(box.x, box.y, box.x + box.width, box.y + box.height)
+        .map((idx) => this.boundingBoxes[idx]),
+    });
+  }
+}
+
+class CreateConnectorDragHandler {
+  connector: ConnectorWidget;
+  private snapIndex: SnapIndex;
+  constructor(
+    e: PointerEvent<SVGElement>,
+    private projection: CanvasProjection,
+    private page: Page
+  ) {
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+
+    // add a connector widget
+    this.connector = page.addItem(
+      createPageItemData(page.project.data.nextId++, "connector")
+    ) as ConnectorWidget;
+    this.connector.initializeAfterAdd();
+
+    // snap the source at the current position
+    const startPos = projection.pointToWorld(Vec2d.fromEvent(e));
+    this.snapIndex = new SnapIndex(page, projection, () => true);
+    const { snapResult, snappedPosition } = e.ctrlKey
+      ? { snappedPosition: startPos }
+      : this.getSnappedPosition(startPos);
+    this.connector.source.setPosition(snappedPosition, snapResult);
+    this.connector.target.setPosition(snappedPosition);
+  }
+
+  onPointerMove(e: PointerEvent<SVGElement>) {
+    const pos = this.projection.pointToWorld(Vec2d.fromEvent(e));
+    const { snapResult, snappedPosition } = e.ctrlKey
+      ? { snappedPosition: pos }
+      : this.getSnappedPosition(pos);
+    this.connector.target.setPosition(snappedPosition, snapResult);
+  }
+
+  onPointerUp(e: PointerEvent<SVGElement>) {
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    const pos = this.projection.pointToWorld(Vec2d.fromEvent(e));
+
+    const { snapResult, snappedPosition } = e.ctrlKey
+      ? { snappedPosition: pos }
+      : this.getSnappedPosition(pos);
+    this.connector.target.setPosition(snappedPosition, snapResult);
+
+    this.page.setSelection(Selection.of(this.connector));
+  }
+
+  private getSnappedPosition(position: Vec2d): {
+    snapResult: any;
+    snappedPosition: Vec2d;
+  } {
+    const refs = {
+      otherHorizontal: [
+        new HorizontalSnapReference(
+          position.x - this.projection.lengthToWorld(6),
+          position.y,
+          this.projection.lengthToWorld(12),
+          "connector"
+        ),
+      ],
+      otherVertical: [
+        new VerticalSnapReference(
+          position.x,
+          position.y - this.projection.lengthToWorld(6),
+          this.projection.lengthToWorld(12),
+          "connector"
+        ),
+      ],
+    };
+    const snapResult = this.snapIndex.snapReferences(refs, new Vec2d(0, 0));
+    const snappedPosition = position.add(snapResult.offset);
+    return { snapResult, snappedPosition };
+  }
+}
+
 function EditorCanvasInner({
   state,
   page,
@@ -169,11 +314,13 @@ function EditorCanvasInner({
   });
 
   const dragState = useRef<
-    | { startPos: Vec2d; index: Flatbush; boundingBoxes: IRectangle[] }
-    | undefined
+    SelectBoxDragHandler | CreateConnectorDragHandler | undefined
   >(undefined);
 
-  const [dragSelectionBox, setDragSelectionBox] = useState<IRectangle>();
+  const [dragSelectionBox, setDragSelectionBox] = useState<{
+    box: IRectangle;
+    boundingBoxes: IRectangle[];
+  }>();
 
   const attrs = dragPositionRectAttrs(projection);
 
@@ -183,68 +330,38 @@ function EditorCanvasInner({
       ref={setNodeRef}
       page={page}
       onPointerDown={(e) => {
-        if (e.ctrlKey) {
-          e.stopPropagation();
-          e.currentTarget.setPointerCapture(e.pointerId);
-          const pos = projection.pointToWorld(Vec2d.fromEvent(e));
-          setDragSelectionBox({ x: pos.x, y: pos.y, width: 0, height: 0 });
-
-          const index = new Flatbush(page.ownItems.length);
-          const boundingBoxes = page.ownItems.map((item) => item.boundingBox);
-          boundingBoxes.map((box) => {
-            index.add(box.x, box.y, box.x + box.width, box.y + box.height);
-          });
-          index.finish();
-
-          dragState.current = { startPos: pos, index, boundingBoxes };
-          page.setSelection(Selection.empty);
+        if (e.shiftKey) {
+          dragState.current = new CreateConnectorDragHandler(
+            e,
+            projection,
+            page
+          );
+        } else if (e.ctrlKey) {
+          dragState.current = new SelectBoxDragHandler(
+            e,
+            projection,
+            page,
+            setDragSelectionBox
+          );
         }
       }}
       onPointerMove={(e) => {
-        if (dragState.current) {
-          const pos = projection.pointToWorld(Vec2d.fromEvent(e));
-          setDragSelectionBox(
-            Vec2d.boundingBox(pos, dragState.current.startPos)
-          );
-        }
+        dragState.current?.onPointerMove(e);
       }}
-      onPointerUp={() => {
-        if (dragState.current) {
-          setDragSelectionBox(undefined);
-          page.setSelection(
-            Selection.of(
-              ...dragState.current.index
-                .search(
-                  dragSelectionBox!.x,
-                  dragSelectionBox!.y,
-                  dragSelectionBox!.x + dragSelectionBox!.width,
-                  dragSelectionBox!.y + dragSelectionBox!.height
-                )
-                .map((idx) => page.ownItems[idx])
-            )
-          );
-          dragState.current = undefined;
-        }
+      onPointerUp={(e) => {
+        dragState.current?.onPointerUp(e);
+        dragState.current = undefined;
       }}
     >
       <MultiItemSelectionBox {...{ projection, page }} />
       <RenderPageItems {...{ projection, page }} />
       {dragSelectionBox && (
-        <rect {...attrs} {...dragSelectionBox} fill="transparent" />
+        <rect {...attrs} {...dragSelectionBox.box} fill="transparent" />
       )}
       {dragSelectionBox &&
-        dragState.current &&
-        dragState.current.index
-          .search(
-            dragSelectionBox.x,
-            dragSelectionBox.y,
-            dragSelectionBox.x + dragSelectionBox.width,
-            dragSelectionBox.y + dragSelectionBox.height
-          )
-          .map((idx) => {
-            const box = dragState.current?.boundingBoxes[idx];
-            return <rect key={idx} {...box} {...attrs} fill="transparent" />;
-          })}
+        dragSelectionBox.boundingBoxes.map((box, idx) => (
+          <rect key={idx} {...box} {...attrs} fill="transparent" />
+        ))}
     </Canvas>
   );
 }

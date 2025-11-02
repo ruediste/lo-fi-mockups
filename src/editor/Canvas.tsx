@@ -172,7 +172,7 @@ export function Canvas({
             }}
             viewBox={`${projection.offset.x} ${projection.offset.y} ${worldViewSize.x}  ${worldViewSize.y}`}
             onPointerDown={(e) => {
-              if (!e.ctrlKey) {
+              if (!e.ctrlKey && !e.shiftKey) {
                 dragState.current = {
                   startPointerPos: Vec2d.fromEvent(e),
                   startOffset: projection.offset,

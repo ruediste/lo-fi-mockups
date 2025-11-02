@@ -16,6 +16,11 @@ Alternatively, you can just add a bookmark. The application will launch happily 
 
 ## Manual
 
+### Keyboard Reference
+
+- While dragging, holding the ctrl-key disables snapping
+- Hold shift to draw new connectors
+
 ### User Interface Overview
 
 The user interface is divided into several key sections:
