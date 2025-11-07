@@ -24,6 +24,9 @@ export default defineConfig({
         enabled: false,
       },
       includeAssets: "**/*",
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,woff,woff2,png}"],
+      },
       manifest: {
         name: "Lo Fi Mockups",
         short_name: "LoFi",
