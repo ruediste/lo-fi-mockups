@@ -266,7 +266,8 @@ export class StringProperty extends PageItemPropertyBase<string> {
     item: PageItem,
     id: string,
     private label: string,
-    defaultValue: string
+    defaultValue: string,
+    private _rows = 5
   ) {
     super(item, id, defaultValue);
   }
@@ -280,7 +281,7 @@ export class StringProperty extends PageItemPropertyBase<string> {
             value={this.get()}
             onChange={(e) => this.set(e.target.value)}
             as={this.isTextArea ? "textarea" : undefined}
-            rows={5}
+            rows={this._rows}
             onKeyDown={
               this.isAcceptTabs
                 ? (e) => {
@@ -309,8 +310,9 @@ export class StringProperty extends PageItemPropertyBase<string> {
     );
   }
 
-  textArea() {
+  textArea(rows?: number) {
     this.isTextArea = true;
+    if (rows !== undefined) this._rows = rows;
     return this;
   }
 

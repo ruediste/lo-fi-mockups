@@ -12,7 +12,7 @@ export class LabelWidget extends PositionWidget {
   get boundingBox(): IRectangle {
     return {
       ...this.position,
-      width: getTextWidth(this.text.get()) + 2 * margin,
+      width: getTextWidth(this.text.get()),
       height: widgetTheme.fontSize,
     };
   }

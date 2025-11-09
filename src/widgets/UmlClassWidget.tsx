@@ -21,7 +21,7 @@ export class UmlClassWidget extends BoxWidget {
 id: long
 `
   )
-    .textArea()
+    .textArea(10)
     .acceptTabs();
 
   contents = new MemoValue(

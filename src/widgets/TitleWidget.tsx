@@ -16,7 +16,7 @@ export class TitleWidget extends PositionWidget {
   get boundingBox(): IRectangle {
     return {
       ...this.position,
-      width: getTextWidth(this.text.get(), this.fontSize) + 2 * margin,
+      width: getTextWidth(this.text.get(), this.fontSize),
       height: this.fontSize + 2 * margin,
     };
   }
