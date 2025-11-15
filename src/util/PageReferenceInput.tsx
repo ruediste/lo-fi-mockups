@@ -8,17 +8,19 @@ export function PageReferenceInput({
   setPageId,
   style,
   stop,
+  canReferenceMasterPage,
 }: {
   project: Project;
   pageId?: number;
   setPageId: (pageId?: number) => void;
   style?: React.CSSProperties;
   stop?: () => void;
+  canReferenceMasterPage?: boolean;
 }) {
-  const page =
-    pageId === undefined
-      ? undefined
-      : project.data.pages.find((x) => x.id == pageId);
+  const pages =
+    canReferenceMasterPage ?? false
+      ? project.data.pages
+      : project.data.pages.filter((p) => !project.masterPageIds.has(p.id));
 
   return (
     <span style={style} onPointerDown={(e) => e.stopPropagation()}>
@@ -34,14 +36,12 @@ export function PageReferenceInput({
           onBlur={() => stop?.()}
           onChange={(e) => {
             const index = e.target.selectedIndex;
-            setPageId(
-              index == 0 ? undefined : project.data.pages[index - 1].id
-            );
+            setPageId(index == 0 ? undefined : pages[index - 1].id);
             stop?.();
           }}
         >
           <option value=""></option>
-          {project.data.pages.map((p) => (
+          {pages.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
@@ -58,10 +58,14 @@ export function InlinePageReferenceInput(props: {
   setPageId: (pageId?: number) => void;
   disabled?: boolean;
   style?: React.CSSProperties;
+  canReferenceMasterPage?: boolean;
 }) {
   const { pageId, project, style, disabled } = props;
   const page =
     pageId === undefined
+      ? undefined
+      : !(props.canReferenceMasterPage ?? false) &&
+        project.masterPageIds.has(pageId) // check if the reference page is a master page
       ? undefined
       : project.data.pages.find((x) => x.id == pageId);
 

@@ -94,6 +94,7 @@ function Page({
           project={project}
           pageId={page.masterPageId}
           setPageId={(e) => project.setMasterPage(page.id, e)}
+          canReferenceMasterPage={true}
         />
 
         <IconButton

@@ -460,6 +460,8 @@ export class PageReferenceProperty extends PageItemPropertyBase<{
     super(item, id, {});
   }
 
+  _canReferenceMasterPage = false;
+
   render(): JSX.Element {
     return (
       <Form.Group className="mb-3">
@@ -475,6 +477,20 @@ export class PageReferenceProperty extends PageItemPropertyBase<{
         </InputGroup>
       </Form.Group>
     );
+  }
+
+  override get(): { pageId?: number } {
+    const pageId = super.get().pageId;
+    if (pageId === undefined) {
+      return { pageId: undefined };
+    }
+
+    if (
+      !this._canReferenceMasterPage &&
+      this.item.page.project.masterPageIds.has(pageId)
+    )
+      return { pageId: undefined };
+    return { pageId };
   }
 }
 

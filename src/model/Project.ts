@@ -19,8 +19,12 @@ export class Project {
   currentPage?: Page;
   constructor(public data: ProjectData, public onDataChanged: () => void) {
     data.pages.forEach((page) => (this.pageDataMap[page.id] = page));
+    this.updateMasterPages();
     this.recreateCurrentPage();
   }
+
+  /// ids of all pages, which are a master page of another page
+  masterPageIds = new Set<number>();
 
   nextId() {
     return this.data.nextId++;
@@ -115,6 +119,7 @@ export class Project {
     });
 
     this.onDataChanged();
+    this.updateMasterPages();
     this.recreateCurrentPage();
   }
 
@@ -126,7 +131,16 @@ export class Project {
 
   setMasterPage(pageId: number, masterPageId?: number) {
     this.pageDataMap[pageId].masterPageId = masterPageId;
+    this.updateMasterPages();
     this.recreateCurrentPage();
+  }
+
+  private updateMasterPages() {
+    this.masterPageIds.clear();
+    this.data.pages.forEach((page) => {
+      if (page.masterPageId !== undefined)
+        this.masterPageIds.add(page.masterPageId);
+    });
   }
 
   private recreateCurrentPage(oldSelection?: Selection) {
