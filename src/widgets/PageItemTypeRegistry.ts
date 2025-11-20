@@ -26,6 +26,7 @@ import { TextAreaWidget } from "./TextAreaWidget";
 import { TextInputWidget } from "./TextInputWidget";
 import { TitleWidget } from "./TitleWidget";
 import { UmlClassWidget } from "./UmlClassWidget";
+import { UmlDatabaseWidget } from "./UmlDatabaseWidget";
 import { VerticalScrollBarWidget } from "./VerticalScrollBarWidget";
 import { Widget } from "./Widget";
 
@@ -110,3 +111,4 @@ register(
     } satisfies ConnectorWidgetData)
 );
 register("umlClass", UmlClassWidget);
+register("umlDatabase", UmlDatabaseWidget);
