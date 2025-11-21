@@ -1,16 +1,24 @@
 import {
+  BackgroundColorProperty,
   PageReferenceProperty,
   StringProperty,
 } from "@/model/PageItemProperty";
 import { JSX } from "react";
 import { BoxWidget } from "./Widget";
 import { PageLink } from "./WidgetHelpers";
-import { widgetTheme } from "./widgetTheme";
+import { backgroundPaletteMap, widgetTheme } from "./widgetTheme";
 
 export class UmlDatabaseWidget extends BoxWidget {
   label = "UML Database";
 
   name = new StringProperty(this, "name", "Name", `MariaDB`);
+
+  backgroundColor = new BackgroundColorProperty(
+    this,
+    "backgroundColor",
+    "Background Color",
+    "White"
+  );
 
   link = new PageReferenceProperty(this, "link", "Link");
 
@@ -19,6 +27,7 @@ export class UmlDatabaseWidget extends BoxWidget {
 
     const ellipseHeight = box.width / 4;
     const remainingHeight = box.height - ellipseHeight;
+    const bgColor = backgroundPaletteMap[this.backgroundColor.get()];
 
     return (
       <>
@@ -30,7 +39,7 @@ export class UmlDatabaseWidget extends BoxWidget {
             box.x + box.width
           } ${box.y + box.height - ellipseHeight / 2}
           L ${box.x + box.width} ${box.y + ellipseHeight / 2} `}
-          fill="lightgray"
+          fill={bgColor}
           stroke="black"
           strokeWidth={widgetTheme.strokeWidth}
         />
@@ -40,7 +49,7 @@ export class UmlDatabaseWidget extends BoxWidget {
           cy={box.y + ellipseHeight / 2}
           rx={box.width / 2}
           ry={ellipseHeight / 2}
-          fill="lightgray"
+          fill={bgColor}
           stroke="black"
           strokeWidth={widgetTheme.strokeWidth}
         />

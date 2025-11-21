@@ -1,5 +1,6 @@
 import { Selection } from "@/editor/Selection";
 import { getOwnPropertyNames } from "@/util/utils";
+import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
 import { ModelEvent } from "./ModelEvent";
 import { Page, PageData } from "./Page";
 import { PageItemData } from "./PageItem";
@@ -45,10 +46,13 @@ export class Project {
   }
 
   duplicatePage(page: PageData) {
+    const idMap: Record<number, number> = Object.fromEntries(
+      page.items.map((item) => [item.id, this.data.nextId++])
+    );
     const itemMap: { [key: number]: PageItemData } = Object.fromEntries(
       page.items.map((item) => [
         item.id,
-        { id: this.data.nextId++, type: item.type },
+        pageItemTypeRegistry.duplicateData(item, idMap),
       ])
     );
     const mapItemId = (id: number) =>

@@ -33,10 +33,14 @@ import { Widget } from "./Widget";
 export class PageItemTypeRegistryImpl implements PageItemRegistry {
   itemTypes = new Map<
     string,
-    [
-      (args: PageItemsArgs) => PageItem,
-      (id: number, type: string) => PageItemData
-    ]
+    {
+      itemFactory: (args: PageItemsArgs) => PageItem;
+      newDataFactory: (id: number, type: string) => PageItemData;
+      dataCopyFactory: (
+        existingData: PageItemData,
+        idMap: Record<number, number>
+      ) => PageItemData;
+    }
   >();
 
   palette: {
@@ -45,14 +49,20 @@ export class PageItemTypeRegistryImpl implements PageItemRegistry {
   }[] = [];
 
   create(args: PageItemsArgs): PageItem {
-    const [ctor] = this.itemTypes.get(args.data.type)!;
-    const result = ctor(args);
+    const { itemFactory } = this.itemTypes.get(args.data.type)!;
+    const result = itemFactory(args);
     result.initialize();
     return result;
   }
 
   createData(id: number, type: string): PageItemData {
-    return this.itemTypes.get(type)![1](id, type);
+    return this.itemTypes.get(type)!.newDataFactory(id, type);
+  }
+
+  duplicateData(existingData: PageItemData, idMap: Record<number, number>) {
+    return this.itemTypes
+      .get(existingData.type)!
+      .dataCopyFactory(existingData, idMap);
   }
 }
 
@@ -66,12 +76,19 @@ function register(
     page: Page,
     fromMasterPage: boolean
   ) => PageItem,
-  dataFactory?: (id: number, type: string) => PageItemData
+  dataFactory?: (id: number, type: string) => PageItemData,
+  dataCopyFactory?: (
+    existingData: PageItemData,
+    idMap: Record<number, number>
+  ) => PageItemData
 ) {
-  pageItemTypeRegistry.itemTypes.set(key, [
-    (args) => new ctor(args.data, args.page, args.fromMasterPage),
-    dataFactory ?? ((id, type) => ({ id, type })),
-  ]);
+  pageItemTypeRegistry.itemTypes.set(key, {
+    itemFactory: (args) => new ctor(args.data, args.page, args.fromMasterPage),
+    newDataFactory: dataFactory ?? ((id, type) => ({ id, type })),
+    dataCopyFactory:
+      dataCopyFactory ??
+      ((data, idMap) => ({ id: idMap[data.id], type: data.type })),
+  });
   if (ctor.prototype instanceof Widget) {
     pageItemTypeRegistry.palette.push({ key, ctor: ctor as any });
   }
@@ -108,7 +125,29 @@ register(
       type,
       source: { position: { x: 0, y: 0 } },
       target: { position: { x: 80, y: 0 } },
-    } satisfies ConnectorWidgetData)
+    } satisfies ConnectorWidgetData),
+  (data, idMap) => {
+    const d = data as ConnectorWidgetData;
+    const result: ConnectorWidgetData = {
+      ...d,
+      id: idMap[data.id],
+      source: {
+        ...d.source,
+        connectedItemId:
+          d.source.connectedItemId === undefined
+            ? undefined
+            : idMap[d.source.connectedItemId],
+      },
+      target: {
+        ...d.target,
+        connectedItemId:
+          d.target.connectedItemId === undefined
+            ? undefined
+            : idMap[d.target.connectedItemId],
+      },
+    };
+    return result;
+  }
 );
 register("umlClass", UmlClassWidget);
 register("umlDatabase", UmlDatabaseWidget);
