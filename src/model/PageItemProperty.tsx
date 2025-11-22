@@ -643,3 +643,52 @@ export class SelectProperty<
     }
   }
 }
+
+export function getLineDashArray(lineStyle: LineStyle): string | undefined {
+  switch (lineStyle) {
+    case "Normal":
+      return undefined;
+    case "Dashed":
+      return "10,5";
+    case "Dotted":
+      return "2,5";
+    default:
+      return undefined;
+  }
+}
+
+type LineStyle = "Normal" | "Dashed" | "Dotted";
+
+const LINE_STYLE_OPTIONS: SelectPropertyOption<LineStyle>[] = (
+  ["Normal", "Dashed", "Dotted"] as const
+).map((x) => ({
+  value: x,
+  label: x,
+  icon: () => (
+    <svg width="32" height="16" viewBox="0 0 32 16">
+      <line
+        x1="2"
+        y1="8"
+        x2="30"
+        y2="8"
+        stroke="#666"
+        strokeWidth="2"
+        strokeDasharray={getLineDashArray(x)}
+      />
+    </svg>
+  ),
+}));
+export function lineStyleProperty(
+  item: PageItem,
+  id: string
+): SelectProperty<LineStyle> {
+  return new SelectProperty<LineStyle>(
+    item,
+    id,
+    "Line Style",
+    () => LINE_STYLE_OPTIONS,
+    "Normal"
+  )
+    .buttonGroup()
+    .noLabel();
+}

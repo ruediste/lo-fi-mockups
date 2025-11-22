@@ -28,6 +28,7 @@ export const widgetRectAttrs = {
 
 export const backgroundPalette = [
   { name: "White", color: "#fff" },
+  { name: "Transparent", color: "transparent" },
   { name: "Red", color: "#fef2f2" },
   { name: "Blue", color: "#eff6ff" },
   { name: "Green", color: "#f0fdf4" },

@@ -19,6 +19,8 @@ import { getDirectionOutside, Vec2d } from "@/util/Vec2d";
 import { WithHooks } from "@/util/WithHooks";
 import {
   CheckboxProperty,
+  getLineDashArray,
+  lineStyleProperty,
   MemoValue,
   SelectProperty,
   SelectPropertyOption,
@@ -51,28 +53,6 @@ const UML_MARKER_OPTIONS: SelectPropertyOption<UmlMarkerType>[] = (
   ),
 }));
 
-type LineStyle = "Normal" | "Dashed" | "Dotted";
-
-const LINE_STYLE_OPTIONS: SelectPropertyOption<LineStyle>[] = (
-  ["Normal", "Dashed", "Dotted"] as const
-).map((x) => ({
-  value: x,
-  label: x,
-  icon: () => (
-    <svg width="32" height="16" viewBox="0 0 32 16">
-      <line
-        x1="2"
-        y1="8"
-        x2="30"
-        y2="8"
-        stroke="#666"
-        strokeWidth="2"
-        strokeDasharray={getDashArray(x)}
-      />
-    </svg>
-  ),
-}));
-
 function getMarkerUrl(markerType: UmlMarkerType | null): string | undefined {
   if (markerType === null) return undefined;
 
@@ -85,19 +65,6 @@ function getMarkerUrl(markerType: UmlMarkerType | null): string | undefined {
       return "url(#connector-composition)";
     case "Inheritance":
       return "url(#connector-inheritance)";
-    default:
-      return undefined;
-  }
-}
-
-function getDashArray(lineStyle: LineStyle): string | undefined {
-  switch (lineStyle) {
-    case "Normal":
-      return undefined;
-    case "Dashed":
-      return "10,5";
-    case "Dotted":
-      return "2,5";
     default:
       return undefined;
   }
@@ -150,15 +117,7 @@ export class ConnectorWidget extends Widget {
     .buttonGroup()
     .noLabel();
 
-  lineStyle = new SelectProperty<LineStyle>(
-    this,
-    "lineStyle",
-    "Line Style",
-    () => LINE_STYLE_OPTIONS,
-    "Normal"
-  )
-    .buttonGroup()
-    .noLabel();
+  lineStyle = lineStyleProperty(this, "lineStyle");
 
   orthogonalRouting = new CheckboxProperty(
     this,
@@ -246,7 +205,9 @@ export class ConnectorWidget extends Widget {
           const targetMulti = this.targetMultiplicity.get();
           const sourceMarkerType = this.sourceMarkerType.get();
           const targetMarkerType = this.targetMarkerType.get();
-          const lineDashArray = getDashArray(this.lineStyle.get() || "Normal");
+          const lineDashArray = getLineDashArray(
+            this.lineStyle.get() || "Normal"
+          );
           const routePoints = this.routePointsMemo.value;
 
           // Find the center by segment length

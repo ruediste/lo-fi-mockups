@@ -4,6 +4,7 @@ import {
 } from "../model/createPageItem";
 import { Page } from "../model/Page";
 import { PageItem, PageItemData, PageItemsArgs } from "../model/PageItem";
+import { BoxWidget } from "./BoxWidget";
 import { BreadcrumbWidget } from "./BreadcrumbWidget";
 import { BrowserWidget } from "./BrowserWidget";
 import { ButtonToggleWidget } from "./ButtonToggleWidget";
@@ -99,6 +100,7 @@ function register(
 register("list", ListWidget);
 register("tabs", TabsWidget);
 register("button", ButtonWidget);
+register("box", BoxWidget);
 register("title", TitleWidget);
 register("label", LabelWidget);
 register("textInput", TextInputWidget);
