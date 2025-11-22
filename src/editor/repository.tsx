@@ -80,11 +80,16 @@ export class Repository {
     return (await db.get("project", "default")) ?? Repository.emptyData();
   }
 
-  async loadZip(data: Blob) {
+  async loadZip(data: Blob, pageNr?: number) {
     const zip = await JSZip.loadAsync(data, {});
     this.projectData = JSON.parse(
       await zip.file("project.json")!.async("string")
     );
+    if (pageNr !== undefined) {
+      if (pageNr < this.projectData.pages.length) {
+        this.projectData.currentPageId = this.projectData.pages[pageNr].id;
+      }
+    }
     this.onChanged.notify();
   }
 

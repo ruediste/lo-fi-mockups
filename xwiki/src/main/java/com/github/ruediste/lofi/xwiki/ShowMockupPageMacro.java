@@ -87,11 +87,11 @@ public class ShowMockupPageMacro extends AbstractMacro<ShowMockupPageMacroParame
             List<Block> wordBlockAsList = List.of(new RawBlock(
                     "<div class=\"include-lo-fi-mockup-page\"><div class=\"actions\">"
 
-                            + "<a href=\"" + service.getMockupPlayUrl(attachment) + "\" >"
+                            + "<a href=\"" + service.getMockupPlayUrl(attachment, parameters.getPageNr() - 1) + "\" >"
                             + iconManager.renderHTML("play")
                             + "</a>"
 
-                            + "<a href=\"" + service.getMockupEditUrl(attachment) + "\" >"
+                            + "<a href=\"" + service.getMockupEditUrl(attachment, parameters.getPageNr() - 1) + "\" >"
                             + iconManager.renderHTML("edit")
                             + "</a>"
                             + "</div> <img src=\""

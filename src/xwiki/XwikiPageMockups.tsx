@@ -163,9 +163,11 @@ export function XwikiPageMockupsIndex({ page }: { page: string }) {
 function OpenAttachment({
   page,
   attachment,
+  pageNr,
 }: {
   attachment: string;
   page: string;
+  pageNr?: number;
 }) {
   const state = useEditorState();
   const data = useLoader(async () => {
@@ -179,7 +181,7 @@ function OpenAttachment({
       repo.clear();
       return true;
     } else if (response.ok) {
-      await repo.loadZip(await response.blob());
+      await repo.loadZip(await response.blob(), pageNr);
       return true;
     }
     return false;
@@ -202,12 +204,15 @@ export function XwikiPageMockups() {
   const [searchParams, setSearchParams] = useSearchParams();
   const attachment = searchParams.get("attachment");
   const page = searchParams.get("page");
+  const pageNr = searchParams.get("pageNr");
 
   if (page == null) {
     return <>No Page Specified</>;
   }
   return attachment ? (
-    <OpenAttachment {...{ attachment, page }} />
+    <OpenAttachment
+      {...{ attachment, page, pageNr: pageNr ? parseInt(pageNr) : undefined }}
+    />
   ) : (
     <XwikiPageMockupsIndex {...{ page: page! }} />
   );

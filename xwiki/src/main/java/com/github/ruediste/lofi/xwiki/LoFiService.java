@@ -10,9 +10,9 @@ public interface LoFiService {
 
     String getMockupManagementUrl();
 
-    String getMockupEditUrl(String attachment);
+    String getMockupEditUrl(String attachment, int pageNr);
 
-    String getMockupPlayUrl(String attachment);
+    String getMockupPlayUrl(String attachment, int pageNr);
 
     String getMockupManagementUrl(DocumentReference document);
 

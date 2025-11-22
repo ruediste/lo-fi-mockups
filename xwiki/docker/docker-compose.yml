@@ -14,6 +14,7 @@ services:
     volumes:
       - ./xwiki-data:/usr/local/xwiki
       - ./xwiki.properties:/usr/local/tomcat/webapps/ROOT/WEB-INF/xwiki.properties
+      - ./xwiki.cfg:/usr/local/tomcat/webapps/ROOT/WEB-INF/xwiki.cfg
       - ${HOME}/.m2/repository:/repository
       - ./logback.xml:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/logback.xml
 
