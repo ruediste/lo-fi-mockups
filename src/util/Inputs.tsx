@@ -102,9 +102,9 @@ export function ThreeDotMenu({
             key={idx}
             {...("href" in item ? { href: item.href, target: "_blank" } : {})}
             onClick={(e) => {
-              e.stopPropagation();
-              if (item.checked === undefined && "onClick" in item)
+              if (item.checked === undefined && "onClick" in item) {
                 item.onClick();
+              }
             }}
           >
             {item.checked !== undefined ? (

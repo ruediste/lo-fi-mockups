@@ -93,17 +93,22 @@ export class Repository {
     this.onChanged.notify();
   }
 
-  async createZip() {
+  async createZip(
+    includeImages: boolean,
+    progress?: (processed: number, total: number) => void
+  ) {
     const zip = new JSZip();
     zip.file("project.json", JSON.stringify(this.projectData));
     zip.file("version.txt", "1");
-
-    await this.generatePageImages(async ({ element, pageNr }) => {
-      const dataUrl = await htmlToImage.toPng((await element(1))[0]);
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
-      zip.file("pages/" + pageNr + ".png", blob);
-    });
+    progress?.(0, this.projectData.pages.length);
+    if (includeImages)
+      await this.generatePageImages(async ({ element, pageNr }) => {
+        const dataUrl = await htmlToImage.toPng((await element(1))[0]);
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        zip.file("pages/" + pageNr + ".png", blob);
+        progress?.(pageNr + 1, this.projectData.pages.length);
+      });
 
     return await zip.generateAsync({ type: "blob" });
   }
@@ -193,7 +198,7 @@ export class Repository {
     }
   }
 
-  async savePdf() {
+  async savePdf(progress?: (processed: number, total: number) => void) {
     const pageWidth = 297;
     const pageHeight = 210;
     const doc = new jsPDF({
@@ -214,6 +219,11 @@ export class Repository {
         .map((p, idx) => [p.id, idx + 1])
     );
     let firstPage = true;
+    let processedPages = 0;
+    const totalPages = this.projectData.pages.filter(
+      (p) => !masterPages.has(p.id)
+    ).length;
+    progress?.(0, totalPages);
     await this.generatePageImages(
       async ({ element, box, pageName, pageData }) => {
         if (masterPages.has(pageData.id)) return;
@@ -257,6 +267,8 @@ export class Repository {
               }
             );
         });
+        processedPages++;
+        progress?.(processedPages, totalPages);
       }
     );
 

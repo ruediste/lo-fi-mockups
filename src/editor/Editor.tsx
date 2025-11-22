@@ -413,6 +413,14 @@ export function Editor({ downloadName }: { downloadName?: string }) {
 
   const dockLayout = useRef<DockLayout | null>(null);
 
+  const [zipProgress, setZipProgress] = useState<
+    { processed: number; total: number } | undefined
+  >(undefined);
+
+  const [pdfProgress, setPdfProgress] = useState<
+    { processed: number; total: number } | undefined
+  >(undefined);
+
   return (
     <div
       style={{
@@ -437,16 +445,34 @@ export function Editor({ downloadName }: { downloadName?: string }) {
           <Button as="a" {...play}>
             Play
           </Button>
-          <Button
-            onClick={async () => {
-              saveAs(
-                await state.repository.createZip(),
-                downloadName ?? "project.lofi"
-              );
-            }}
-          >
-            Download
-          </Button>
+          {pdfProgress && (
+            <span>
+              Creating PDF: {pdfProgress.processed}/{pdfProgress.total}
+            </span>
+          )}
+          {zipProgress && (
+            <span>
+              Creating Download: {zipProgress.processed}/{zipProgress.total}
+            </span>
+          )}
+          {!zipProgress && (
+            <Button
+              onClick={async () => {
+                saveAs(
+                  await state.repository.createZip(
+                    false,
+                    (processed, total) => {
+                      setZipProgress({ processed, total });
+                    }
+                  ),
+                  downloadName ?? "project.lofi"
+                );
+                setZipProgress(undefined);
+              }}
+            >
+              Download
+            </Button>
+          )}
           <Dropzone
             onDropAccepted={async (acceptedFiles) => {
               if (acceptedFiles.length < 1) {
@@ -491,9 +517,15 @@ export function Editor({ downloadName }: { downloadName?: string }) {
           <ThreeDotMenu
             items={[
               {
-                label: "Export PDF",
+                label: pdfProgress
+                  ? `Creating PDF: ${pdfProgress.processed}/${pdfProgress.total}`
+                  : "Export PDF",
                 onClick: async () => {
-                  await state.repository.savePdf();
+                  if (pdfProgress || zipProgress) return;
+                  await state.repository.savePdf((processed, total) => {
+                    setPdfProgress({ processed, total });
+                  });
+                  setPdfProgress(undefined);
                 },
               },
               {
