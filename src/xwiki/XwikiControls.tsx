@@ -4,13 +4,13 @@ import { Button } from "react-bootstrap";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "react-toastify";
-import { xwiki } from "./xwikiUtils";
+import { saveLoFiIdentification, xwiki } from "./xwikiUtils";
 
 export function XwikiControls() {
   const [searchParams, setSearchParams] = useSearchParams();
   const state = useEditorState();
-  const attachment = searchParams.get("attachment");
-  const page = searchParams.get("page");
+  const attachment = searchParams.get("attachment")!;
+  const page = searchParams.get("page")!;
   const [saveProgress, setSaveProgress] = useState<
     { processed: number; total: number } | undefined
   >(undefined);
@@ -29,6 +29,7 @@ export function XwikiControls() {
           method: "PUT",
         })
       );
+      saveLoFiIdentification(page, attachment);
       setSaveProgress(undefined);
       toast.success("Project saved to XWiki");
     } catch (e) {

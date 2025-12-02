@@ -15,7 +15,12 @@ import { useSearchParams } from "react-router";
 import { confirm } from "../util/confirm";
 import { fetchData, fetchDataRaw, useLoader } from "../util/fetchData";
 import { WithLoader, WithMultiData } from "../util/UseData";
-import { xwiki } from "./xwikiUtils";
+import {
+  getSavedLoFiIdentification,
+  saveLoFiIdentification,
+  toXwikiLoFiIdentification,
+  xwiki,
+} from "./xwikiUtils";
 
 // http://localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.23-SNAPSHOT/index.html?page=wikis%2Fxwiki%2Fspaces%2Ftest2%2Fspaces%2FLoFiTest%2Fpages%2FWebHome
 // http: //localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.1-SNAPSHOT/index.html
@@ -172,19 +177,25 @@ function OpenAttachment({
   const state = useEditorState();
   const data = useLoader(async () => {
     const response = await fetchDataRaw(
-      xwiki({
-        url: page + "/attachments/" + attachment,
-      })
+      xwiki({ url: page + "/attachments/" + attachment })
     );
     const repo = state.repository;
     if (response.status == 404) {
       repo.clear();
       return true;
     } else if (response.ok) {
-      await repo.loadZip(await response.blob(), true, pageNr);
+      const savedIdentification = getSavedLoFiIdentification();
+      const currentIdentification = toXwikiLoFiIdentification(page, attachment);
+
+      await repo.loadZip(
+        await response.blob(),
+        savedIdentification === currentIdentification,
+        pageNr
+      );
+      saveLoFiIdentification(page, attachment);
       return true;
     } else return false;
-  }, []);
+  }, [page, attachment]);
 
   return (
     <WithLoader data={data}>
