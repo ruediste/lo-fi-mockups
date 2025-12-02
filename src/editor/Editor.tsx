@@ -458,6 +458,8 @@ export function Editor({ downloadName }: { downloadName?: string }) {
           {!zipProgress && (
             <Button
               onClick={async () => {
+                state.repository.projectData.dataVersion++;
+                state.project.onDataChanged();
                 saveAs(
                   await state.repository.createZip(
                     false,
@@ -487,7 +489,7 @@ export function Editor({ downloadName }: { downloadName?: string }) {
                 return;
               }
               try {
-                await state.repository.loadZip(acceptedFiles[0]);
+                await state.repository.loadZip(acceptedFiles[0], false);
               } catch (e) {
                 console.log(e);
                 toast.error("Loading " + acceptedFiles[0].name + " failed");

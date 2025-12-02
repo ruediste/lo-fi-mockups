@@ -16,6 +16,13 @@ import { createRoot } from "react-dom/client";
 import { ModelEvent } from "../model/ModelEvent";
 import { globalSvgContent, IRectangle } from "../widgets/Widget";
 
+const migrators: ((data: any) => void)[] = [
+  // add data version
+  (data) => {
+    data.dataVersion = 0;
+  },
+];
+
 interface MyDB extends DBSchema {
   project: {
     key: string;
@@ -48,6 +55,8 @@ export class Repository {
 
   private static emptyData(): ProjectData {
     return {
+      schemaVersion: migrators.length,
+      dataVersion: 0,
       nextId: 2,
       currentPageId: 1,
       pages: [
@@ -80,11 +89,34 @@ export class Repository {
     return (await db.get("project", "default")) ?? Repository.emptyData();
   }
 
-  async loadZip(data: Blob, pageNr?: number) {
+  async loadZip(
+    data: Blob,
+    skipIfDataVersionMatches: boolean,
+    pageNr?: number
+  ) {
     const zip = await JSZip.loadAsync(data, {});
-    this.projectData = JSON.parse(
+    const loadedData: ProjectData = JSON.parse(
       await zip.file("project.json")!.async("string")
     );
+
+    // apply migrators
+    for (
+      let schemaVersion = loadedData.schemaVersion ?? 0; // version 0 did not yet have the schemaVersion field
+      schemaVersion < migrators.length;
+      schemaVersion++
+    ) {
+      migrators[schemaVersion](loadedData);
+    }
+
+    if (
+      skipIfDataVersionMatches &&
+      loadedData.dataVersion == this.projectData.dataVersion
+    )
+      return;
+
+    loadedData.schemaVersion = migrators.length;
+
+    this.projectData = loadedData;
     if (pageNr !== undefined) {
       if (pageNr < this.projectData.pages.length) {
         this.projectData.currentPageId = this.projectData.pages[pageNr].id;

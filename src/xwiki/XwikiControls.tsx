@@ -16,6 +16,8 @@ export function XwikiControls() {
   >(undefined);
 
   const save = async () => {
+    state.repository.projectData.dataVersion++;
+    state.project.onDataChanged();
     const zip = await state.repository.createZip(true, (processed, total) => {
       setSaveProgress({ processed, total });
     });

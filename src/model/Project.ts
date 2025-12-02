@@ -6,6 +6,12 @@ import { Page, PageData } from "./Page";
 import { PageItemData } from "./PageItem";
 
 export interface ProjectData {
+  /// version of the data schema. Used for data migrations
+  schemaVersion: number;
+
+  /// incremented whenever the project is saved
+  dataVersion: number;
+
   nextId: number;
   pages: PageData[];
   currentPageId?: number;

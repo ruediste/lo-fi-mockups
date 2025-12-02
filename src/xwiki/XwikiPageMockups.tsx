@@ -181,10 +181,9 @@ function OpenAttachment({
       repo.clear();
       return true;
     } else if (response.ok) {
-      await repo.loadZip(await response.blob(), pageNr);
+      await repo.loadZip(await response.blob(), true, pageNr);
       return true;
-    }
-    return false;
+    } else return false;
   }, []);
 
   return (
@@ -201,7 +200,7 @@ function OpenAttachment({
 }
 
 export function XwikiPageMockups() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const attachment = searchParams.get("attachment");
   const page = searchParams.get("page");
   const pageNr = searchParams.get("pageNr");

@@ -98,6 +98,8 @@ export const Palette = memo(function Palette() {
     );
 
     const projectData: ProjectData = {
+      dataVersion: 0,
+      schemaVersion: 0,
       currentPageId: nextId,
       pages: [
         {

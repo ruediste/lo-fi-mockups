@@ -6,7 +6,7 @@
 
   <groupId>com.github.ruediste.lo-fi-mockups</groupId>
   <artifactId>lo-fi-mockups-xwiki</artifactId>
-  <version>1.0.65-SNAPSHOT</version>
+  <version>1.0.68-SNAPSHOT</version>
 
   <name>LoFi Mockup</name>
   <description>Integrate LoFi Mockup with XWiki</description>
@@ -29,6 +29,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
+        <version>3.6.2</version>
         <executions>
           <execution>
             <id>my-exec</id>
@@ -51,6 +52,7 @@
 
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
+        <version>3.4.0</version>
         <executions>
           <execution>
             <id>copy-webjar-resources</id>
