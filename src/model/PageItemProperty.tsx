@@ -261,6 +261,8 @@ export class ObjectProperty<
 
 export class StringProperty extends PageItemPropertyBase<string> {
   isTextArea = false;
+  isMonoFont = false;
+  isAutoIndent = false;
   isAcceptTabs = false;
   constructor(
     item: PageItem,
@@ -282,10 +284,14 @@ export class StringProperty extends PageItemPropertyBase<string> {
             onChange={(e) => this.set(e.target.value)}
             as={this.isTextArea ? "textarea" : undefined}
             rows={this._rows}
+            style={{
+              fontFamily: this.isMonoFont ? "monospace" : undefined,
+              paddingLeft: "4px",
+            }}
             onKeyDown={
-              this.isAcceptTabs
+              this.isAcceptTabs || this.isAutoIndent
                 ? (e) => {
-                    if (e.key == "Tab") {
+                    if (this.isAcceptTabs && e.key == "Tab") {
                       e.preventDefault();
                       const target = e.target as HTMLTextAreaElement;
                       var start = target.selectionStart;
@@ -296,9 +302,40 @@ export class StringProperty extends PageItemPropertyBase<string> {
                         target.value.substring(0, start) +
                         "\t" +
                         target.value.substring(end);
+                      this.set(target.value);
 
                       // put caret at right position again
                       target.selectionStart = target.selectionEnd = start + 1;
+                    }
+                    if (this.isAutoIndent && e.key == "Enter") {
+                      e.preventDefault();
+                      const target = e.target as HTMLTextAreaElement;
+                      var start = target.selectionStart;
+                      var end = target.selectionEnd;
+
+                      // find indentation of current line
+                      const valueUpToCaret = target.value.substring(0, start);
+                      const lastLineBreak = valueUpToCaret.lastIndexOf("\n");
+                      const currentLine =
+                        lastLineBreak === -1
+                          ? valueUpToCaret
+                          : valueUpToCaret.substring(lastLineBreak + 1);
+                      const indentationMatch = currentLine.match(/^\s*/);
+                      const indentation = indentationMatch
+                        ? indentationMatch[0]
+                        : "";
+
+                      // set textarea value to: text before caret + newline + indentation + text after caret
+                      target.value =
+                        target.value.substring(0, start) +
+                        "\n" +
+                        indentation +
+                        target.value.substring(end);
+                      this.set(target.value);
+
+                      // put caret at right position again
+                      target.selectionStart = target.selectionEnd =
+                        start + 1 + indentation.length;
                     }
                   }
                 : undefined
@@ -313,6 +350,16 @@ export class StringProperty extends PageItemPropertyBase<string> {
   textArea(rows?: number) {
     this.isTextArea = true;
     if (rows !== undefined) this._rows = rows;
+    return this;
+  }
+
+  monoFont() {
+    this.isMonoFont = true;
+    return this;
+  }
+
+  autoIndent() {
+    this.isAutoIndent = true;
     return this;
   }
 

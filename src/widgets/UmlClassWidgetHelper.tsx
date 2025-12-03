@@ -10,12 +10,13 @@ export function parseUmlClassWidgetContents(text: string): React.ReactNode {
       result.push(<hr key={idx} />);
       return;
     }
+    const nonEmptyLine = line === "" ? " " : line;
     if (seenSeparator) {
-      result.push(<div key={idx}>{line}</div>);
+      result.push(<pre key={idx}>{nonEmptyLine}</pre>);
     } else
       result.push(
         <div className="classHeader" key={idx}>
-          {line}
+          <pre>{nonEmptyLine}</pre>
         </div>
       );
   });

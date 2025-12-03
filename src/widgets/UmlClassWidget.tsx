@@ -22,6 +22,8 @@ id: long
 `
   )
     .textArea(10)
+    .monoFont()
+    .autoIndent()
     .acceptTabs();
 
   contents = new MemoValue(
@@ -49,13 +51,13 @@ id: long
             css={{
               whiteSpace: "nowrap",
               overflow: "hidden",
-              "&>div": {
+              pre: {
+                margin: 0,
                 marginLeft: 4,
               },
               ".classHeader": { display: "flex", justifyContent: "center" },
               hr: { margin: 0 },
             }}
-            className="umlClassWidget"
             {...{ xmlns: "http://www.w3.org/1999/xhtml" }}
           >
             {contents}
