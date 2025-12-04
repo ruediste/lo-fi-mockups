@@ -195,7 +195,7 @@ function OpenAttachment({
       saveLoFiIdentification(page, attachment);
       return true;
     } else return false;
-  }, [page, attachment]);
+  }, [page, attachment, pageNr]);
 
   return (
     <WithLoader data={data}>

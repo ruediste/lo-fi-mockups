@@ -27,6 +27,7 @@ import { IRectangle, IVec2d } from "../widgets/Widget";
 import { dragPositionRectAttrs } from "../widgets/widgetUtils";
 import { PageItemPropertyBase } from "./PageItemProperty";
 import { SnapIndex } from "./SnapIndex";
+import { snapConfiguration } from "@/widgets/widgetTheme";
 
 export function MoveWidgetBox(
   props: { projection: CanvasProjection } & JSX.IntrinsicElements["rect"]
@@ -314,7 +315,8 @@ export function DraggableSnapCornerBox({
 
 export function DraggableConnectorSnapBox({
   projection,
-  position: position,
+  position,
+  otherPosition,
   select,
   item,
   cursor,
@@ -323,6 +325,7 @@ export function DraggableConnectorSnapBox({
 }: {
   projection: CanvasProjection;
   position: IVec2d;
+  otherPosition: IVec2d;
   select?: (toggle: boolean) => void;
   item: PageItem;
   cursor?: CursorValue;
@@ -384,7 +387,31 @@ export function DraggableConnectorSnapBox({
                 } satisfies Partial<SnapReferencesArgs>,
                 diff.sub(state.appliedOffset)
               );
+
               snappedOffset = offset.add(snapResult.offset);
+
+              // snap to the other connector position
+              const toOther = Vec2d.from(otherPosition)
+                .sub(state.startPosition)
+                .sub(snappedOffset);
+
+              const snapThreshold =
+                snapConfiguration.snapRange / projection.scale;
+
+              if (Math.abs(toOther.x) < snapThreshold) {
+                snappedOffset = snappedOffset.add(new Vec2d(toOther.x, 0));
+                snapResult.offset = snapResult.offset.add(
+                  new Vec2d(toOther.x, 0)
+                );
+              }
+
+              if (Math.abs(toOther.y) < snapThreshold) {
+                snappedOffset = snappedOffset.add(new Vec2d(0, toOther.y));
+                snapResult.offset = snapResult.offset.add(
+                  new Vec2d(0, toOther.y)
+                );
+              }
+
               setSnapResult(snapResult);
               state.appliedOffset = snapResult.offset;
             }

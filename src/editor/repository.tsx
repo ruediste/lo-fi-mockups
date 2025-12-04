@@ -107,16 +107,14 @@ export class Repository {
     ) {
       migrators[schemaVersion](loadedData);
     }
-
-    if (
-      skipIfDataVersionMatches &&
-      loadedData.dataVersion == this.projectData.dataVersion
-    )
-      return;
-
     loadedData.schemaVersion = migrators.length;
 
-    this.projectData = loadedData;
+    if (
+      !skipIfDataVersionMatches ||
+      loadedData.dataVersion != this.projectData.dataVersion
+    )
+      this.projectData = loadedData;
+
     if (pageNr !== undefined) {
       if (pageNr < this.projectData.pages.length) {
         this.projectData.currentPageId = this.projectData.pages[pageNr].id;

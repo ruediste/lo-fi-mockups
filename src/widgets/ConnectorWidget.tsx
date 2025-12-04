@@ -484,7 +484,6 @@ class ConnectorInteraction extends PageItemInteraction {
           useRerenderOnEvent(this.item_.routePointsMemo.invalidated);
           const { source, target } = this.item_;
           const selection = this.item.page.selection;
-          const handleSize = projection.lengthToWorld(12);
 
           const visible = selection.has(this.item);
 
@@ -514,6 +513,7 @@ class ConnectorInteraction extends PageItemInteraction {
                 <>
                   <DraggableConnectorSnapBox
                     position={source.position}
+                    otherPosition={target.position}
                     item={this.item}
                     visible={selection.has(this.item)}
                     update={(start, delta, result) => {
@@ -530,6 +530,7 @@ class ConnectorInteraction extends PageItemInteraction {
                   />
                   <DraggableConnectorSnapBox
                     position={target.position}
+                    otherPosition={source.position}
                     item={this.item}
                     visible={selection.has(this.item)}
                     update={(start, delta, result) => {
