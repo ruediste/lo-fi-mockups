@@ -388,30 +388,33 @@ export function DraggableConnectorSnapBox({
                 diff.sub(state.appliedOffset)
               );
 
-              snappedOffset = offset.add(snapResult.offset);
-
               // snap to the other connector position
               const toOther = Vec2d.from(otherPosition)
                 .sub(state.startPosition)
-                .sub(snappedOffset);
+                .sub(offset);
 
               const snapThreshold =
                 snapConfiguration.snapRange / projection.scale;
 
-              if (Math.abs(toOther.x) < snapThreshold) {
-                snappedOffset = snappedOffset.add(new Vec2d(toOther.x, 0));
-                snapResult.offset = snapResult.offset.add(
-                  new Vec2d(toOther.x, 0)
-                );
+              if (
+                Math.abs(toOther.x) < snapThreshold &&
+                (!snapResult.v ||
+                  Math.abs(toOther.x) < Math.abs(snapResult.offset.x))
+              ) {
+                snapResult.offset = new Vec2d(toOther.x, snapResult.offset.y);
+                snapResult.v = undefined;
               }
 
-              if (Math.abs(toOther.y) < snapThreshold) {
-                snappedOffset = snappedOffset.add(new Vec2d(0, toOther.y));
-                snapResult.offset = snapResult.offset.add(
-                  new Vec2d(0, toOther.y)
-                );
+              if (
+                Math.abs(toOther.y) < snapThreshold &&
+                (!snapResult.h ||
+                  Math.abs(toOther.y) < Math.abs(snapResult.offset.y))
+              ) {
+                snapResult.offset = new Vec2d(snapResult.offset.x, toOther.y);
+                snapResult.h = undefined;
               }
 
+              snappedOffset = offset.add(snapResult.offset);
               setSnapResult(snapResult);
               state.appliedOffset = snapResult.offset;
             }
