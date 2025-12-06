@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "preview": "vite build && vite preview",
     "test": "jest --watch",
-    "build-webjar": "tsc -b && rm -rf dist && vite build --base=./ && rm -rf xwiki/src/main/webjar && mkdir -p xwiki/src/main/webjar && cp -r dist/* xwiki/src/main/webjar/"
+    "build-webjar": "tsc -b && vite build --base=./ && rm -rf xwiki/src/main/webjar && mkdir -p xwiki/src/main/webjar && cp -r dist/* xwiki/src/main/webjar/"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
