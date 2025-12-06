@@ -22,7 +22,7 @@ export abstract class PageItemInteraction {
     props: RenderInteractionArgs
   ): React.ReactNode;
 
-  abstract moveBy(delta: IVec2d): void;
+  abstract moveBy(delta: IVec2d, allItemsBeingMoved?: Set<PageItem>): void;
 
   abstract setPosition(pos: IVec2d): void;
 }
@@ -58,6 +58,7 @@ export class BoxWidgetInteraction extends PageItemInteraction {
               toggle ? selection.toggle(this.item) : Selection.of(this.item)
             ),
           items: () => this.item.page.selection.items,
+          moveItems: (by) => this.item.page.selection.moveBy(by),
           onDuplicate: () => this.item.page.duplicateItem(this.item),
         }}
       />
@@ -147,6 +148,7 @@ export class PositionWidgetInteraction extends PageItemInteraction {
               toggle ? selection.toggle(this.item) : Selection.of(this.item)
             ),
           items: () => this.item.page.selection.items,
+          moveItems: (by) => this.item.page.selection.moveBy(by),
           onDuplicate: () => this.item.page.duplicateItem(this.item),
         }}
       />

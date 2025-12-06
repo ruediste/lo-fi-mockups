@@ -182,6 +182,7 @@ export function DraggableSnapBox({
   page,
   select,
   items,
+  moveItems,
   onDuplicate,
 }: {
   projection: CanvasProjection;
@@ -190,6 +191,7 @@ export function DraggableSnapBox({
   page: Page;
   select?: (toggle: boolean) => void;
   items: () => Set<PageItem>;
+  moveItems: (by: Vec2d) => void;
   onDuplicate: () => void;
 }): JSX.Element {
   const [snapResult, setSnapResult] = useState<SnapResult>();
@@ -237,7 +239,7 @@ export function DraggableSnapBox({
             const move = snappedOffset.sub(state.lastSnappedOffset);
             state.lastSnappedOffset = snappedOffset;
 
-            items().forEach((i) => i.interaction.moveBy(move));
+            moveItems(move);
             page.onItemPositionChange.notify();
           },
           onDragEnd: () => setSnapResult(undefined),
@@ -728,6 +730,7 @@ export function DraggableSnapResizeBox({
           page: item.page,
           select,
           items: () => toSet(item),
+          moveItems: (by) => item.interaction.moveBy(by),
           onDuplicate,
         }}
       />

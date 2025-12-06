@@ -553,16 +553,25 @@ class ConnectorInteraction extends PageItemInteraction {
       </WithHooks>
     );
   }
+
   renderMasterInteraction(props: RenderInteractionArgs): React.ReactNode {
     return <></>;
   }
-  moveBy(delta: IVec2d): void {
-    this.item_.source.moveBy(delta);
-    this.item_.target.moveBy(delta);
+
+  override moveBy(delta: IVec2d): void {
+    // if the source respectively the target are connected to an item, do not move it directly,
+    // as it will be moved along  with the connected item
+    const source = this.item_.source;
+    if (source.connectedItem === undefined) source.moveBy(delta);
+
+    const target = this.item_.target;
+    if (target.connectedItem === undefined) target.moveBy(delta);
+
     this.item.onChange.notify();
     this.item.onDataChanged();
     this.item.page.onItemPositionChange.notify();
   }
+
   setPosition(pos: IVec2d): void {
     (this.item_.data_.source.position = { x: pos.x + 10, y: pos.y + 10 }),
       (this.item_.data_.target.position = { x: pos.x + 90, y: pos.y + 10 });

@@ -1,3 +1,4 @@
+import { Vec2d } from "@/util/Vec2d";
 import { PageItem } from "../model/PageItem";
 import { toSet } from "../util/utils";
 
@@ -37,6 +38,10 @@ export class Selection {
 
   all(): PageItem[] {
     return [...this.items];
+  }
+
+  moveBy(by: Vec2d) {
+    this.items.forEach((i) => i.interaction.moveBy(by, this.items));
   }
 
   get size() {

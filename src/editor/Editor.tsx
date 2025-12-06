@@ -88,6 +88,7 @@ function MultiItemSelectionBox({
         {...{
           box: drawBox,
           items: () => page.selection.items,
+          moveItems: (by) => page.selection.moveBy(by),
           projection,
           visible: true,
           page,
