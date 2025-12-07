@@ -29,7 +29,7 @@ export function dragPositionRectAttrs(
 export function triangleDown(x: number, y: number) {
   return (
     <g transform={`translate(${x} ${y - 8})`}>
-      <path fill="#c9c9c9" strokeWidth="0" d="M0,0 L4.75,6.2,L9.5,0 z"></path>
+      <path fill="#aba9a9ff" strokeWidth="0" d="M0,0 L4.75,6.2 L9.5,0 z"></path>
     </g>
   );
 }

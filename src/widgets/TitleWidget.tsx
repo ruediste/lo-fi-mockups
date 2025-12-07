@@ -1,5 +1,9 @@
-import { StringProperty } from "../model/PageItemProperty";
+import {
+  PageReferenceProperty,
+  StringProperty,
+} from "../model/PageItemProperty";
 import { IRectangle, PositionWidget } from "./Widget";
+import { PageLink } from "./WidgetHelpers";
 import { widgetRectAttrs, widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
 
@@ -8,6 +12,7 @@ export class TitleWidget extends PositionWidget {
   label = "Title";
 
   text = new StringProperty(this, "text", "Text", "Title");
+  link = new PageReferenceProperty(this, "link", "Link");
 
   private get fontSize() {
     return widgetTheme.fontSize * 2;
@@ -37,6 +42,7 @@ export class TitleWidget extends PositionWidget {
         {text.length == 0 && (
           <rect {...widgetRectAttrs} {...box} fill="transparent" />
         )}
+        <PageLink {...box} pageId={this.link.get().pageId} />
       </>
     );
   }

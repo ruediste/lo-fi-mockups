@@ -3,12 +3,19 @@ import {
   BackgroundColorProperty,
   getLineDashArray,
   lineStyleProperty,
+  PageReferenceProperty,
   SelectProperty,
   SelectPropertyOption,
   StringProperty,
 } from "../model/PageItemProperty";
 import { BoxWidget as BaseBoxWidget } from "./Widget";
-import { backgroundPaletteMap, widgetTheme } from "./widgetTheme";
+import {
+  backgroundPaletteMap,
+  snapConfiguration,
+  widgetTheme,
+} from "./widgetTheme";
+import { PageLink } from "./WidgetHelpers";
+import { SnapBoxesArgs, SnapReferencesArgs } from "@/model/PageItem";
 
 type HorizontalAlignment = "Left" | "Center" | "Right";
 type VerticalAlignment = "Top" | "Middle" | "Bottom";
@@ -29,7 +36,7 @@ const VERTICAL_ALIGNMENT_OPTIONS: SelectPropertyOption<VerticalAlignment>[] = (
 export class BoxWidget extends BaseBoxWidget {
   label = "Box";
 
-  text = new StringProperty(this, "text", "Text", "").textArea();
+  text = new StringProperty(this, "text", "Text", "").textArea().autoIndent();
 
   backgroundColor = new BackgroundColorProperty(
     this,
@@ -59,6 +66,8 @@ export class BoxWidget extends BaseBoxWidget {
   )
     .buttonGroup()
     .noLabel();
+
+  link = new PageReferenceProperty(this, "link", "Link");
 
   override renderContent(): JSX.Element {
     const box = this.box;
@@ -127,6 +136,7 @@ export class BoxWidget extends BaseBoxWidget {
         />
         {text && (
           <text
+            css={{ whiteSpace: "pre" }}
             x={getTextX()}
             y={getStartY()}
             fontSize={fontSize}
@@ -139,13 +149,24 @@ export class BoxWidget extends BaseBoxWidget {
                 x={getTextX()}
                 dy={index === 0 ? 0 : fontSize + 2}
               >
-                {line}
+                {line === "" ? " " : line}
               </tspan>
             ))}
           </text>
         )}
+        <PageLink {...box} pageId={this.link.get().pageId} />
       </>
     );
+  }
+
+  override getSnapBoxes(args: SnapBoxesArgs): void {
+    super.getSnapBoxes(args);
+    args.addMarginBox(this.box, -snapConfiguration.snapMargin);
+  }
+
+  override getSnapReferences(args: SnapReferencesArgs): void {
+    super.getSnapReferences(args);
+    args.addMarginBox(this.box, -snapConfiguration.snapMargin);
   }
 
   override initializeAfterAdd() {

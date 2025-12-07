@@ -1,12 +1,14 @@
 # Low Fidelity Mockups
 
 Test it out at https://ruediste.github.io/lo-fi-mockups/
+Download the [Sample Project](doc/sample.lofi) and upload it in the app to see a sample mockup with various features. PDF export of the sample project: [sample.pdf](doc/sample.pdf)
 
-The goal of this project is to create a tool for low fidelity UI mockups. The focus is on quickly sketching a UI.
+The goal of this project is to create a tool for low fidelity UI mockups. The focus is on quickly sketching a UI. In addition, it allows the creation of some basic UML diagrams. The use of master pages reduces repetition and allows for consistent design across multiple pages. It runs completely in the browser.
 
-## Current Status
+![Screenshot](doc/screenshot.png)
 
-The project is ready for some beta testing. The basic features are implemented.
+Sample Diagram:
+![Diagram](doc/sample-diagram.png)
 
 ## Offline Installation
 
@@ -19,6 +21,8 @@ Alternatively, you can just add a bookmark. The application will launch happily 
 ### Keyboard Reference
 
 - While dragging, holding the ctrl-key disables snapping
+- Ctrl-click on an element to select multiple elements
+- Ctrl-drag to draw a selection rectangle
 - Hold shift to draw new connectors
 
 ### User Interface Overview
