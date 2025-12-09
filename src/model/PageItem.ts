@@ -93,16 +93,12 @@ export abstract class PageItem {
     return this.page.onDataChanged;
   }
 
-  cloneData(): PageItemData {
-    // serialization roundtrip to deep clone the data
-    return {
-      ...JSON.parse(JSON.stringify(this.data)),
-      id: this.nextId(),
-    };
-  }
-
   notifyChange() {
     this.onChange.notify();
+  }
+
+  mapDataBeforePaste(): PageItemData {
+    return this.data;
   }
 
   hasOverrideableProperties() {

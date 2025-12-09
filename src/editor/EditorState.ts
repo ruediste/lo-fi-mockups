@@ -5,6 +5,7 @@ import { useRerenderOnEvent } from "@/util/hooks";
 import { throttle } from "@/util/throttle";
 import { createContext, useContext } from "react";
 import { CanvasProjection } from "./Canvas";
+import { generateUUID } from "./generateUUID";
 
 export class EditorState {
   private save = throttle(async () => {

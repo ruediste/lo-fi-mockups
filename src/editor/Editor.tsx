@@ -1,5 +1,5 @@
 import { Selection } from "@/editor/Selection";
-import { Page } from "@/model/Page";
+import { ClipboardData, Page, PageData } from "@/model/Page";
 import {
   HorizontalSnapReference,
   PageItem,
@@ -421,6 +421,55 @@ export function Editor({ downloadName }: { downloadName?: string }) {
   const [pdfProgress, setPdfProgress] = useState<
     { processed: number; total: number } | undefined
   >(undefined);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "p" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        play.onClick(undefined!);
+      }
+    };
+    const handleCopy = (e: ClipboardEvent) => {
+      if (!document.activeElement?.classList.contains("canvas")) return;
+      const currentPage = state.project.currentPage;
+      if (!currentPage) return;
+      const selection = currentPage.selection;
+      if (selection && selection.size > 0) {
+        e.preventDefault();
+
+        const data = currentPage.copyItems(selection.all());
+
+        e.clipboardData?.setData("application/x-lofi-mockups-page-items", data);
+      }
+    };
+
+    const handlePaste = (e: ClipboardEvent) => {
+      if (!document.activeElement?.classList.contains("canvas")) return;
+      const dataStr = e.clipboardData?.getData(
+        "application/x-lofi-mockups-page-items"
+      );
+      if (dataStr) {
+        e.preventDefault();
+        try {
+          const currentPage = state.project.currentPage;
+          if (!currentPage) return;
+          currentPage.setSelection(
+            Selection.of(...currentPage.pasteItems(dataStr))
+          );
+        } catch (e) {
+          console.error("Error while handling paste", e);
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("paste", handlePaste);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("paste", handlePaste);
+    };
+  }, []);
 
   return (
     <div

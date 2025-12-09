@@ -21,6 +21,8 @@ export abstract class PageItemProperty {
   abstract render(): React.ReactNode;
   abstract shouldRender(): boolean;
 
+  initializeDataAfterCopy(mapId: (id: number) => number | undefined) {}
+
   protected notify() {
     this.item.onDataChanged();
     this.valueChanged.notify();
@@ -508,6 +510,13 @@ export class PageReferenceProperty extends PageItemPropertyBase<{
   }
 
   _canReferenceMasterPage = false;
+
+  override initializeDataAfterCopy(
+    mapId: (id: number) => number | undefined
+  ): void {
+    const data = super.get();
+    data.pageId = data.pageId === undefined ? undefined : mapId(data.pageId);
+  }
 
   render(): JSX.Element {
     return (

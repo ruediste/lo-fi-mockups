@@ -98,8 +98,6 @@ export class CanvasProjection {
   }
 }
 
-const scaleFactor = 1.1;
-
 export function Canvas({
   projection,
   children,
@@ -135,7 +133,7 @@ export function Canvas({
     <div
       className={classNames(className, "canvas")}
       ref={ref}
-      tabIndex={0}
+      tabIndex={-1}
       onKeyDown={(e) => {
         if (e.key === "Delete") {
           page.removeSelectedItems();
