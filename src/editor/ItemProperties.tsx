@@ -38,7 +38,8 @@ function SingleItemProperties({
             <IconButton
               onClick={() => {
                 const clone = item.page.duplicateItem(item);
-                project.currentPage?.setSelection(Selection.of(clone));
+                if (clone)
+                  project.currentPage?.setSelection(Selection.of(clone));
               }}
             >
               <Copy size={24} />
@@ -110,6 +111,16 @@ export function ItemProperties() {
             }}
           >
             <Trash size={24} />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              const copiedItems = project.currentPage?.duplicateItems(
+                selection.all()
+              );
+              project.currentPage?.setSelection(Selection.of(...copiedItems!));
+            }}
+          >
+            <Copy size={24} />
           </IconButton>
         </>
       )}

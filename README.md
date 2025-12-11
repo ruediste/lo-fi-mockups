@@ -1,20 +1,16 @@
 # Low Fidelity Mockups
 
+The goal of this project is to create a tool for low fidelity UI mockups. The focus is on quickly sketching a UI. In addition, it allows the creation of some basic UML diagrams. The use of master pages reduces repetition and allows for consistent design across multiple pages. It runs completely in the browser.
+
 Test it out at https://ruediste.github.io/lo-fi-mockups/
 Download the [Sample Project](doc/sample.lofi) and upload it in the app to see a sample mockup with various features. PDF export of the sample project: [sample.pdf](doc/sample.pdf)
 
-The goal of this project is to create a tool for low fidelity UI mockups. The focus is on quickly sketching a UI. In addition, it allows the creation of some basic UML diagrams. The use of master pages reduces repetition and allows for consistent design across multiple pages. It runs completely in the browser.
+## Screenshots
 
 ![Screenshot](doc/screenshot.png)
 
 Sample Diagram:
 ![Diagram](doc/sample-diagram.png)
-
-## Offline Installation
-
-The application is a PWA and can be installed locally. For Chrome/Edge simply open https://ruediste.github.io/lo-fi-mockups/ and click install in the address bar. For Firefox, you might need to install https://addons.mozilla.org/en-US/firefox/addon/pwas-for-firefox/
-
-Alternatively, you can just add a bookmark. The application will launch happily while you're offline.
 
 ## Manual
 
@@ -34,6 +30,12 @@ The user interface is divided into several key sections:
 - **Editor:** The area where you arrange and edit the UI elements to create your mockup.
 - **Properties Panel:** This panel displays and allows you to modify the properties of the currently selected UI element.
 - **Top Bar:** Contains buttons for actions like "Play", "Download", and "Upload", along with the application title "LoFi Mockup".
+
+### Offline Usage and Installation
+
+The application is a PWA and can be installed locally. For Chrome/Edge simply open https://ruediste.github.io/lo-fi-mockups/ and click install in the address bar. For Firefox, you might need to install https://addons.mozilla.org/en-US/firefox/addon/pwas-for-firefox/
+
+Alternatively, you can just add a bookmark. The application will launch happily while you're offline.
 
 ### Working with Pages
 

@@ -13,6 +13,7 @@ import {
 } from "./PageItem";
 import { Project } from "./Project";
 import { createPageItem } from "./createPageItem";
+import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
 
 export interface PageData {
   id: number;
@@ -22,6 +23,11 @@ export interface PageData {
   propertyValues: { [itemId: number]: { [propertyKey: string]: any } };
   overrideableProperties: { [itemId: number]: { [propertyId: string]: true } };
 }
+
+export type ClipboardData = {
+  sourceProjectId: string;
+  sourcePageId: number;
+} & Pick<PageData, "propertyValues" | "overrideableProperties" | "items">;
 
 export class Page {
   masterItems: PageItem[];
@@ -106,33 +112,98 @@ export class Page {
     return item;
   }
 
-  duplicateItem(item: PageItem) {
-    const cloneData = item.cloneData();
+  copyItems(items: PageItem[]): string {
+    const ownItemIds = new Set(this.ownItems.map((i) => i.id));
+    const itemIds = new Set(
+      items.map((i) => i.id).filter((id) => ownItemIds.has(id))
+    );
 
-    // serialization roundtrip to copy the property values
-    {
-      const value = this.data.propertyValues[item.id];
-      if (value !== undefined) {
-        const serialized = JSON.stringify(value);
-        try {
-          this.data.propertyValues[cloneData.id] = JSON.parse(serialized);
-        } catch (e) {
-          console.log("Error while deserializing", serialized);
-          throw e;
-        }
-      }
+    const propertyValues: ClipboardData["propertyValues"] = {};
+    const overrideableProperties: ClipboardData["overrideableProperties"] = {};
+
+    for (const itemId of itemIds) {
+      if (this.data.propertyValues[itemId] !== undefined)
+        propertyValues[itemId] = this.data.propertyValues[itemId];
+      if (this.data.overrideableProperties[itemId] !== undefined)
+        overrideableProperties[itemId] =
+          this.data.overrideableProperties[itemId];
     }
-    const clone = this.toPageItem(cloneData, false);
-    clone.initialize();
-    clone.initializeItemReferences();
-    clone.interaction.moveBy({ x: 20, y: 20 });
-    this.data.items.push(cloneData);
-    this.ownItems.push(clone);
-    this.allItems.set(clone.id, clone);
-    clone.initializeItemReferences();
+
+    const data = {
+      sourceProjectId: this.project.uniqueId,
+      sourcePageId: this.data.id,
+      propertyValues,
+      overrideableProperties,
+      items: this.ownItems
+        .filter((i) => itemIds.has(i.id))
+        .map((i) => i.mapDataBeforePaste()),
+    } satisfies ClipboardData;
+
+    return JSON.stringify(data, undefined, 2);
+  }
+
+  /// Paste the items in the clipboard data. The data must have already have gone through
+  /// a serialization/deserialization roundtrip.
+  pasteItems(dataStr: string) {
+    const data: ClipboardData = JSON.parse(dataStr);
+    const idMap = new Map(
+      data.items.map((item) => [item.id, this.project.nextId()])
+    );
+    const isFromSamePage =
+      data.sourceProjectId == this.project.uniqueId &&
+      data.sourcePageId == this.data.id;
+
+    const mapId = (id: number) =>
+      idMap.has(id) ? idMap.get(id) : isFromSamePage ? id : undefined;
+
+    const itemDataMap = new Map(
+      data.items.map((item) => [
+        item.id,
+        pageItemTypeRegistry.mapDataAfterPaste(item, mapId),
+      ])
+    );
+
+    const copiedItems: PageItem[] = [];
+    for (const originalData of data.items) {
+      const copiedData = itemDataMap.get(originalData.id)!;
+      this.data.propertyValues[copiedData.id] =
+        data.propertyValues[originalData.id];
+      this.data.overrideableProperties[copiedData.id] =
+        data.overrideableProperties[originalData.id];
+
+      const copy = this.toPageItem(copiedData, false);
+
+      copy.properties.forEach((property) => {
+        property.initializeDataAfterCopy(mapId);
+      });
+
+      copy.initialize();
+      this.data.items.push(copiedData);
+      this.ownItems.push(copy);
+      this.allItems.set(copy.id, copy);
+      copiedItems.push(copy);
+    }
+
+    for (const copiedItem of copiedItems) {
+      copiedItem.initializeItemReferences();
+    }
+
+    if (isFromSamePage)
+      copiedItems.forEach((copy) => copy.interaction.moveBy({ x: 20, y: 20 }));
+
     this.onDataChanged();
     this.onChange.notify();
-    return clone;
+    return copiedItems;
+  }
+
+  duplicateItem(item: PageItem) {
+    const copiedItems = this.duplicateItems([item]);
+    return copiedItems.length > 0 ? copiedItems[0] : undefined;
+  }
+
+  duplicateItems(items: PageItem[]) {
+    const clipboardData = this.copyItems(items);
+    return this.pasteItems(clipboardData);
   }
 
   removeItem(id: number) {

@@ -1,9 +1,9 @@
 import { Selection } from "@/editor/Selection";
-import { getOwnPropertyNames } from "@/util/utils";
 import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
 import { ModelEvent } from "./ModelEvent";
 import { Page, PageData } from "./Page";
 import { PageItemData } from "./PageItem";
+import { generateUUID } from "@/editor/generateUUID";
 
 export interface ProjectData {
   /// version of the data schema. Used for data migrations
@@ -18,6 +18,9 @@ export interface ProjectData {
 }
 
 export class Project {
+  // transient ID, to identify the project during Copy&Paste
+  public uniqueId = generateUUID();
+
   pageDataMap: { [id: number]: PageData } = {};
 
   /// raised when there are any changes to the page list or when the current page switches to a different page
@@ -51,34 +54,42 @@ export class Project {
     this.selectPage(page);
   }
 
-  duplicatePage(page: PageData) {
-    const idMap: Record<number, number> = Object.fromEntries(
-      page.items.map((item) => [item.id, this.data.nextId++])
+  duplicatePage(pageData: PageData) {
+    const page = new Page(pageData, this, this.onDataChanged);
+
+    const idMap = new Map<number, number>(
+      pageData.items.map((item) => [item.id, this.data.nextId++])
     );
-    const itemMap: { [key: number]: PageItemData } = Object.fromEntries(
-      page.items.map((item) => [
-        item.id,
-        pageItemTypeRegistry.duplicateData(item, idMap),
-      ])
-    );
-    const mapItemId = (id: number) =>
-      itemMap.hasOwnProperty(id) ? itemMap[id].id : id;
+
+    const mapItemId = (id: number) => idMap.get(id) ?? id;
+
     let copy: PageData = {
       id: this.data.nextId++,
-      name: page.name + " (copy)",
-      items: Object.values(itemMap),
-      masterPageId: page.masterPageId,
+      name: pageData.name + " (copy)",
+      items: pageData.items
+        .map((item) => page.allItems.get(item.id)!)
+        .map((i) =>
+          pageItemTypeRegistry.mapDataAfterPaste(
+            JSON.parse(JSON.stringify(i.mapDataBeforePaste())),
+            mapItemId
+          )
+        ),
+      masterPageId: pageData.masterPageId,
       propertyValues: Object.fromEntries(
-        getOwnPropertyNames(page.propertyValues).map((itemId) => [
-          mapItemId(itemId),
-          { ...page.propertyValues[itemId] },
-        ])
+        Object.getOwnPropertyNames(pageData.propertyValues)
+          .map((x) => parseInt(x))
+          .map((itemId) => {
+            const res = [mapItemId(itemId), pageData.propertyValues[itemId]];
+            return res;
+          })
       ),
       overrideableProperties: Object.fromEntries(
-        getOwnPropertyNames(page.propertyValues).map((itemId) => [
-          mapItemId(itemId),
-          { ...page.overrideableProperties[itemId] },
-        ])
+        Object.getOwnPropertyNames(pageData.overrideableProperties)
+          .map((x) => parseInt(x))
+          .map((itemId) => [
+            mapItemId(itemId),
+            pageData.overrideableProperties[itemId],
+          ])
       ),
     };
 

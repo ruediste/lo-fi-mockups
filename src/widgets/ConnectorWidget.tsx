@@ -78,6 +78,8 @@ export interface ConnectorWidgetData extends PageItemData {
 interface ConnectorEndpointData {
   position: { x: number; y: number };
   connectedItemId?: number;
+  // only used during copy&paste
+  absolutePosition?: { x: number; y: number };
 }
 
 export class ConnectorWidget extends Widget {
@@ -192,6 +194,20 @@ export class ConnectorWidget extends Widget {
 
   get data_(): ConnectorWidgetData {
     return this.data as ConnectorWidgetData;
+  }
+
+  override mapDataBeforePaste(): ConnectorWidgetData {
+    return {
+      ...this.data_,
+      source: {
+        ...this.data_.source,
+        absolutePosition: this.source.position,
+      },
+      target: {
+        ...this.data_.target,
+        absolutePosition: this.target.position,
+      },
+    };
   }
 
   renderContent(): React.ReactNode {

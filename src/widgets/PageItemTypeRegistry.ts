@@ -33,18 +33,17 @@ import { UmlNodeWidget } from "./UmlNodeWidget";
 import { VerticalScrollBarWidget } from "./VerticalScrollBarWidget";
 import { Widget } from "./Widget";
 
+interface RegistryEntry {
+  itemFactory: (args: PageItemsArgs) => PageItem;
+  newDataFactory: (id: number, type: string) => PageItemData;
+  // there is always a JSON deep-clone between copy and paste
+  mapDataAfterPaste: (
+    existingData: PageItemData,
+    mapId: (id: number) => number | undefined
+  ) => PageItemData;
+}
 export class PageItemTypeRegistryImpl implements PageItemRegistry {
-  itemTypes = new Map<
-    string,
-    {
-      itemFactory: (args: PageItemsArgs) => PageItem;
-      newDataFactory: (id: number, type: string) => PageItemData;
-      dataCopyFactory: (
-        existingData: PageItemData,
-        idMap: Record<number, number>
-      ) => PageItemData;
-    }
-  >();
+  itemTypes = new Map<string, RegistryEntry>();
 
   palette: {
     key: string;
@@ -62,10 +61,13 @@ export class PageItemTypeRegistryImpl implements PageItemRegistry {
     return this.itemTypes.get(type)!.newDataFactory(id, type);
   }
 
-  duplicateData(existingData: PageItemData, idMap: Record<number, number>) {
+  mapDataAfterPaste(
+    existingData: PageItemData,
+    mapId: (id: number) => number | undefined
+  ) {
     return this.itemTypes
       .get(existingData.type)!
-      .dataCopyFactory(existingData, idMap);
+      .mapDataAfterPaste(existingData, mapId);
   }
 }
 
@@ -79,18 +81,14 @@ function register(
     page: Page,
     fromMasterPage: boolean
   ) => PageItem,
-  dataFactory?: (id: number, type: string) => PageItemData,
-  dataCopyFactory?: (
-    existingData: PageItemData,
-    idMap: Record<number, number>
-  ) => PageItemData
+  args?: Partial<Pick<RegistryEntry, "newDataFactory" | "mapDataAfterPaste">>
 ) {
   pageItemTypeRegistry.itemTypes.set(key, {
     itemFactory: (args) => new ctor(args.data, args.page, args.fromMasterPage),
-    newDataFactory: dataFactory ?? ((id, type) => ({ id, type })),
-    dataCopyFactory:
-      dataCopyFactory ??
-      ((data, idMap) => ({ id: idMap[data.id], type: data.type })),
+    newDataFactory: args?.newDataFactory ?? ((id, type) => ({ id, type })),
+    mapDataAfterPaste:
+      args?.mapDataAfterPaste ??
+      ((data, mapId) => ({ ...data, id: mapId(data.id)! })),
   });
   if (ctor.prototype instanceof Widget) {
     pageItemTypeRegistry.palette.push({ key, ctor: ctor as any });
@@ -120,39 +118,57 @@ register("browser", BrowserWidget);
 register("group", GroupWidget);
 register("note", NoteWidget);
 register("buttonToggle", ButtonToggleWidget);
-register(
-  "connector",
-  ConnectorWidget,
-  (id, type) =>
+register("connector", ConnectorWidget, {
+  newDataFactory: (id, type) =>
     ({
       id,
       type,
       source: { position: { x: 0, y: 0 } },
       target: { position: { x: 80, y: 0 } },
     } satisfies ConnectorWidgetData),
-  (data, idMap) => {
+  mapDataAfterPaste: (data, mapId) => {
     const d = data as ConnectorWidgetData;
+
+    const source = {
+      ...d.source,
+      connectedItemId:
+        d.source.connectedItemId === undefined
+          ? undefined
+          : mapId(d.source.connectedItemId),
+    };
+
+    // if the paste disconnected the connector, keep its absolute position
+    if (
+      d.source.connectedItemId !== undefined &&
+      source.connectedItemId === undefined
+    ) {
+      source.position = { ...d.source.absolutePosition! };
+    }
+
+    const target = {
+      ...d.target,
+      connectedItemId:
+        d.target.connectedItemId === undefined
+          ? undefined
+          : mapId(d.target.connectedItemId),
+    };
+
+    if (
+      d.target.connectedItemId !== undefined &&
+      target.connectedItemId === undefined
+    ) {
+      target.position = { ...d.target.absolutePosition! };
+    }
+
     const result: ConnectorWidgetData = {
       ...d,
-      id: idMap[data.id],
-      source: {
-        ...d.source,
-        connectedItemId:
-          d.source.connectedItemId === undefined
-            ? undefined
-            : idMap[d.source.connectedItemId],
-      },
-      target: {
-        ...d.target,
-        connectedItemId:
-          d.target.connectedItemId === undefined
-            ? undefined
-            : idMap[d.target.connectedItemId],
-      },
+      id: mapId(data.id)!,
+      source,
+      target,
     };
     return result;
-  }
-);
+  },
+});
 register("umlClass", UmlClassWidget);
 register("umlDatabase", UmlDatabaseWidget);
 register("umlNode", UmlNodeWidget);

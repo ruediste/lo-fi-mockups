@@ -4,6 +4,7 @@ export interface PageItemRegistry {
   create: (args: PageItemsArgs) => PageItem;
   createData: (id: number, type: string) => PageItemData;
 }
+
 export const pageItemTypeRegistryHolder: {
   registry: PageItemRegistry;
 } = {} as any;

@@ -29,8 +29,8 @@ export default function useSearchHref(
   return {
     href,
     onClick: (e) => {
-      e.stopPropagation();
-      e.preventDefault();
+      e?.stopPropagation?.();
+      e?.preventDefault?.();
       navigate(to as any, relative);
     },
   };

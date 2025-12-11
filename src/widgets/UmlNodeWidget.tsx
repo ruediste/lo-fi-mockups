@@ -6,7 +6,12 @@ import {
 import { JSX } from "react";
 import { BoxWidget } from "./Widget";
 import { PageLink } from "./WidgetHelpers";
-import { backgroundPaletteMap, widgetTheme } from "./widgetTheme";
+import {
+  backgroundPaletteMap,
+  snapConfiguration,
+  widgetTheme,
+} from "./widgetTheme";
+import { SnapBoxesArgs, SnapReferencesArgs } from "@/model/PageItem";
 
 export class UmlNodeWidget extends BoxWidget {
   label = "UML Node";
@@ -24,12 +29,13 @@ export class UmlNodeWidget extends BoxWidget {
 
   link = new PageReferenceProperty(this, "link", "Link");
 
+  // 3D effect depth
+  private readonly depth = 16;
+
   override renderContent(): JSX.Element {
     const box = this.box;
     const bgColor = backgroundPaletteMap[this.backgroundColor.get()];
-
-    // 3D effect depth
-    const depth = 16;
+    const depth = this.depth;
 
     return (
       <>
@@ -94,7 +100,7 @@ export class UmlNodeWidget extends BoxWidget {
               : widgetTheme.fontSize)
           }
           textAnchor="middle"
-          dominantBaseline="middle"
+          dominantBaseline="auto"
           fontSize={widgetTheme.fontSize}
           fontWeight="bold"
         >
@@ -104,6 +110,27 @@ export class UmlNodeWidget extends BoxWidget {
         <PageLink {...box} pageId={this.link.get().pageId} />
       </>
     );
+  }
+
+  private innerSnapBox() {
+    const heightOffset =
+      this.depth + widgetTheme.fontSize * (this.stereotype.get() ? 2 : 1);
+    return {
+      x: this.box.x,
+      y: this.box.y + heightOffset,
+      width: this.box.width - this.depth,
+      height: this.box.height - heightOffset,
+    };
+  }
+
+  override getSnapBoxes(args: SnapBoxesArgs): void {
+    super.getSnapBoxes(args);
+    args.addMarginBox(this.innerSnapBox(), -snapConfiguration.snapMargin);
+  }
+
+  override getSnapReferences(args: SnapReferencesArgs): void {
+    super.getSnapReferences(args);
+    args.addMarginBox(this.innerSnapBox(), -snapConfiguration.snapMargin);
   }
 
   initializeAfterAdd(): void {
