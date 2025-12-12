@@ -29,6 +29,7 @@ import {
 import { globalSvgContent, IRectangle, IVec2d, Widget } from "./Widget";
 import { widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
+import { useId } from "react";
 
 type UmlMarkerType = "None" | "Association" | "Composition" | "Inheritance";
 
@@ -38,33 +39,43 @@ const UML_MARKER_OPTIONS: SelectPropertyOption<UmlMarkerType>[] = (
   value: x,
   label: x,
   icon: () => (
-    <svg width="32" height="16" viewBox="0 0 40 20">
-      {globalSvgContent}
-      <line
-        x1="2"
-        y1="10"
-        x2="36"
-        y2="10"
-        stroke="#666"
-        strokeWidth="2"
-        markerEnd={getMarkerUrl(x)}
-      />
-    </svg>
+    <WithHooks>
+      {() => {
+        const globalContentId = useId();
+        return (
+          <svg width="32" height="16" viewBox="0 0 40 20">
+            {globalSvgContent(globalContentId)}
+            <line
+              x1="2"
+              y1="10"
+              x2="36"
+              y2="10"
+              stroke="#666"
+              strokeWidth="2"
+              markerEnd={getMarkerUrl(x, globalContentId)}
+            />
+          </svg>
+        );
+      }}
+    </WithHooks>
   ),
 }));
 
-function getMarkerUrl(markerType: UmlMarkerType | null): string | undefined {
+function getMarkerUrl(
+  markerType: UmlMarkerType | null,
+  globalContentId: string
+): string | undefined {
   if (markerType === null) return undefined;
 
   switch (markerType) {
     case "None":
       return undefined;
     case "Association":
-      return "url(#connector-association)";
+      return `url(#connector-association-${globalContentId})`;
     case "Composition":
-      return "url(#connector-composition)";
+      return `url(#connector-composition-${globalContentId})`;
     case "Inheritance":
-      return "url(#connector-inheritance)";
+      return `url(#connector-inheritance-${globalContentId})`;
     default:
       return undefined;
   }
@@ -210,7 +221,7 @@ export class ConnectorWidget extends Widget {
     };
   }
 
-  renderContent(): React.ReactNode {
+  override renderContent(globalContentId: string): React.ReactNode {
     return (
       <WithHooks>
         {() => {
@@ -266,8 +277,14 @@ export class ConnectorWidget extends Widget {
           const padding = 6;
 
           // Get marker URLs
-          const sourceMarkerUrl = getMarkerUrl(sourceMarkerType);
-          const targetMarkerUrl = getMarkerUrl(targetMarkerType);
+          const sourceMarkerUrl = getMarkerUrl(
+            sourceMarkerType,
+            globalContentId
+          );
+          const targetMarkerUrl = getMarkerUrl(
+            targetMarkerType,
+            globalContentId
+          );
 
           // Calculate direction from first segment for source multiplicity
           const sourceDirection = routePoints[1].sub(routePoints[0]);
@@ -332,7 +349,7 @@ export class ConnectorWidget extends Widget {
                     height={textHeight + 2 * padding}
                     fill="rgba(255, 255, 255, 1)"
                     rx="4"
-                    filter={`url(#connector-text-background-blur)`}
+                    filter={`url(#connector-text-background-blur-${globalContentId})`}
                   />
                   <text
                     x={midX}

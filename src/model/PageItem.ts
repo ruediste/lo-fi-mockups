@@ -107,7 +107,7 @@ export abstract class PageItem {
       Object.keys(this.overrideableProperties).length > 0
     );
   }
-  abstract renderContent(): React.ReactNode;
+  abstract renderContent(globalContentId: string): React.ReactNode;
 
   abstract get boundingBox(): IRectangle;
 

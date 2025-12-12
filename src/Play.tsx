@@ -1,5 +1,5 @@
 import { editorState } from "@/editor/EditorState";
-import { use, useCallback, useEffect, useMemo } from "react";
+import { use, useCallback, useEffect, useId, useMemo } from "react";
 import { CloseButton } from "react-bootstrap";
 import { ArrowLeft, ArrowRight } from "react-bootstrap-icons";
 import { PageItem, PageItemRenderContext } from "./model/PageItem";
@@ -7,9 +7,15 @@ import { useRerenderOnEvent } from "./util/hooks";
 import { IconButton } from "./util/Inputs";
 import { globalSvgContent } from "./widgets/Widget";
 
-function RenderItem({ item }: { item: PageItem }) {
+function RenderItem({
+  item,
+  globalSvgContentId,
+}: {
+  item: PageItem;
+  globalSvgContentId: string;
+}) {
   useRerenderOnEvent(item.onChange);
-  return <>{item.renderContent()}</>;
+  return <>{item.renderContent(globalSvgContentId)}</>;
 }
 
 export function Play() {
@@ -17,6 +23,7 @@ export function Play() {
   useRerenderOnEvent(state.onChanged);
   useRerenderOnEvent(state.project.onChange);
   const project = state.project;
+  const globalSvgContentId = useId();
 
   useEffect(() => {
     if (!project.currentPage && project.data.pages.length > 0)
@@ -67,9 +74,13 @@ export function Play() {
               height: "100%",
             }}
           >
-            {globalSvgContent}
+            {globalSvgContent(globalSvgContentId)}
             {page.masterItems.concat(page.ownItems).map((item) => (
-              <RenderItem key={item.id} item={item} />
+              <RenderItem
+                key={item.id}
+                item={item}
+                globalSvgContentId={globalSvgContentId}
+              />
             ))}
           </svg>
         )}

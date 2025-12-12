@@ -12,7 +12,7 @@ import { IRectangle, Widget } from "@/widgets/Widget";
 import { dragPositionRectAttrs } from "@/widgets/widgetUtils";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import Flatbush from "flatbush";
-import { PointerEvent, useEffect, useRef, useState } from "react";
+import { PointerEvent, useEffect, useId, useRef, useState } from "react";
 import { Canvas, CanvasProjection } from "./Canvas";
 
 import useSearchHref from "@/util/useSearchHref";
@@ -38,15 +38,17 @@ import { EditorState, useEditorState } from "./EditorState";
 function RenderItem({
   item,
   projection,
+  globalSvgContentId,
 }: {
   item: PageItem;
   projection: CanvasProjection;
+  globalSvgContentId: string;
 }) {
   useRerenderOnEvent(item.onChange);
   useRerenderOnEvent(projection.onChange);
   return (
     <>
-      {item.renderContent()}
+      {item.renderContent(globalSvgContentId)}
       {item.fromMasterPage
         ? item.interaction.renderMasterInteraction({
             projection,
@@ -103,13 +105,21 @@ function MultiItemSelectionBox({
 function RenderPageItems({
   page,
   projection,
+  globalSvgContentId,
 }: {
   page: Page;
   projection: CanvasProjection;
+  globalSvgContentId: string;
 }) {
   return page.masterItems
     .concat(page.ownItems)
-    .map((item) => <RenderItem key={item.data.id} {...{ item, projection }} />);
+    .map((item) => (
+      <RenderItem
+        key={item.data.id}
+        {...{ item, projection }}
+        globalSvgContentId={globalSvgContentId}
+      />
+    ));
 }
 
 function EditorCanvas() {
@@ -274,6 +284,7 @@ function EditorCanvasInner({
   const { setNodeRef } = useDroppable({
     id: "editor",
   });
+  const globalSvgContentId = useId();
 
   useEffect(() => projection.setScaleOneAndAlign(page.boundingBox()), [page]);
 
@@ -330,6 +341,7 @@ function EditorCanvasInner({
       projection={projection}
       ref={setNodeRef}
       page={page}
+      globalSvgContentId={globalSvgContentId}
       onPointerDown={(e) => {
         if (e.shiftKey) {
           dragState.current = new CreateConnectorDragHandler(
@@ -355,7 +367,7 @@ function EditorCanvasInner({
       }}
     >
       <MultiItemSelectionBox {...{ projection, page }} />
-      <RenderPageItems {...{ projection, page }} />
+      <RenderPageItems {...{ projection, page, globalSvgContentId }} />
       {dragSelectionBox && (
         <rect {...attrs} {...dragSelectionBox.box} fill="transparent" />
       )}

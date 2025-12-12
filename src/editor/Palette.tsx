@@ -5,7 +5,7 @@ import { Project, ProjectData } from "@/model/Project";
 import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
 import { globalSvgContent, Widget } from "@/widgets/Widget";
 import { DragOverlay, useDraggable } from "@dnd-kit/core";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useId, useMemo, useState } from "react";
 import { EditorState, useEditorState } from "./EditorState";
 
 const paletteItemSize = { width: 120, height: 90 };
@@ -36,6 +36,7 @@ function PaletteEntry({
     paletteItemSize.width / paletteItemSize.height,
     boundingBox
   );
+  const globalSvgContentId = useId();
 
   const [overlayTransform, setOverlayTransform] = useState<string>();
   useEffect(() => {
@@ -65,8 +66,8 @@ function PaletteEntry({
           width={paletteItemSize.width + "px"}
           height={paletteItemSize.height + "px"}
         >
-          {globalSvgContent}
-          {widget.renderContent()}
+          {globalSvgContent(globalSvgContentId)}
+          {widget.renderContent(globalSvgContentId)}
         </svg>
         <div style={{ textAlign: "center", fontWeight: "bold" }}>
           {widget.label}
@@ -80,7 +81,7 @@ function PaletteEntry({
             width={state.projection.lengthToView(boundingBox.width) + "px"}
             height={state.projection.lengthToView(boundingBox.height) + "px"}
           >
-            {widget.renderContent()}
+            {widget.renderContent(globalSvgContentId)}
           </svg>
         )}
       </DragOverlay>

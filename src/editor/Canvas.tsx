@@ -107,6 +107,7 @@ export function Canvas({
   onPointerUp,
   className,
   page,
+  globalSvgContentId,
 }: {
   projection: CanvasProjection;
   children?: React.ReactNode;
@@ -116,6 +117,7 @@ export function Canvas({
   onPointerUp?: PointerEventHandler<SVGElement>;
   className?: string;
   page: Page;
+  globalSvgContentId: string;
 }) {
   const dragState = useRef<
     | {
@@ -223,7 +225,7 @@ export function Canvas({
               }
             }}
           >
-            {globalSvgContent}
+            {globalSvgContent(globalSvgContentId)}
             {children}
           </svg>
         </ProjectionContext.Provider>

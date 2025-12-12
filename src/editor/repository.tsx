@@ -156,7 +156,7 @@ export class Repository {
 
   private renderPage(page: Page, scale: number) {
     const box = page.boundingBox();
-
+    const globalSvgContentId = "export-" + Math.random().toString(16).slice(2);
     const rootElement = document.createElement("div");
     rootElement.className = "export-helper";
     document.body.append(rootElement);
@@ -175,9 +175,11 @@ export class Repository {
             width={box.width * scale}
             height={box.height * scale}
           >
-            {globalSvgContent}
+            {globalSvgContent(globalSvgContentId)}
             {page.masterItems.concat(page.ownItems).map((item, idx) => (
-              <Fragment key={idx}>{item.renderContent()}</Fragment>
+              <Fragment key={idx}>
+                {item.renderContent(globalSvgContentId)}
+              </Fragment>
             ))}
           </svg>
         </PageItemRenderContext.Provider>
