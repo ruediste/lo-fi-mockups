@@ -15,11 +15,11 @@ export abstract class PageItemInteraction {
   }
 
   abstract renderEditorInteraction(
-    props: RenderInteractionArgs
+    props: RenderInteractionArgs,
   ): React.ReactNode;
 
   abstract renderMasterInteraction(
-    props: RenderInteractionArgs
+    props: RenderInteractionArgs,
   ): React.ReactNode;
 
   abstract moveBy(delta: IVec2d, allItemsBeingMoved?: Set<PageItem>): void;
@@ -44,25 +44,9 @@ export class BoxWidgetInteraction extends PageItemInteraction {
 
   override renderEditorInteraction({
     projection,
-  }: RenderInteractionArgs): JSX.Element {
+  }: RenderInteractionArgs): React.ReactNode {
     const selection = this.item.page.selection;
-    return selection.size > 1 ? (
-      <DraggableSnapBox
-        {...{
-          box: this.item.boundingBox,
-          projection,
-          visible: selection.has(this.item),
-          page: this.item.page,
-          select: (toggle) =>
-            this.item.page.setSelection(
-              toggle ? selection.toggle(this.item) : Selection.of(this.item)
-            ),
-          items: () => this.item.page.selection.items,
-          moveItems: (by) => this.item.page.selection.moveBy(by),
-          onDuplicate: () => this.item.page.duplicateItem(this.item),
-        }}
-      />
-    ) : (
+    return (
       <DraggableSnapResizeBox
         {...{
           projection,
@@ -70,7 +54,7 @@ export class BoxWidgetInteraction extends PageItemInteraction {
           item: this.item,
           select: (toggle) =>
             this.item.page.setSelection(
-              toggle ? selection.toggle(this.item) : Selection.of(this.item)
+              toggle ? selection.toggle(this.item) : Selection.of(this.item),
             ),
           update: (value) => {
             this.box.set(value);
@@ -145,7 +129,7 @@ export class PositionWidgetInteraction extends PageItemInteraction {
           page: this.item.page,
           select: (toggle) =>
             this.item.page.setSelection(
-              toggle ? selection.toggle(this.item) : Selection.of(this.item)
+              toggle ? selection.toggle(this.item) : Selection.of(this.item),
             ),
           items: () => this.item.page.selection.items,
           moveItems: (by) => this.item.page.selection.moveBy(by),

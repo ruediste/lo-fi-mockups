@@ -1,5 +1,5 @@
 import { Selection } from "@/editor/Selection";
-import { ClipboardData, Page, PageData } from "@/model/Page";
+import { Page } from "@/model/Page";
 import {
   HorizontalSnapReference,
   PageItem,
@@ -32,6 +32,7 @@ import { SnapIndex } from "@/model/SnapIndex";
 import { confirm } from "@/util/confirm";
 import { ThreeDotMenu } from "@/util/Inputs";
 import { ConnectorWidget } from "@/widgets/ConnectorWidget";
+import { snapConfiguration } from "@/widgets/widgetTheme";
 import "rc-dock/dist/rc-dock.css";
 import { EditorState, useEditorState } from "./EditorState";
 
@@ -46,16 +47,27 @@ function RenderItem({
 }) {
   useRerenderOnEvent(item.onChange);
   useRerenderOnEvent(projection.onChange);
+  const selection = item.page.selection;
   return (
     <>
       {item.renderContent(globalSvgContentId)}
-      {item.fromMasterPage
-        ? item.interaction.renderMasterInteraction({
+      {selection.size <= 1 ? (
+        item.fromMasterPage ? (
+          item.interaction.renderMasterInteraction({
             projection,
           })
-        : item.interaction.renderEditorInteraction({
+        ) : (
+          item.interaction.renderEditorInteraction({
             projection,
-          })}
+          })
+        )
+      ) : (
+        <rect
+          {...item.boundingBox}
+          {...dragPositionRectAttrs(projection)}
+          fill="transparent"
+        />
+      )}
     </>
   );
 }
@@ -73,7 +85,7 @@ function MultiItemSelectionBox({
   if (page.selection.size > 1) {
     const margin = projection.lengthToWorld(32);
     const box = Vec2d.boundingBoxRect(
-      ...[...page.selection.items.values()].map((item) => item.boundingBox)
+      ...[...page.selection.items.values()].map((item) => item.boundingBox),
     );
 
     drawBox = {
@@ -111,15 +123,17 @@ function RenderPageItems({
   projection: CanvasProjection;
   globalSvgContentId: string;
 }) {
-  return page.masterItems
-    .concat(page.ownItems)
-    .map((item) => (
-      <RenderItem
-        key={item.data.id}
-        {...{ item, projection }}
-        globalSvgContentId={globalSvgContentId}
-      />
-    ));
+  return (
+    <>
+      {page.masterItems.concat(page.ownItems).map((item) => (
+        <RenderItem
+          key={item.data.id}
+          {...{ item, projection }}
+          globalSvgContentId={globalSvgContentId}
+        />
+      ))}
+    </>
+  );
 }
 
 function EditorCanvas() {
@@ -143,8 +157,8 @@ class SelectBoxDragHandler {
     private projection: CanvasProjection,
     private page: Page,
     private setDragSelectionBox: (
-      value: { box: IRectangle; boundingBoxes: IRectangle[] } | undefined
-    ) => void
+      value: { box: IRectangle; boundingBoxes: IRectangle[] } | undefined,
+    ) => void,
   ) {
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -181,10 +195,10 @@ class SelectBoxDragHandler {
             dragSelectionBox!.x,
             dragSelectionBox!.y,
             dragSelectionBox!.x + dragSelectionBox!.width,
-            dragSelectionBox!.y + dragSelectionBox!.height
+            dragSelectionBox!.y + dragSelectionBox!.height,
           )
-          .map((idx) => this.page.ownItems[idx])
-      )
+          .map((idx) => this.page.ownItems[idx]),
+      ),
     );
   }
   private updateDragSelectionBox(box: IRectangle) {
@@ -203,14 +217,14 @@ class CreateConnectorDragHandler {
   constructor(
     e: PointerEvent<SVGElement>,
     private projection: CanvasProjection,
-    private page: Page
+    private page: Page,
   ) {
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
 
     // add a connector widget
     this.connector = page.addItem(
-      createPageItemData(page.project.data.nextId++, "connector")
+      createPageItemData(page.project.data.nextId++, "connector"),
     ) as ConnectorWidget;
     this.connector.initializeAfterAdd();
 
@@ -254,7 +268,7 @@ class CreateConnectorDragHandler {
           position.x - this.projection.lengthToWorld(6),
           position.y,
           this.projection.lengthToWorld(12),
-          "connector"
+          "connector",
         ),
       ],
       otherVertical: [
@@ -262,11 +276,34 @@ class CreateConnectorDragHandler {
           position.x,
           position.y - this.projection.lengthToWorld(6),
           this.projection.lengthToWorld(12),
-          "connector"
+          "connector",
         ),
       ],
     };
     const snapResult = this.snapIndex.snapReferences(refs, new Vec2d(0, 0));
+
+    // snap to source position as well
+    const toSource = Vec2d.from(this.connector.source.position).sub(position);
+    const snapThreshold = this.projection.lengthToWorld(
+      snapConfiguration.snapRange,
+    );
+
+    if (
+      Math.abs(toSource.x) < snapThreshold &&
+      (!snapResult.v || Math.abs(toSource.x) < Math.abs(snapResult.offset.x))
+    ) {
+      snapResult.offset = new Vec2d(toSource.x, snapResult.offset.y);
+      snapResult.v = undefined;
+    }
+
+    if (
+      Math.abs(toSource.y) < snapThreshold &&
+      (!snapResult.h || Math.abs(toSource.y) < Math.abs(snapResult.offset.y))
+    ) {
+      snapResult.offset = new Vec2d(snapResult.offset.x, toSource.y);
+      snapResult.h = undefined;
+    }
+
     const snappedPosition = position.add(snapResult.offset);
     return { snapResult, snappedPosition };
   }
@@ -307,14 +344,14 @@ function EditorCanvasInner({
         const item = page.addItem(
           createPageItemData(
             page.project.data.nextId++,
-            event.active!.data.current!.itemType
-          )
+            event.active!.data.current!.itemType,
+          ),
         ) as Widget;
 
         item.initializeAfterAdd();
 
         const worldPos = projection.offset.add(
-          projection.scaleToWorld(new Vec2d(x, y))
+          projection.scaleToWorld(new Vec2d(x, y)),
         );
 
         item.interaction.setPosition({
@@ -347,14 +384,14 @@ function EditorCanvasInner({
           dragState.current = new CreateConnectorDragHandler(
             e,
             projection,
-            page
+            page,
           );
         } else if (e.ctrlKey) {
           dragState.current = new SelectBoxDragHandler(
             e,
             projection,
             page,
-            setDragSelectionBox
+            setDragSelectionBox,
           );
         }
       }}
@@ -458,7 +495,7 @@ export function Editor({ downloadName }: { downloadName?: string }) {
     const handlePaste = (e: ClipboardEvent) => {
       if (!document.activeElement?.classList.contains("canvas")) return;
       const dataStr = e.clipboardData?.getData(
-        "application/x-lofi-mockups-page-items"
+        "application/x-lofi-mockups-page-items",
       );
       if (dataStr) {
         e.preventDefault();
@@ -466,7 +503,7 @@ export function Editor({ downloadName }: { downloadName?: string }) {
           const currentPage = state.project.currentPage;
           if (!currentPage) return;
           currentPage.setSelection(
-            Selection.of(...currentPage.pasteItems(dataStr))
+            Selection.of(...currentPage.pasteItems(dataStr)),
           );
         } catch (e) {
           console.error("Error while handling paste", e);
@@ -527,9 +564,9 @@ export function Editor({ downloadName }: { downloadName?: string }) {
                     false,
                     (processed, total) => {
                       setZipProgress({ processed, total });
-                    }
+                    },
                   ),
-                  downloadName ?? "project.lofi"
+                  downloadName ?? "project.lofi",
                 );
                 setZipProgress(undefined);
               }}
