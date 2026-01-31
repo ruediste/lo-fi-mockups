@@ -24,7 +24,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button, Form, ListGroup } from "react-bootstrap";
-import { Copy, GripVertical, Trash } from "react-bootstrap-icons";
+import { Copy, GripVertical, Plus, Trash } from "react-bootstrap-icons";
 import { useProject } from "./EditorState";
 
 function Page({
@@ -50,6 +50,31 @@ function Page({
 
   return (
     <>
+      {idx > 0 && (
+        <div
+          style={{
+            position: "relative",
+            marginTop: "-1px",
+          }}
+        >
+          <IconButton
+            style={{
+              position: "absolute",
+              right: "4px",
+              top: "0",
+              transform: "translateY(-50%)",
+              zIndex: 3,
+            }}
+            className="add-button"
+            onClick={async (e) => {
+              e.stopPropagation();
+              project.addPage(idx);
+            }}
+          >
+            <Plus />
+          </IconButton>
+        </div>
+      )}
       <ListGroup.Item
         active={selected}
         ref={setNodeRef}
@@ -101,7 +126,7 @@ function Page({
           style={{ marginLeft: "8px" }}
           onClick={async (e) => {
             e.stopPropagation();
-            project.duplicatePage(page);
+            project.duplicatePage(page, idx);
           }}
         >
           <Copy />
@@ -146,7 +171,7 @@ export function Pages() {
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
   );
 
   return (
