@@ -3,10 +3,21 @@
   "tasks": [
     {
       "type": "npm",
-      "script": "start",
+      "script": "start-web",
       "problemMatcher": [],
-      "label": "npm: start",
-      "detail": "vite"
+      "label": "npm: start"
+    },
+    {
+      "type": "npm",
+      "script": "start-native",
+      "problemMatcher": [],
+      "label": "npm: start-native"
+    },
+    {
+      "type": "npm",
+      "script": "start-xwiki",
+      "problemMatcher": [],
+      "label": "npm: start-xwiki"
     },
     {
       "type": "npm",
@@ -36,8 +47,7 @@
       "type": "npm",
       "script": "preview",
       "problemMatcher": [],
-      "label": "npm: preview",
-      "detail": "vite build && vite preview"
+      "label": "npm: preview"
     }
   ]
 }

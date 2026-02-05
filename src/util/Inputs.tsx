@@ -82,14 +82,16 @@ function ThreeDotMenuToggle({
   );
 }
 
+export type ThreeDotMenuItem = {
+  label: string;
+  checked?: boolean;
+} & ({ onClick: () => void } | { href: string });
+
 export function ThreeDotMenu({
   items,
   style,
 }: {
-  items: ({ label: string; checked?: boolean } & (
-    | { onClick: () => void }
-    | { href: string }
-  ))[];
+  items: ThreeDotMenuItem[];
   style?: React.CSSProperties;
 }) {
   const id = useId();
@@ -129,7 +131,7 @@ export function ThreeDotMenu({
 export function FormCheck(
   props: React.PropsWithChildren<
     ReplaceProps<"input", BsPrefixProps<"input"> & FormCheckProps>
-  >
+  >,
 ) {
   const id = useId();
   return <Form.Check {...props} id={id} />;

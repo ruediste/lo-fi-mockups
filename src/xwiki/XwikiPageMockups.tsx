@@ -1,6 +1,7 @@
-import { InnerApp } from "@/App";
 import { useEditorState } from "@/editor/EditorState";
+import { InnerApp } from "@/InnerApp";
 import useSearchHref from "@/util/useSearchHref";
+import saveAs from "file-saver";
 import { useState } from "react";
 import {
   Alert,
@@ -15,6 +16,7 @@ import { useSearchParams } from "react-router";
 import { confirm } from "../util/confirm";
 import { fetchData, fetchDataRaw, useLoader } from "../util/fetchData";
 import { WithLoader, WithMultiData } from "../util/UseData";
+import { XwikiControls } from "./XwikiControls";
 import {
   getSavedLoFiIdentification,
   saveLoFiIdentification,
@@ -24,8 +26,8 @@ import {
 
 // http://localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.23-SNAPSHOT/index.html?page=wikis%2Fxwiki%2Fspaces%2Ftest2%2Fspaces%2FLoFiTest%2Fpages%2FWebHome
 // http: //localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.1-SNAPSHOT/index.html
-// http://localhost:5173/#xwiki/?page=wikis/xwiki%2Fspaces%2Ftest2%2Fspaces%2FLoFiTest%2Fpages%2FWebHome
-// http://localhost:5173/#xwiki/?attachment=df.zip&page=wikis/xwiki/spaces/test2/spaces/LoFiTest/pages/WebHome
+// http://localhost:5173/#/?page=wikis/xwiki%2Fspaces%2Ftest2%2Fspaces%2FLoFiTest%2Fpages%2FWebHome
+// http://localhost:5173/#/?attachment=df.zip&page=wikis/xwiki/spaces/test2/spaces/LoFiTest/pages/WebHome
 
 interface XwikiAttachments {
   attachments: {
@@ -64,7 +66,7 @@ export function MockupListItem({
               })
             ) {
               await fetchData(
-                xwiki({ url: page + "/attachments/" + name, method: "DELETE" })
+                xwiki({ url: page + "/attachments/" + name, method: "DELETE" }),
               );
               refresh();
             }
@@ -94,7 +96,7 @@ export function XwikiPageMockupsIndex({ page }: { page: string }) {
     >
       {([pageData, attachmentsRaw], refresh) => {
         const attachments = attachmentsRaw.attachments.filter((x) =>
-          x.name.endsWith(".lofi")
+          x.name.endsWith(".lofi"),
         );
         return (
           <div
@@ -177,7 +179,7 @@ function OpenAttachment({
   const state = useEditorState();
   const data = useLoader(async () => {
     const response = await fetchDataRaw(
-      xwiki({ url: page + "/attachments/" + attachment })
+      xwiki({ url: page + "/attachments/" + attachment }),
     );
     const repo = state.repository;
     if (response.status == 404) {
@@ -190,7 +192,7 @@ function OpenAttachment({
       await repo.loadZip(
         await response.blob(),
         savedIdentification === currentIdentification,
-        pageNr
+        pageNr,
       );
       saveLoFiIdentification(page, attachment);
       return true;
@@ -201,7 +203,19 @@ function OpenAttachment({
     <WithLoader data={data}>
       {(success) =>
         success ? (
-          <InnerApp downloadName={attachment} />
+          <InnerApp
+            controls={{
+              projectName: attachment,
+              saveAs: (data, filename) => saveAs(data, filename),
+              rightControls: (args) => (
+                <XwikiControls
+                  page={page}
+                  attachment={attachment}
+                  args={args}
+                />
+              ),
+            }}
+          />
         ) : (
           <div>Loading Attachment Failed</div>
         )
@@ -210,7 +224,7 @@ function OpenAttachment({
   );
 }
 
-export function XwikiPageMockups() {
+export function XwikiApp() {
   const [searchParams] = useSearchParams();
   const attachment = searchParams.get("attachment");
   const page = searchParams.get("page");

@@ -39,21 +39,27 @@ export class Repository {
 
   constructor(
     public projectData: ProjectData,
-    private db: IDBPDatabase<MyDB>
+    private db: IDBPDatabase<MyDB>,
   ) {}
 
   static async create(): Promise<Repository> {
-    const db = await openDB<MyDB>("test", 1, {
+    const db = await openDB<MyDB>("lo-fi-current", 1, {
       upgrade(db) {
         db.createObjectStore("project");
         db.createObjectStore("images");
       },
     });
+    if (import.meta.env.VITE_VARIANT === "native") {
+      db.clear("project");
+      db.clear("images");
+    }
 
-    return new Repository(await this.loadFromDb(db), db);
+    var result = new Repository(await this.loadFromDb(db), db);
+
+    return result;
   }
 
-  private static emptyData(): ProjectData {
+  private static createEmptyData(): ProjectData {
     return {
       schemaVersion: migrators.length,
       dataVersion: 0,
@@ -72,7 +78,7 @@ export class Repository {
   }
 
   clear() {
-    this.projectData = Repository.emptyData();
+    this.projectData = Repository.createEmptyData();
     this.onChanged.notify();
   }
 
@@ -86,17 +92,17 @@ export class Repository {
   }
 
   private static async loadFromDb(db: IDBPDatabase<MyDB>) {
-    return (await db.get("project", "default")) ?? Repository.emptyData();
+    return (await db.get("project", "default")) ?? Repository.createEmptyData();
   }
 
   async loadZip(
     data: Blob,
     skipIfDataVersionMatches: boolean,
-    pageNr?: number
+    pageNr?: number,
   ) {
     const zip = await JSZip.loadAsync(data, {});
     const loadedData: ProjectData = JSON.parse(
-      await zip.file("project.json")!.async("string")
+      await zip.file("project.json")!.async("string"),
     );
 
     // apply migrators
@@ -125,7 +131,7 @@ export class Repository {
 
   async createZip(
     includeImages: boolean,
-    progress?: (processed: number, total: number) => void
+    progress?: (processed: number, total: number) => void,
   ) {
     const zip = new JSZip();
     zip.file("project.json", JSON.stringify(this.projectData));
@@ -182,7 +188,7 @@ export class Repository {
               </Fragment>
             ))}
           </svg>
-        </PageItemRenderContext.Provider>
+        </PageItemRenderContext.Provider>,
       );
     });
     return [
@@ -197,11 +203,11 @@ export class Repository {
       pageName: string;
       pageData: PageData;
       element: (
-        scale: number
+        scale: number,
       ) => Promise<[HTMLElement, { box: IRectangle; pageId: number }[]]>;
       pageNr: number;
       box: IRectangle;
-    }) => Promise<void>
+    }) => Promise<void>,
   ) {
     const data = { ...this.projectData };
     const project = new Project(data, () => {});
@@ -230,7 +236,7 @@ export class Repository {
     }
   }
 
-  async savePdf(progress?: (processed: number, total: number) => void) {
+  async createPdf(progress?: (processed: number, total: number) => void) {
     const pageWidth = 297;
     const pageHeight = 210;
     const doc = new jsPDF({
@@ -243,17 +249,17 @@ export class Repository {
     const masterPages = toSet(
       ...this.projectData.pages
         .map((p) => p.masterPageId)
-        .filter((x) => x !== undefined)
+        .filter((x) => x !== undefined),
     );
     const pageNrs = Object.fromEntries(
       this.projectData.pages
         .filter((p) => !masterPages.has(p.id))
-        .map((p, idx) => [p.id, idx + 1])
+        .map((p, idx) => [p.id, idx + 1]),
     );
     let firstPage = true;
     let processedPages = 0;
     const totalPages = this.projectData.pages.filter(
-      (p) => !masterPages.has(p.id)
+      (p) => !masterPages.has(p.id),
     ).length;
     progress?.(0, totalPages);
     await this.generatePageImages(
@@ -272,7 +278,7 @@ export class Repository {
         const top = (pageHeight - height) / 2;
 
         const [exportElement, links] = await element(
-          (ratio / 25.1) * renderDpi
+          (ratio / 25.1) * renderDpi,
         );
         doc.addImage(
           await htmlToImage.toCanvas(exportElement),
@@ -280,7 +286,7 @@ export class Repository {
           left,
           top,
           width,
-          height
+          height,
         );
 
         const pageNr = pageNrs[pageData.id];
@@ -296,14 +302,14 @@ export class Repository {
               l.box.height * ratio,
               {
                 pageNumber: pageNrs[l.pageId],
-              }
+              },
             );
         });
         processedPages++;
         progress?.(processedPages, totalPages);
-      }
+      },
     );
 
-    doc.save("export.pdf");
+    return doc.output("blob");
   }
 }

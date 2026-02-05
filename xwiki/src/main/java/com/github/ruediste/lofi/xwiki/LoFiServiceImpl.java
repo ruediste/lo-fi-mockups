@@ -39,19 +39,19 @@ public class LoFiServiceImpl implements LoFiService {
 
     @Override
     public String getMockupManagementUrl(DocumentReference document) {
-        return this.getWebjarUrl() + "/index.html#xwiki?page=" + getPageValue(document);
+        return this.getWebjarUrl() + "/index.html#/?page=" + getPageValue(document);
     }
 
     @Override
     public String getMockupPlayUrl(String attachment, int pageNr) {
-        return this.getWebjarUrl() + "/index.html#xwiki/play?page="
+        return this.getWebjarUrl() + "/index.html#/play?page="
                 + getPageValue(documentAccessBridge.getCurrentDocumentReference()) + "&attachment="
                 + URLEncoder.encode(attachment, StandardCharsets.UTF_8) + "&pageNr=" + pageNr;
     }
 
     @Override
     public String getMockupEditUrl(String attachment, int pageNr) {
-        return this.getWebjarUrl() + "/index.html#xwiki?page="
+        return this.getWebjarUrl() + "/index.html#/?page="
                 + getPageValue(documentAccessBridge.getCurrentDocumentReference()) + "&attachment="
                 + URLEncoder.encode(attachment, StandardCharsets.UTF_8) + "&pageNr=" + pageNr;
     }

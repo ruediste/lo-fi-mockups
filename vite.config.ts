@@ -58,6 +58,7 @@ export default defineConfig({
   },
   server: {
     open: true,
+    port: 5173,
     proxy: {
       "/xwikiApi": {
         target: "http://localhost:8078",

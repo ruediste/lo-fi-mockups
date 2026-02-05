@@ -1,0 +1,37 @@
+{
+  "applicationId": "com.github.ruediste.lofi",
+  "version": "0.0.1",
+  "defaultMode": "window",
+  "documentRoot": "/dist/",
+  "url": "/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "nativeAllowList": ["app.*", "filesystem.*", "os.*"],
+  "modes": {
+    "window": {
+      "title": "Lo Fi Mockups",
+      "width": 800,
+      "height": 500,
+      "minWidth": 400,
+      "minHeight": 200,
+      "icon": "/public/icon64.png",
+      "injectGlobals": true
+    }
+  },
+  "cli": {
+    "binaryName": "lofi",
+    "resourcesPath": "/dist/",
+    "extensionsPath": "/extensions/",
+    "binaryVersion": "6.5.0",
+    "clientVersion": "6.5.0",
+    "distributionPath": "/native/",
+    "frontendLibrary": {
+      "patchFile": "/index.html",
+      "devUrl": "http://localhost:5173",
+      "projectPath": "/",
+      "initCommand": "npm install",
+      "devCommand": "BROWSER=none npm run start-native-webapp",
+      "buildCommand": "VITE_VARIANT=native npm run native-build-webapp"
+    }
+  }
+}

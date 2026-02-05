@@ -5,7 +5,6 @@ import { useRerenderOnEvent } from "@/util/hooks";
 import { throttle } from "@/util/throttle";
 import { createContext, useContext } from "react";
 import { CanvasProjection } from "./Canvas";
-import { generateUUID } from "./generateUUID";
 
 export class EditorState {
   private save = throttle(async () => {
@@ -30,7 +29,12 @@ export class EditorState {
   }
 
   static async create() {
-    return new EditorState(await Repository.create());
+    console.log("EditorState create started", new Date().toISOString());
+    try {
+      return new EditorState(await Repository.create());
+    } finally {
+      console.log("EditorState created", new Date().toISOString());
+    }
   }
 
   public recreateProject() {
@@ -53,7 +57,7 @@ if (import.meta.hot) {
 }
 
 export const EditorStateContext = createContext<EditorState | undefined>(
-  undefined
+  undefined,
 );
 
 export function useEditorState() {

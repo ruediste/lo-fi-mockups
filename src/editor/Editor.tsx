@@ -17,23 +17,17 @@ import { Canvas, CanvasProjection } from "./Canvas";
 
 import useSearchHref from "@/util/useSearchHref";
 import "@/widgets/PageItemTypeRegistry";
-import { XwikiControls } from "@/xwiki/XwikiControls";
-import saveAs from "file-saver";
 import DockLayout, { LayoutData } from "rc-dock";
-import { Button, Stack } from "react-bootstrap";
-import Dropzone from "react-dropzone";
-import { toast } from "react-toastify";
 import { Pages } from "./Pages";
 import { Palette } from "./Palette";
 
 import { ItemProperties } from "@/editor/ItemProperties";
 import { createPageItemData } from "@/model/createPageItem";
 import { SnapIndex } from "@/model/SnapIndex";
-import { confirm } from "@/util/confirm";
-import { ThreeDotMenu } from "@/util/Inputs";
 import { ConnectorWidget } from "@/widgets/ConnectorWidget";
 import { snapConfiguration } from "@/widgets/widgetTheme";
 import "rc-dock/dist/rc-dock.css";
+import { EditorControls, EditorControlsProps } from "./EditorControls";
 import { EditorState, useEditorState } from "./EditorState";
 
 function RenderItem({
@@ -457,19 +451,17 @@ const defaultLayout: LayoutData = {
 };
 
 export const editorLayoutKey = "lo-fi-mockups-layout";
-export function Editor({ downloadName }: { downloadName?: string }) {
+export function Editor({
+  controls,
+}: {
+  controls: Omit<EditorControlsProps, "resetLayout">;
+}) {
   const state = useEditorState();
   const play = useSearchHref({ pathname: "./play" });
 
   const dockLayout = useRef<DockLayout | null>(null);
 
-  const [zipProgress, setZipProgress] = useState<
-    { processed: number; total: number } | undefined
-  >(undefined);
-
-  const [pdfProgress, setPdfProgress] = useState<
-    { processed: number; total: number } | undefined
-  >(undefined);
+  console.log("Editor render", new Date().toISOString());
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -540,148 +532,13 @@ export function Editor({ downloadName }: { downloadName?: string }) {
       >
         <span style={{ fontSize: "24px" }}>LoFi Mockup</span>
 
-        <Stack direction="horizontal" style={{ marginLeft: "auto" }} gap={3}>
-          <Button as="a" {...play}>
-            Play
-          </Button>
-          {pdfProgress && (
-            <span>
-              Creating PDF: {pdfProgress.processed}/{pdfProgress.total}
-            </span>
-          )}
-          {zipProgress && (
-            <span>
-              Creating Download: {zipProgress.processed}/{zipProgress.total}
-            </span>
-          )}
-          {!zipProgress && (
-            <Button
-              onClick={async () => {
-                state.repository.projectData.dataVersion++;
-                state.project.onDataChanged();
-                saveAs(
-                  await state.repository.createZip(
-                    false,
-                    (processed, total) => {
-                      setZipProgress({ processed, total });
-                    },
-                  ),
-                  downloadName ?? "project.lofi",
-                );
-                setZipProgress(undefined);
-              }}
-            >
-              Download
-            </Button>
-          )}
-          <Dropzone
-            onDropAccepted={async (acceptedFiles) => {
-              if (acceptedFiles.length < 1) {
-                return;
-              }
-              if (acceptedFiles.length > 1) {
-                toast.error("Multiple Files Dropped");
-                return;
-              }
-              if (!acceptedFiles[0].name.endsWith(".lofi")) {
-                toast.error("File has to end in '.lofi'");
-                return;
-              }
-              try {
-                await state.repository.loadZip(acceptedFiles[0], false);
-              } catch (e) {
-                console.log(e);
-                toast.error("Loading " + acceptedFiles[0].name + " failed");
-              }
-              toast.success("File " + acceptedFiles[0].name + " loaded");
-            }}
-          >
-            {({ getRootProps, getInputProps, isDragActive }) => (
-              <div
-                {...getRootProps()}
-                style={{
-                  margin: "-4px",
-                  padding: "4px",
-                  ...(isDragActive
-                    ? {
-                        border: "1px dashed black",
-                      }
-                    : { border: "1px dashed transparent" }),
-                }}
-              >
-                <input {...getInputProps()} />
-                <Button>Upload</Button>
-              </div>
-            )}
-          </Dropzone>
-          <XwikiControls />
-          <ThreeDotMenu
-            items={[
-              {
-                label: pdfProgress
-                  ? `Creating PDF: ${pdfProgress.processed}/${pdfProgress.total}`
-                  : "Export PDF",
-                onClick: async () => {
-                  if (pdfProgress || zipProgress) return;
-                  await state.repository.savePdf((processed, total) => {
-                    setPdfProgress({ processed, total });
-                  });
-                  setPdfProgress(undefined);
-                },
-              },
-              {
-                label: "Export PNG Image",
-                onClick: async () => {
-                  saveAs(await state.repository.createPng(), "project.png");
-                },
-              },
-              {
-                label: "Copy Image to Clipboard",
-                onClick: async () => {
-                  const blob = await state.repository.createPng();
-                  await navigator.clipboard.write([
-                    new ClipboardItem({ "image/png": blob }),
-                  ]);
-                  toast.success("Image copied to the clipboard");
-                },
-              },
-              {
-                label: "Clear Project",
-                onClick: async () => {
-                  if (
-                    await confirm({
-                      title: "Clear Project",
-                      confirmation: "Really clear the project?",
-                      okDangerous: true,
-                      okLabel: "Clear",
-                    })
-                  )
-                    state.repository.clear();
-                },
-              },
-              {
-                label: "Reset Editor Layout",
-                onClick: async () => {
-                  if (
-                    await confirm({
-                      title: "Reset Editor Layout",
-                      confirmation:
-                        "Really set the editor layout back to the default?",
-                      okDangerous: true,
-                      okLabel: "Reset",
-                    })
-                  )
-                    localStorage.removeItem(editorLayoutKey);
-                  dockLayout.current?.loadLayout(defaultLayout);
-                },
-              },
-              {
-                label: "Help",
-                href: "https://github.com/ruediste/lo-fi-mockups/blob/main/README.md",
-              },
-            ]}
-          />
-        </Stack>
+        <EditorControls
+          {...controls}
+          resetLayout={() => {
+            localStorage.removeItem(editorLayoutKey);
+            dockLayout.current?.loadLayout(defaultLayout);
+          }}
+        />
       </div>
 
       <DockLayout
