@@ -8,6 +8,11 @@ import {
 } from "@/model/PageItem";
 import { toSet } from "@/util/utils";
 import * as htmlToImage from "@ruediste/html-to-image";
+import {
+  parseBlobEntry,
+  toBlobChunk,
+  transformPng,
+} from "@ruediste/png-transformer";
 import { DBSchema, IDBPDatabase, openDB } from "idb";
 import jsPDF from "jspdf";
 import { Fragment } from "react";
@@ -100,6 +105,25 @@ export class Repository {
     skipIfDataVersionMatches: boolean,
     pageNr?: number,
   ) {
+    const PNG_SIGNATURE = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+    const header = new Uint8Array(await data.slice(0, 8).arrayBuffer());
+    if (header.every((byte, index) => byte === PNG_SIGNATURE[index])) {
+      // this is a PNG file, try to extract the zip from the "lofi" chunk
+
+      let foundData: ArrayBuffer | undefined = undefined;
+      await transformPng(data, async (args) => {
+        const blobEntry = parseBlobEntry(args.chunk);
+        if (blobEntry?.key === "lofi") {
+          foundData = blobEntry.data;
+        }
+      });
+
+      if (!foundData) {
+        throw new Error("PNG file does not contain a 'lofi' chunk");
+      }
+      data = new Blob([foundData]);
+    }
+
     const zip = await JSZip.loadAsync(data, {});
     const loadedData: ProjectData = JSON.parse(
       await zip.file("project.json")!.async("string"),
@@ -153,11 +177,24 @@ export class Repository {
     const data = { ...this.projectData };
     const project = new Project(data, () => {});
     const [root, element] = this.renderPage(project.currentPage!, 2);
-    const dataUrl = await htmlToImage.toPng(element);
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
+    const blob = await htmlToImage.toBlob(element);
+    // const dataUrl = await htmlToImage.toPng(element);
+    // const response = await fetch(dataUrl);
+    // const blob = await response.blob();
     root.remove();
-    return blob;
+    return blob!;
+  }
+
+  async createLofiPng(): Promise<Blob> {
+    const zip = await this.createZip(false);
+    const blob = await this.createPng();
+    return (await transformPng(blob, async (args) => {
+      args.passThrough(); // keep existing chunks
+
+      if (args.chunk.type === "IHDR") {
+        args.addChunk(toBlobChunk("lofi", await zip.arrayBuffer()));
+      }
+    })) as Blob;
   }
 
   private renderPage(page: Page, scale: number) {

@@ -15,11 +15,13 @@ export interface ControlsArgs {
   createZip: (includeImages: boolean) => Promise<Blob>;
   createPdf: () => Promise<Blob>;
   createPng: () => Promise<Blob>;
+  createLofiPng: () => Promise<Blob>;
   inProgress: boolean;
   pdfInProgress: boolean;
   zipInProgress: boolean;
   exportPdf: () => ThreeDotMenuItem;
   exportPng: () => ThreeDotMenuItem;
+  exportLofiPng: () => ThreeDotMenuItem;
 }
 
 export interface EditorControlsProps {
@@ -79,6 +81,9 @@ export function EditorControls({
     createPng: async () => {
       return await state.repository.createPng();
     },
+    createLofiPng: async () => {
+      return await state.repository.createLofiPng();
+    },
     inProgress: zipProgress !== undefined || pdfProgress !== undefined,
     pdfInProgress: pdfProgress !== undefined,
     zipInProgress: zipProgress !== undefined,
@@ -94,6 +99,16 @@ export function EditorControls({
       label: "Export PNG Image",
       onClick: async () => {
         saveAs(await args.createPng(), projectName + ".png", "Save PNG");
+      },
+    }),
+    exportLofiPng: () => ({
+      label: "Export LoFi PNG Image",
+      onClick: async () => {
+        saveAs(
+          await args.createLofiPng(),
+          projectName + ".lofi.png",
+          "Save LoFi PNG",
+        );
       },
     }),
   };
@@ -140,8 +155,11 @@ export function EditorControls({
                 toast.error("Multiple Files Dropped");
                 return;
               }
-              if (!acceptedFiles[0].name.endsWith(".lofi")) {
-                toast.error("File has to end in '.lofi'");
+              if (
+                !acceptedFiles[0].name.endsWith(".lofi") &&
+                !acceptedFiles[0].name.endsWith(".lofi.png")
+              ) {
+                toast.error("File has to end in '.lofi' or '.lofi.png'");
                 return;
               }
               try {
@@ -181,7 +199,9 @@ export function EditorControls({
                 (x) => typeof x !== "boolean" && x != null,
               )
             : []),
-          ...(!hideExports ? [args.exportPdf(), args.exportPng()] : []),
+          ...(!hideExports
+            ? [args.exportPdf(), args.exportPng(), args.exportLofiPng()]
+            : []),
           {
             label: "Copy Image to Clipboard",
             onClick: async () => {

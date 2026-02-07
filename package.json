@@ -28,6 +28,7 @@
     "@neutralinojs/lib": "^6.5.0",
     "@popperjs/core": "^2.11.8",
     "@ruediste/html-to-image": "1.13.3",
+    "@ruediste/png-transformer": "^0.0.2",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "classnames": "^2.5.1",
