@@ -39,6 +39,8 @@ interface MyDB extends DBSchema {
   };
 }
 
+export type LofiFileType = "lofi" | "png";
+
 export class Repository {
   onChanged = new ModelEvent();
 
@@ -100,11 +102,12 @@ export class Repository {
     return (await db.get("project", "default")) ?? Repository.createEmptyData();
   }
 
-  async loadZip(
+  async loadProject(
     data: Blob,
     skipIfDataVersionMatches: boolean,
     pageNr?: number,
   ) {
+    let type: LofiFileType = "lofi";
     const PNG_SIGNATURE = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
     const header = new Uint8Array(await data.slice(0, 8).arrayBuffer());
     if (header.every((byte, index) => byte === PNG_SIGNATURE[index])) {
@@ -122,6 +125,7 @@ export class Repository {
         throw new Error("PNG file does not contain a 'lofi' chunk");
       }
       data = new Blob([foundData]);
+      type = "png";
     }
 
     const zip = await JSZip.loadAsync(data, {});
@@ -151,6 +155,7 @@ export class Repository {
       }
     }
     this.onChanged.notify();
+    return type;
   }
 
   async createZip(

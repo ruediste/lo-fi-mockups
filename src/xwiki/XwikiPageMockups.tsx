@@ -189,7 +189,7 @@ function OpenAttachment({
       const savedIdentification = getSavedLoFiIdentification();
       const currentIdentification = toXwikiLoFiIdentification(page, attachment);
 
-      await repo.loadZip(
+      await repo.loadProject(
         await response.blob(),
         savedIdentification === currentIdentification,
         pageNr,

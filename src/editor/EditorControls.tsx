@@ -163,7 +163,7 @@ export function EditorControls({
                 return;
               }
               try {
-                await state.repository.loadZip(acceptedFiles[0], false);
+                await state.repository.loadProject(acceptedFiles[0], false);
               } catch (e) {
                 console.log(e);
                 toast.error("Loading " + acceptedFiles[0].name + " failed");

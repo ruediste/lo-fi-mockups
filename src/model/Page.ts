@@ -1,4 +1,5 @@
 import { Vec2d } from "@/util/Vec2d";
+import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
 import { IRectangle } from "@/widgets/Widget";
 import { Selection } from "../editor/Selection";
 import { arraySwapInPlace } from "../util/utils";
@@ -13,7 +14,6 @@ import {
 } from "./PageItem";
 import { Project } from "./Project";
 import { createPageItem } from "./createPageItem";
-import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
 
 export interface PageData {
   id: number;
@@ -52,7 +52,7 @@ export class Page {
   constructor(
     public data: PageData,
     public project: Project,
-    public onDataChanged: () => void
+    public onDataChanged: () => void,
   ) {
     const seen = new Set();
     let id = this.data.masterPageId;
@@ -74,7 +74,7 @@ export class Page {
     for (let index = this.masterPages.length - 1; index >= 0; index--) {
       const masterPage = this.masterPages[index];
       this.masterItems.push(
-        ...masterPage.items.map((i) => this.toPageItem(i, true))
+        ...masterPage.items.map((i) => this.toPageItem(i, true)),
       );
     }
 
@@ -84,19 +84,24 @@ export class Page {
   }
 
   setSelection(value: Selection) {
+    console.log(
+      "set selection",
+      value.all().map((i) => i.id),
+    );
+    if (value.size > 1) debugger;
     this._selection = value;
     this.onChange.notify();
   }
 
   selectAvailableItemsById(value: Selection) {
     const items = Object.fromEntries(
-      this.ownItems.concat(this.masterItems).map((i) => [i.id, i])
+      this.ownItems.concat(this.masterItems).map((i) => [i.id, i]),
     );
     this._selection = Selection.of(
       ...value
         .all()
         .filter((i) => i.id in items)
-        .map((i) => items[i.id])
+        .map((i) => items[i.id]),
     );
     this.onChange.notify();
   }
@@ -115,7 +120,7 @@ export class Page {
   copyItems(items: PageItem[]): string {
     const ownItemIds = new Set(this.ownItems.map((i) => i.id));
     const itemIds = new Set(
-      items.map((i) => i.id).filter((id) => ownItemIds.has(id))
+      items.map((i) => i.id).filter((id) => ownItemIds.has(id)),
     );
 
     const propertyValues: ClipboardData["propertyValues"] = {};
@@ -147,7 +152,7 @@ export class Page {
   pasteItems(dataStr: string) {
     const data: ClipboardData = JSON.parse(dataStr);
     const idMap = new Map(
-      data.items.map((item) => [item.id, this.project.nextId()])
+      data.items.map((item) => [item.id, this.project.nextId()]),
     );
     const isFromSamePage =
       data.sourceProjectId == this.project.uniqueId &&
@@ -160,7 +165,7 @@ export class Page {
       data.items.map((item) => [
         item.id,
         pageItemTypeRegistry.mapDataAfterPaste(item, mapId),
-      ])
+      ]),
     );
 
     const copiedItems: PageItem[] = [];
@@ -280,7 +285,7 @@ export class Page {
     let drawBox: IRectangle | undefined;
     if (items.length > 0) {
       const box = Vec2d.boundingBoxRect(
-        ...items.map((item) => item.boundingBox)
+        ...items.map((item) => item.boundingBox),
       );
 
       drawBox = {

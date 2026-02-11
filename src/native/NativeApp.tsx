@@ -31,7 +31,7 @@ async function loadInitialFile(name: string, loaded: () => void) {
   try {
     const fileData = await filesystem.readBinaryFile(name);
     const state = await editorState;
-    await state.repository.loadZip(new Blob([fileData]), false);
+    await state.repository.loadProject(new Blob([fileData]), false);
     loaded();
   } catch (e) {
     console.error("Error loading initial file:", e);
@@ -107,7 +107,7 @@ export function NativeApp() {
                   const fullFilePath = result[0];
                   const fileData =
                     await filesystem.readBinaryFile(fullFilePath);
-                  state.repository.loadZip(new Blob([fileData]), false);
+                  state.repository.loadProject(new Blob([fileData]), false);
 
                   const fileName = getFileNameFromPath(fullFilePath);
                   const type = fullFilePath.endsWith(".lofi.png")

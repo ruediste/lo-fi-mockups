@@ -3,6 +3,7 @@ import { use } from "react";
 import { editorState, EditorStateContext } from "./editor/EditorState";
 import { InnerApp } from "./InnerApp";
 import { NativeApp } from "./native/NativeApp";
+import { VscodeApp } from "./VscodeApp";
 import "./widgets/PageItemTypeRegistry";
 import { XwikiApp } from "./xwiki/XwikiPageMockups";
 
@@ -17,6 +18,14 @@ function WebApp() {
   );
 }
 
+declare global {
+  interface Window {
+    vscode: {
+      postMessage: (message: any) => void;
+    };
+  }
+}
+
 function AppSwitcher() {
   switch (import.meta.env.VITE_VARIANT) {
     case "xwiki":
@@ -25,6 +34,8 @@ function AppSwitcher() {
       return <WebApp />;
     case "native":
       return <NativeApp />;
+    case "vscode":
+      return <VscodeApp />;
   }
 }
 export default function App() {

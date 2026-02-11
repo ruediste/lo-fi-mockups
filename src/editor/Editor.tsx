@@ -58,8 +58,14 @@ function RenderItem({
       ) : (
         <rect
           {...item.boundingBox}
-          {...dragPositionRectAttrs(projection)}
+          {...(selection.has(item) ? dragPositionRectAttrs(projection) : {})}
           fill="transparent"
+          onPointerDown={(e) => {
+            if (e.ctrlKey) {
+              e.stopPropagation();
+              item.page.setSelection(selection.toggle(item));
+            }
+          }}
         />
       )}
     </>

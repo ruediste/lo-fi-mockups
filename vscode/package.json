@@ -1,0 +1,55 @@
+{
+  "name": "lofi",
+  "description": "Lo-Fi - Diagram Editing in VS Code",
+  "version": "0.0.1",
+  "publisher": "Ruedi Steinmann",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruediste/lo-fi-mockups.git"
+  },
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "lofi.editor",
+        "displayName": "Lo-Fi Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.lofi.png"
+          },
+          {
+            "filenamePattern": "*.lofi"
+          }
+        ],
+        "priority": "default"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint",
+    "watch": "tsc -w -p ./"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@stylistic/eslint-plugin": "^2.9.0",
+    "@types/vscode": "^1.100.0",
+    "eslint": "^9.13.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.0"
+  }
+}

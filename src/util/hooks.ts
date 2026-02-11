@@ -6,6 +6,12 @@ export function useRerenderTrigger() {
   return useCallback(() => trigger({}), []);
 }
 
+export function useEvent<T>(event: ModelEvent<T>, handler: (arg: T) => void) {
+  useEffect(() => {
+    return event.subscribe(handler);
+  }, [event, handler]);
+}
+
 export function useRerenderOnEvent(event: ModelEvent<any> | undefined) {
   const trigger = useRerenderTrigger();
   useEffect(() => {

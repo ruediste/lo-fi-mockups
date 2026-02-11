@@ -19,13 +19,18 @@ export class EditorState {
 
   onChanged = new ModelEvent();
 
+  onProjectChanged = new ModelEvent();
+
   constructor(public repository: Repository) {
     repository.onChanged.subscribe(() => this.recreateProject());
     this.project = this.createProject();
   }
 
   private createProject() {
-    return new Project(this.repository.projectData, () => this.save());
+    return new Project(this.repository.projectData, () => {
+      this.onProjectChanged.notify();
+      this.save();
+    });
   }
 
   static async create() {

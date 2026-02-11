@@ -15,6 +15,26 @@
     },
     {
       "type": "npm",
+      "script": "vscode-start-webview",
+      "problemMatcher": [],
+      "label": "npm: vscode-start-webview",
+      "isBackground": true
+    },
+    {
+      "label": "npm: vscode-watch-extension",
+      "type": "npm",
+      "script": "watch",
+      "problemMatcher": [],
+      "path": "vscode",
+      "isBackground": true
+    },
+    {
+      "label": "vscode-debug-tasks",
+      "isBackground": true,
+      "dependsOn": ["npm: vscode-watch-extension", "npm: vscode-start-webview"]
+    },
+    {
+      "type": "npm",
       "script": "start-xwiki",
       "problemMatcher": [],
       "label": "npm: start-xwiki"
