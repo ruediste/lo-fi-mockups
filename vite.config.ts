@@ -1,5 +1,6 @@
 import react from "@vitejs/plugin-react";
 import * as path from "path";
+import { env } from "process";
 import { defineConfig } from "vite";
 import checker from "vite-plugin-checker";
 import { VitePWA } from "vite-plugin-pwa";
@@ -18,37 +19,41 @@ export default defineConfig({
         tsconfigPath: "tsconfig.app.json",
       },
     }),
-    VitePWA({
-      registerType: "autoUpdate",
-      devOptions: {
-        enabled: false,
-      },
-      includeAssets: "**/*",
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,woff,woff2,png}"],
-      },
-      manifest: {
-        name: "Lo Fi Mockups",
-        short_name: "LoFi",
-        description: "Quickly Sketch UIs in Lo Fidelity",
-        theme_color: "#ffffff",
-        launch_handler: {
-          client_mode: "focus-existing",
-        },
-        icons: [
-          {
-            src: "icon192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "icon512.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-        ],
-      },
-    }),
+    ...(env.VITE_VARIANT === "web" || env.VITE_VARIANT === "xwiki"
+      ? [
+          VitePWA({
+            registerType: "autoUpdate",
+            devOptions: {
+              enabled: false,
+            },
+            includeAssets: "**/*",
+            workbox: {
+              globPatterns: ["**/*.{js,css,html,woff,woff2,png}"],
+            },
+            manifest: {
+              name: "Lo Fi Mockups",
+              short_name: "LoFi",
+              description: "Quickly Sketch UIs in Lo Fidelity",
+              theme_color: "#ffffff",
+              launch_handler: {
+                client_mode: "focus-existing",
+              },
+              icons: [
+                {
+                  src: "icon192.png",
+                  sizes: "192x192",
+                  type: "image/png",
+                },
+                {
+                  src: "icon512.png",
+                  sizes: "512x512",
+                  type: "image/png",
+                },
+              ],
+            },
+          }),
+        ]
+      : []),
   ],
   resolve: {
     alias: {
@@ -77,5 +82,15 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      output:
+        env.VITE_VARIANT === "vscode"
+          ? {
+              entryFileNames: "assets/[name].js",
+              chunkFileNames: "assets/[name].js",
+              assetFileNames: "assets/[name].[ext]",
+            }
+          : {},
+    },
   },
 });

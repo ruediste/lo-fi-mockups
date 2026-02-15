@@ -41,33 +41,16 @@ function RenderItem({
 }) {
   useRerenderOnEvent(item.onChange);
   useRerenderOnEvent(projection.onChange);
-  const selection = item.page.selection;
   return (
     <>
       {item.renderContent(globalSvgContentId)}
-      {selection.size <= 1 ? (
-        item.fromMasterPage ? (
-          item.interaction.renderMasterInteraction({
+      {item.fromMasterPage
+        ? item.interaction.renderMasterInteraction({
             projection,
           })
-        ) : (
-          item.interaction.renderEditorInteraction({
+        : item.interaction.renderEditorInteraction({
             projection,
-          })
-        )
-      ) : (
-        <rect
-          {...item.boundingBox}
-          {...(selection.has(item) ? dragPositionRectAttrs(projection) : {})}
-          fill="transparent"
-          onPointerDown={(e) => {
-            if (e.ctrlKey) {
-              e.stopPropagation();
-              item.page.setSelection(selection.toggle(item));
-            }
-          }}
-        />
-      )}
+          })}
     </>
   );
 }
@@ -106,8 +89,7 @@ function MultiItemSelectionBox({
           projection,
           visible: true,
           page,
-          onDuplicate: () =>
-            page.selection.items.forEach((i) => page.duplicateItem(i)),
+          onDuplicate: () => page.duplicateItems(page.selection.all()),
         }}
       />
     )
@@ -464,10 +446,7 @@ export function Editor({
 }) {
   const state = useEditorState();
   const play = useSearchHref({ pathname: "./play" });
-
   const dockLayout = useRef<DockLayout | null>(null);
-
-  console.log("Editor render", new Date().toISOString());
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

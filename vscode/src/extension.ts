@@ -206,11 +206,11 @@ class LofiEditorProvider implements vscode.CustomEditorProvider<LofiDocument> {
     };
     return new LofiDocument(uri);
   }
-  resolveCustomEditor(
+  async resolveCustomEditor(
     document: LofiDocument,
     webviewPanel: vscode.WebviewPanel,
     token: vscode.CancellationToken,
-  ): Thenable<void> | void {
+  ) {
     this.webview = webviewPanel.webview;
     webviewPanel.webview.options = {
       // Allow scripts in the webview
@@ -218,11 +218,13 @@ class LofiEditorProvider implements vscode.CustomEditorProvider<LofiDocument> {
       localResourceRoots: [this.context.extensionUri],
     };
 
-    webviewPanel.webview.html = this._getHtmlForWebview(webviewPanel.webview);
+    webviewPanel.webview.html = await this._getHtmlForWebview(
+      webviewPanel.webview,
+    );
 
     webviewPanel.webview.onDidReceiveMessage(
       async (data: WebviewToExtensionMessage) => {
-        console.log("Received message from webview:", data.type);
+        console.log("Received message from webview:", data.type ?? data);
         switch (data.type) {
           case "triggerSave":
             {
@@ -247,42 +249,42 @@ class LofiEditorProvider implements vscode.CustomEditorProvider<LofiDocument> {
     );
   }
 
-  private _getHtmlForWebview(webview: vscode.Webview) {
+  private async _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, "media", "main.js"),
-    );
+    if (process.env.NODE_ENV !== "production") {
+      // load dist/webview/index.html in production
+      const indexHtmlContent = (
+        await vscode.workspace.fs.readFile(
+          vscode.Uri.joinPath(
+            this.context.extensionUri,
+            // "dist",
+            "webview",
+            "index.html",
+          ),
+        )
+      )
+        .toString()
+        .replace(
+          "<head>",
+          `<head>\n<base href="${webview.asWebviewUri(
+            vscode.Uri.joinPath(
+              this.context.extensionUri,
+              //"dist",
+              "webview",
+            ),
+          )}/"><script>console.log("Acquiring vscode"); try {vscode = acquireVsCodeApi();} catch (error) {console.error("Failed to acquire vscode:", error);}</script>`,
+        );
+      console.log("Loaded index.html ", indexHtmlContent.toString());
+      return indexHtmlContent.toString();
+    }
 
-    // Do the same for the stylesheet.
-    const styleResetUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, "media", "reset.css"),
-    );
-    const styleVSCodeUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, "media", "vscode.css"),
-    );
-    const styleMainUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, "media", "main.css"),
-    );
-    const datUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, "media", "test.dat"),
-    );
-
-    // Use a nonce to only allow a specific script to be run.
-    const nonce = getNonce();
+    const url = "http://localhost:5177";
 
     return `<!DOCTYPE html>
 			<html lang="en">
 			<head>
 				<meta charset="UTF-8">
-
-				<!--
-					Use a content security policy to only allow loading styles from our extension directory,
-					and only allow scripts that have a specific nonce.
-					(See the 'webview-sample' extension sample for img-src content security policy examples)
-				-->
-
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 				<title>Cat Colors</title>
         <style>
           	html, body {
@@ -291,14 +293,14 @@ class LofiEditorProvider implements vscode.CustomEditorProvider<LofiDocument> {
         </style>
 			</head>
 			<body>
-        <iframe id="lofiWebview" src="http://localhost:5177" width="100%" height="100%"></iframe>
-				<script nonce="${nonce}">
+        <iframe id="lofiWebview" src="${url}" width="100%" height="100%"></iframe>
+				<script>
           const vscode = acquireVsCodeApi();
           const iframe = document.getElementById("lofiWebview");
           iframe.addEventListener("load", () => {
             window.addEventListener("message", (event) => {
-              console.log("Received message in extension:", event);
-              if (event.origin === "http://localhost:5177") {
+              console.log("Parent received message:", event.origin);
+              if (event.origin === "${url}") {
                 vscode.postMessage(event.data);
               }
               else {

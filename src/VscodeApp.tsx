@@ -9,8 +9,15 @@ import { LofiFileType } from "./editor/repository";
 import { InnerApp } from "./InnerApp";
 import { useEvent } from "./util/hooks";
 
-function sendMessage(message: WebviewToExtensionMessage) {
-  window.parent.postMessage(message, "*");
+let sendMessage: (message: WebviewToExtensionMessage) => void;
+if (import.meta.env.MODE === "production") {
+  console.log("Running in production mode");
+  // ts-ignore because acquireVsCodeApi is injected by vscode and not defined in the global scope
+  // @ts-ignore
+  sendMessage = (msg) => vscode.postMessage(msg);
+} else {
+  console.log("Running in development mode");
+  sendMessage = (msg) => window.parent.postMessage(msg, "*");
 }
 
 declare global {
@@ -21,6 +28,7 @@ declare global {
     toBase64(): string;
   }
 }
+
 export function VscodeApp() {
   const editorState = useEditorState();
   const type = useRef<LofiFileType | undefined>(undefined);
@@ -36,15 +44,24 @@ export function VscodeApp() {
     });
     window.addEventListener("message", async (event) => {
       const data = event.data as ExtensionToWebviewMessage;
-      console.log("Received message from webview:", data.type);
+      console.log("Received message from extension:", data.type ?? data);
       switch (data.type) {
         case "loadDocument": {
+          if (1 == 1) return;
           // convert base64 to binary
-          const binaryData = (Uint8Array as any).fromBase64(data.value);
-          type.current = await editorState.repository.loadProject(
-            new Blob([binaryData]),
-            false,
-          );
+          console.log("Loading document...");
+          try {
+            const binaryData = (Uint8Array as any).fromBase64(data.value);
+            type.current = await editorState.repository.loadProject(
+              new Blob([binaryData]),
+              false,
+            );
+            console.log("Document loaded with type:", type.current);
+          } catch (error) {
+            console.error("Failed to load document:", error);
+          } finally {
+            console.log("Load document process completed.");
+          }
           break;
         }
         case "exportProject": {
@@ -80,6 +97,7 @@ export function VscodeApp() {
       type: "listening",
     });
   }, []);
+  console.log("Rendering VscodeApp");
   return (
     <InnerApp
       controls={{

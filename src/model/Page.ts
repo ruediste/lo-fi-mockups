@@ -1,4 +1,5 @@
 import { Vec2d } from "@/util/Vec2d";
+import { ConnectorWidget } from "@/widgets/ConnectorWidget";
 import { pageItemTypeRegistry } from "@/widgets/PageItemTypeRegistry";
 import { IRectangle } from "@/widgets/Widget";
 import { Selection } from "../editor/Selection";
@@ -84,11 +85,6 @@ export class Page {
   }
 
   setSelection(value: Selection) {
-    console.log(
-      "set selection",
-      value.all().map((i) => i.id),
-    );
-    if (value.size > 1) debugger;
     this._selection = value;
     this.onChange.notify();
   }
@@ -193,22 +189,36 @@ export class Page {
       copiedItem.initializeItemReferences();
     }
 
-    if (isFromSamePage)
+    if (isFromSamePage) {
+      if (
+        copiedItems.length == 1 &&
+        copiedItems[0] instanceof ConnectorWidget
+      ) {
+        // detach single connector when copying within the same page, to avoid confusion
+        const connector = copiedItems[0] as ConnectorWidget;
+        connector.source.disconnect();
+        connector.target.disconnect();
+      }
       copiedItems.forEach((copy) => copy.interaction.moveBy({ x: 20, y: 20 }));
+    }
 
     this.onDataChanged();
     this.onChange.notify();
     return copiedItems;
   }
 
-  duplicateItem(item: PageItem) {
-    const copiedItems = this.duplicateItems([item]);
+  duplicateItem(item: PageItem, selectCopy = true) {
+    const copiedItems = this.duplicateItems([item], selectCopy);
     return copiedItems.length > 0 ? copiedItems[0] : undefined;
   }
 
-  duplicateItems(items: PageItem[]) {
+  duplicateItems(items: PageItem[], selectCopy = true) {
     const clipboardData = this.copyItems(items);
-    return this.pasteItems(clipboardData);
+    const copiedItems = this.pasteItems(clipboardData);
+    if (selectCopy) {
+      this.setSelection(Selection.of(...copiedItems));
+    }
+    return copiedItems;
   }
 
   removeItem(id: number) {

@@ -1,3 +1,4 @@
+import { dragPositionRectAttrs } from "@/widgets/widgetUtils";
 import { JSX } from "react";
 import { Selection } from "../editor/Selection";
 import { PageItem, RenderInteractionArgs } from "../model/PageItem";
@@ -27,6 +28,32 @@ export abstract class PageItemInteraction {
   abstract setPosition(pos: IVec2d): void;
 }
 
+function MultiSelectionBox({
+  item,
+  selection,
+  projection,
+}: {
+  item: PageItem;
+  selection: Selection;
+  projection: RenderInteractionArgs["projection"];
+}) {
+  return (
+    <rect
+      {...item.boundingBox}
+      {...(selection.has(item) ? dragPositionRectAttrs(projection) : {})}
+      fill="transparent"
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        if (e.ctrlKey) {
+          item.page.setSelection(selection.toggle(item));
+        } else {
+          item.page.setSelection(Selection.of(item));
+        }
+      }}
+    />
+  );
+}
+
 export class BoxWidgetInteraction extends PageItemInteraction {
   box = new ObjectProperty<IRectangle>(this.item, "box", {
     x: 0,
@@ -46,6 +73,16 @@ export class BoxWidgetInteraction extends PageItemInteraction {
     projection,
   }: RenderInteractionArgs): React.ReactNode {
     const selection = this.item.page.selection;
+    if (selection.size > 1) {
+      return (
+        <MultiSelectionBox
+          item={this.item}
+          selection={selection}
+          projection={projection}
+        />
+      );
+    }
+
     return (
       <DraggableSnapResizeBox
         {...{
@@ -120,6 +157,15 @@ export class PositionWidgetInteraction extends PageItemInteraction {
     projection,
   }: RenderInteractionArgs): JSX.Element {
     const selection = this.item.page.selection;
+    if (selection.size > 1) {
+      return (
+        <MultiSelectionBox
+          item={this.item}
+          selection={selection}
+          projection={projection}
+        />
+      );
+    }
     return (
       <DraggableSnapBox
         {...{

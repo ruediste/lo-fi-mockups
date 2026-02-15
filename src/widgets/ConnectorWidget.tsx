@@ -17,6 +17,7 @@ import { useRerenderOnEvent } from "@/util/hooks";
 import { Rectangle } from "@/util/rectangle";
 import { getDirectionOutside, Vec2d } from "@/util/Vec2d";
 import { WithHooks } from "@/util/WithHooks";
+import { useId, useRef } from "react";
 import {
   CheckboxProperty,
   getLineDashArray,
@@ -29,7 +30,6 @@ import {
 import { globalSvgContent, IRectangle, IVec2d, Widget } from "./Widget";
 import { widgetTheme } from "./widgetTheme";
 import { getTextWidth } from "./widgetUtils";
-import { useId } from "react";
 
 type UmlMarkerType = "None" | "Association" | "Composition" | "Inheritance";
 
@@ -63,7 +63,7 @@ const UML_MARKER_OPTIONS: SelectPropertyOption<UmlMarkerType>[] = (
 
 function getMarkerUrl(
   markerType: UmlMarkerType | null,
-  globalContentId: string
+  globalContentId: string,
 ): string | undefined {
   if (markerType === null) return undefined;
 
@@ -101,13 +101,13 @@ export class ConnectorWidget extends Widget {
     this,
     "sourceMultiplicity",
     "Source Multiplicity",
-    ""
+    "",
   );
   targetMultiplicity = new StringProperty(
     this,
     "targetMultiplicity",
     "Target Multiplicity",
-    ""
+    "",
   );
 
   sourceMarkerType = new SelectProperty<UmlMarkerType>(
@@ -115,7 +115,7 @@ export class ConnectorWidget extends Widget {
     "sourceMarkerType",
     "Source Marker",
     () => UML_MARKER_OPTIONS,
-    "None"
+    "None",
   )
     .buttonGroup()
     .noLabel();
@@ -125,7 +125,7 @@ export class ConnectorWidget extends Widget {
     "targetMarkerType",
     "Target Marker",
     () => UML_MARKER_OPTIONS,
-    "Association"
+    "Association",
   )
     .buttonGroup()
     .noLabel();
@@ -136,7 +136,7 @@ export class ConnectorWidget extends Widget {
     this,
     "orthogonalRouting",
     "OrthogonalRouting",
-    true
+    true,
   );
 
   routePointsMemo = new MemoValue<Vec2d[]>(() => {
@@ -156,8 +156,8 @@ export class ConnectorWidget extends Widget {
             direction: getDirectionOutside(
               sourceBoundingBox,
               Vec2d.from(this.source.position).sub(
-                this.source.connectedItem!.boundingBox
-              )
+                this.source.connectedItem!.boundingBox,
+              ),
             ),
             rectangle: sourceBoundingBox,
           }
@@ -174,8 +174,8 @@ export class ConnectorWidget extends Widget {
             direction: getDirectionOutside(
               targetBoundingBox,
               Vec2d.from(this.target.position).sub(
-                this.target.connectedItem!.boundingBox
-              )
+                this.target.connectedItem!.boundingBox,
+              ),
             ),
             rectangle: targetBoundingBox,
           }
@@ -233,7 +233,7 @@ export class ConnectorWidget extends Widget {
           const sourceMarkerType = this.sourceMarkerType.get();
           const targetMarkerType = this.targetMarkerType.get();
           const lineDashArray = getLineDashArray(
-            this.lineStyle.get() || "Normal"
+            this.lineStyle.get() || "Normal",
           );
           const routePoints = this.routePointsMemo.value;
 
@@ -279,11 +279,11 @@ export class ConnectorWidget extends Widget {
           // Get marker URLs
           const sourceMarkerUrl = getMarkerUrl(
             sourceMarkerType,
-            globalContentId
+            globalContentId,
           );
           const targetMarkerUrl = getMarkerUrl(
             targetMarkerType,
-            globalContentId
+            globalContentId,
           );
 
           // Calculate direction from first segment for source multiplicity
@@ -291,7 +291,7 @@ export class ConnectorWidget extends Widget {
 
           // Calculate direction from last segment for target multiplicity
           const targetDirection = routePoints[routePoints.length - 2].sub(
-            routePoints[routePoints.length - 1]
+            routePoints[routePoints.length - 1],
           );
 
           return (
@@ -302,14 +302,14 @@ export class ConnectorWidget extends Widget {
                 this.renderMultiplicity(
                   sourceMulti,
                   source.position,
-                  sourceDirection
+                  sourceDirection,
                 )}
               {targetMulti &&
                 targetMulti.length > 0 &&
                 this.renderMultiplicity(
                   targetMulti,
                   target.position,
-                  targetDirection
+                  targetDirection,
                 )}
 
               {/* Draw connector lines using route points */}
@@ -372,7 +372,7 @@ export class ConnectorWidget extends Widget {
   private renderMultiplicity(
     text: string,
     position: IVec2d,
-    direction: IVec2d
+    direction: IVec2d,
   ): React.ReactNode {
     const dx = direction.x;
     const dy = direction.y;
@@ -447,7 +447,7 @@ class ConnectorEndpoint {
   connectedItem?: PageItem;
   constructor(
     public widget: ConnectorWidget,
-    public data: ConnectorEndpointData
+    public data: ConnectorEndpointData,
   ) {
     if (data.connectedItemId !== undefined)
       this.connectedItem = widget.page.allItems.get(data.connectedItemId);
@@ -463,6 +463,10 @@ class ConnectorEndpoint {
         y: box.y + this.data.position.y * box.height,
       };
     }
+  }
+
+  disconnect() {
+    this.moveBy({ x: 0, y: 0 });
   }
 
   moveBy(delta: IVec2d) {
@@ -515,10 +519,18 @@ class ConnectorInteraction extends PageItemInteraction {
       <WithHooks>
         {() => {
           useRerenderOnEvent(this.item_.routePointsMemo.invalidated);
+          const dragState = useRef<
+            | {
+                startEventPosition: IVec2d;
+                lastDelta: IVec2d;
+                dragStarted: boolean;
+              }
+            | undefined
+          >(undefined);
           const { source, target } = this.item_;
           const selection = this.item.page.selection;
 
-          const visible = selection.has(this.item);
+          const selected = selection.has(this.item);
 
           const routePoints = this.item_.routePointsMemo.value;
 
@@ -526,36 +538,70 @@ class ConnectorInteraction extends PageItemInteraction {
             <>
               <polyline
                 points={routePoints.map((p) => `${p.x},${p.y}`).join(" ")}
-                stroke={visible ? "#00FF0040" : "transparent"}
+                stroke={selected ? "#00FF0040" : "transparent"}
                 fill="none"
+                cursor="grab"
                 strokeWidth={projection.lengthToWorld(20)}
-                style={{ cursor: "move" }}
                 onDoubleClick={() => this.item.page.duplicateItem(this.item)}
                 onPointerDown={(e) => {
                   if (e.shiftKey) return;
-
                   e.stopPropagation();
-                  this.item.page.setSelection(
-                    e.ctrlKey
-                      ? selection.toggle(this.item)
-                      : Selection.of(this.item)
-                  );
+                  e.currentTarget.setPointerCapture(e.pointerId);
+
+                  dragState.current = {
+                    startEventPosition: Vec2d.fromEvent(e),
+                    lastDelta: { x: 0, y: 0 },
+                    dragStarted: false,
+                  };
+                }}
+                onPointerMove={(e) => {
+                  const state = dragState.current;
+                  if (!state) return;
+
+                  const currentPos = Vec2d.fromEvent(e);
+                  const delta = currentPos.sub(state.startEventPosition);
+                  if (Math.abs(delta.x) > 5 || Math.abs(delta.y) > 5) {
+                    state.dragStarted = true;
+                  }
+                  if (state.dragStarted) {
+                    const deltaProjected = projection.scaleToWorld(delta);
+
+                    if (selected)
+                      selection.moveBy(deltaProjected.sub(state.lastDelta));
+                    else this.moveBy(deltaProjected.sub(state.lastDelta));
+                    state.lastDelta = deltaProjected;
+                  }
+                }}
+                onPointerUp={(e) => {
+                  const state = dragState.current;
+                  if (!state) return;
+
+                  e.currentTarget.releasePointerCapture(e.pointerId);
+
+                  if (!state.dragStarted) {
+                    this.item.page.setSelection(
+                      e.ctrlKey
+                        ? selection.toggle(this.item)
+                        : Selection.of(this.item),
+                    );
+                  }
+                  dragState.current = undefined;
                 }}
               />
-              {selection.size == 1 && (
+              {selection.size == 1 && selected && (
                 <>
                   <DraggableConnectorSnapBox
                     position={source.position}
                     otherPosition={target.position}
                     item={this.item}
-                    visible={selection.has(this.item)}
+                    visible={true}
                     update={(start, delta, result) => {
                       this.item_.source.setPosition(
                         {
                           x: start.x + delta.x,
                           y: start.y + delta.y,
                         },
-                        result
+                        result,
                       );
                     }}
                     projection={projection}
@@ -565,14 +611,14 @@ class ConnectorInteraction extends PageItemInteraction {
                     position={target.position}
                     otherPosition={source.position}
                     item={this.item}
-                    visible={selection.has(this.item)}
+                    visible={true}
                     update={(start, delta, result) => {
                       this.item_.target.setPosition(
                         {
                           x: start.x + delta.x,
                           y: start.y + delta.y,
                         },
-                        result
+                        result,
                       );
                     }}
                     projection={projection}
@@ -606,7 +652,7 @@ class ConnectorInteraction extends PageItemInteraction {
   }
 
   setPosition(pos: IVec2d): void {
-    (this.item_.data_.source.position = { x: pos.x + 10, y: pos.y + 10 }),
-      (this.item_.data_.target.position = { x: pos.x + 90, y: pos.y + 10 });
+    ((this.item_.data_.source.position = { x: pos.x + 10, y: pos.y + 10 }),
+      (this.item_.data_.target.position = { x: pos.x + 90, y: pos.y + 10 }));
   }
 }

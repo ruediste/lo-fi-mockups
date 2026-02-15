@@ -35,13 +35,7 @@ function SingleItemProperties({
         >
           <h1 style={{ marginRight: "auto" }}> {item.label} </h1>
           {!item.fromMasterPage && (
-            <IconButton
-              onClick={() => {
-                const clone = item.page.duplicateItem(item);
-                if (clone)
-                  project.currentPage?.setSelection(Selection.of(clone));
-              }}
-            >
+            <IconButton onClick={() => item.page.duplicateItem(item)}>
               <Copy size={24} />
             </IconButton>
           )}
@@ -115,9 +109,8 @@ export function ItemProperties() {
           <IconButton
             onClick={() => {
               const copiedItems = project.currentPage?.duplicateItems(
-                selection.all()
+                selection.all(),
               );
-              project.currentPage?.setSelection(Selection.of(...copiedItems!));
             }}
           >
             <Copy size={24} />

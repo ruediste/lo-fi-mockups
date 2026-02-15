@@ -34,12 +34,7 @@ export class EditorState {
   }
 
   static async create() {
-    console.log("EditorState create started", new Date().toISOString());
-    try {
-      return new EditorState(await Repository.create());
-    } finally {
-      console.log("EditorState created", new Date().toISOString());
-    }
+    return new EditorState(await Repository.create());
   }
 
   public recreateProject() {
