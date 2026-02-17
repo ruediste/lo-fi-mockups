@@ -11,12 +11,10 @@ import { useEvent } from "./util/hooks";
 
 let sendMessage: (message: WebviewToExtensionMessage) => void;
 if (import.meta.env.MODE === "production") {
-  console.log("Running in production mode");
   // ts-ignore because acquireVsCodeApi is injected by vscode and not defined in the global scope
   // @ts-ignore
   sendMessage = (msg) => vscode.postMessage(msg);
 } else {
-  console.log("Running in development mode");
   sendMessage = (msg) => window.parent.postMessage(msg, "*");
 }
 

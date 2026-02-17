@@ -113,9 +113,13 @@ export class BoxWidgetInteraction extends PageItemInteraction {
         showHandles={this.item.page.selection.hasSingle(this.item)}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => {
-          if (!e.ctrlKey && !e.shiftKey) {
+          if (!e.shiftKey) {
             e.stopPropagation();
-            this.item.page.setSelection(Selection.of(this.item));
+            this.item.page.setSelection(
+              e.ctrlKey
+                ? this.item.page.selection.toggle(this.item)
+                : Selection.of(this.item),
+            );
           }
         }}
       />
@@ -194,9 +198,13 @@ export class PositionWidgetInteraction extends PageItemInteraction {
         showHandles={this.item.page.selection.hasSingle(this.item)}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => {
-          if (!e.ctrlKey && !e.shiftKey) {
+          if (!e.shiftKey) {
             e.stopPropagation();
-            this.item.page.setSelection(Selection.of(this.item));
+            this.item.page.setSelection(
+              e.ctrlKey
+                ? this.item.page.selection.toggle(this.item)
+                : Selection.of(this.item),
+            );
           }
         }}
       />

@@ -1,3 +1,4 @@
+import { SnapBoxesArgs, SnapReferencesArgs } from "@/model/PageItem";
 import { JSX } from "react";
 import {
   BackgroundColorProperty,
@@ -9,13 +10,12 @@ import {
   StringProperty,
 } from "../model/PageItemProperty";
 import { BoxWidget as BaseBoxWidget } from "./Widget";
+import { PageLink } from "./WidgetHelpers";
 import {
   backgroundPaletteMap,
   snapConfiguration,
   widgetTheme,
 } from "./widgetTheme";
-import { PageLink } from "./WidgetHelpers";
-import { SnapBoxesArgs, SnapReferencesArgs } from "@/model/PageItem";
 
 type HorizontalAlignment = "Left" | "Center" | "Right";
 type VerticalAlignment = "Top" | "Middle" | "Bottom";
@@ -42,7 +42,7 @@ export class BoxWidget extends BaseBoxWidget {
     this,
     "backgroundColor",
     "Background Color",
-    "White"
+    "White",
   );
 
   lineStyle = lineStyleProperty(this, "lineStyle");
@@ -52,7 +52,7 @@ export class BoxWidget extends BaseBoxWidget {
     "horizontalAlignment",
     "Horizontal Alignment",
     () => HORIZONTAL_ALIGNMENT_OPTIONS,
-    "Left"
+    "Left",
   )
     .buttonGroup()
     .noLabel();
@@ -62,7 +62,7 @@ export class BoxWidget extends BaseBoxWidget {
     "verticalAlignment",
     "Vertical Alignment",
     () => VERTICAL_ALIGNMENT_OPTIONS,
-    "Top"
+    "Top",
   )
     .buttonGroup()
     .noLabel();
@@ -80,7 +80,7 @@ export class BoxWidget extends BaseBoxWidget {
     const padding = 8;
 
     // Calculate text position based on alignment
-    const getTextX = () => {
+    const textX = (() => {
       switch (hAlign) {
         case "Left":
           return box.x + padding;
@@ -91,9 +91,9 @@ export class BoxWidget extends BaseBoxWidget {
         default:
           return box.x + padding;
       }
-    };
+    })();
 
-    const getTextAnchor = () => {
+    const textAnchor = (() => {
       switch (hAlign) {
         case "Left":
           return "start";
@@ -104,12 +104,12 @@ export class BoxWidget extends BaseBoxWidget {
         default:
           return "start";
       }
-    };
+    })();
 
     const lines = text.split("\n");
     const totalTextHeight = lines.length * fontSize + (lines.length - 1) * 2;
 
-    const getStartY = () => {
+    const startY = (() => {
       switch (vAlign) {
         case "Top":
           return box.y + padding + fontSize;
@@ -120,7 +120,7 @@ export class BoxWidget extends BaseBoxWidget {
         default:
           return box.y + padding + fontSize;
       }
-    };
+    })();
 
     return (
       <>
@@ -137,18 +137,14 @@ export class BoxWidget extends BaseBoxWidget {
         {text && (
           <text
             css={{ whiteSpace: "pre" }}
-            x={getTextX()}
-            y={getStartY()}
+            x={textX}
+            y={startY}
             fontSize={fontSize}
-            textAnchor={getTextAnchor()}
+            textAnchor={textAnchor}
             alignmentBaseline="hanging"
           >
             {lines.map((line, index) => (
-              <tspan
-                key={index}
-                x={getTextX()}
-                dy={index === 0 ? 0 : fontSize + 2}
-              >
+              <tspan key={index} x={textX} dy={index === 0 ? 0 : fontSize + 2}>
                 {line === "" ? " " : line}
               </tspan>
             ))}

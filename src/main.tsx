@@ -13,6 +13,15 @@ import { editorLayoutKey } from "./editor/Editor.tsx";
 import { editorState } from "./editor/EditorState.ts";
 import { ErrorBoundary } from "./util/ErrorBoundary.tsx";
 
+if ((window as any).APP_LOADED) {
+  // reload the page if the app is already loaded
+  location.reload();
+} else {
+  (window as any).APP_LOADED = true;
+}
+
+console.log("App starting...");
+
 export function RootError({ clear }: { clear: () => void }) {
   return (
     <div

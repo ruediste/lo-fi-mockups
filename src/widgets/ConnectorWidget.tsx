@@ -17,7 +17,7 @@ import { useRerenderOnEvent } from "@/util/hooks";
 import { Rectangle } from "@/util/rectangle";
 import { getDirectionOutside, Vec2d } from "@/util/Vec2d";
 import { WithHooks } from "@/util/WithHooks";
-import { useId, useRef } from "react";
+import React, { useId, useRef } from "react";
 import {
   CheckboxProperty,
   getLineDashArray,
@@ -96,7 +96,7 @@ interface ConnectorEndpointData {
 export class ConnectorWidget extends Widget {
   label = "Connector";
   protected connectorInteraction = new ConnectorInteraction(this);
-  labelText = new StringProperty(this, "label", "Label", "");
+  labelText = new StringProperty(this, "label", "Label", "").textArea(1);
   sourceMultiplicity = new StringProperty(
     this,
     "sourceMultiplicity",
@@ -271,11 +271,6 @@ export class ConnectorWidget extends Widget {
             }
           }
 
-          // Calculate text dimensions for background
-          const textWidth = getTextWidth(text, widgetTheme.fontSize);
-          const textHeight = widgetTheme.fontSize;
-          const padding = 6;
-
           // Get marker URLs
           const sourceMarkerUrl = getMarkerUrl(
             sourceMarkerType,
@@ -293,6 +288,52 @@ export class ConnectorWidget extends Widget {
           const targetDirection = routePoints[routePoints.length - 2].sub(
             routePoints[routePoints.length - 1],
           );
+
+          // prepare text
+          const lines = text.trim().length === 0 ? [] : text.split("\n");
+          const textHeight =
+            lines.length * widgetTheme.fontSize + (lines.length - 1) * 2;
+
+          // Calculate text dimensions for background
+          const lineWidths = lines.map((line) =>
+            getTextWidth(line, widgetTheme.fontSize),
+          );
+          const padding = 6;
+
+          const textElements: React.ReactNode[] = [];
+          lines.forEach((line, index) => {
+            const lineWidth = lineWidths[index];
+            const x = midX - lineWidth / 2 - padding;
+            const y =
+              midY - textHeight / 2 + index * (widgetTheme.fontSize + 2);
+            textElements.unshift(
+              <rect
+                key={`rect-${index}`}
+                x={x}
+                y={y - padding}
+                width={lineWidth + 2 * padding}
+                height={widgetTheme.fontSize + 2 * padding}
+                fill="rgba(255, 255, 255, 1)"
+                rx="4"
+                filter={`url(#connector-text-background-blur-${globalContentId})`}
+              />,
+            );
+            textElements.push(
+              <text
+                key={`text-${index}`}
+                x={midX}
+                y={y + widgetTheme.fontSize * 0.75}
+                fontSize={widgetTheme.fontSize}
+                style={{
+                  textAnchor: "middle",
+                  whiteSpace: "pre",
+                }}
+                fill="#333"
+              >
+                {line === "" ? " " : line}
+              </text>,
+            );
+          });
 
           return (
             <>
@@ -340,28 +381,7 @@ export class ConnectorWidget extends Widget {
                 strokeWidth="2"
                 markerEnd={sourceMarkerUrl}
               />
-              {text && text.length > 0 && (
-                <>
-                  <rect
-                    x={midX - textWidth / 2 - padding}
-                    y={midY - textHeight / 2 - padding}
-                    width={textWidth + 2 * padding}
-                    height={textHeight + 2 * padding}
-                    fill="rgba(255, 255, 255, 1)"
-                    rx="4"
-                    filter={`url(#connector-text-background-blur-${globalContentId})`}
-                  />
-                  <text
-                    x={midX}
-                    y={midY + textHeight / 4}
-                    fontSize={widgetTheme.fontSize}
-                    textAnchor="middle"
-                    fill="#333"
-                  >
-                    {text}
-                  </text>
-                </>
-              )}
+              {textElements}
             </>
           );
         }}
@@ -634,7 +654,30 @@ class ConnectorInteraction extends PageItemInteraction {
   }
 
   renderMasterInteraction(props: RenderInteractionArgs): React.ReactNode {
-    return <></>;
+    const selection = this.item.page.selection;
+    const selected = selection.has(this.item);
+    const routePoints = this.item_.routePointsMemo.value;
+    const projection = props.projection;
+    return (
+      <>
+        <polyline
+          points={routePoints.map((p) => `${p.x},${p.y}`).join(" ")}
+          stroke={selected ? "#00fff040" : "transparent"}
+          fill="none"
+          strokeWidth={projection.lengthToWorld(20)}
+          onPointerDown={(e) => {
+            if (!e.shiftKey) {
+              e.stopPropagation();
+              this.item.page.setSelection(
+                e.ctrlKey
+                  ? selection.toggle(this.item)
+                  : Selection.of(this.item),
+              );
+            }
+          }}
+        />
+      </>
+    );
   }
 
   override moveBy(delta: IVec2d): void {
