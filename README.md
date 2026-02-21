@@ -37,6 +37,17 @@ The application is a PWA and can be installed locally. For Chrome/Edge simply op
 
 Alternatively, you can just add a bookmark. The application will launch happily while you're offline.
 
+### Native Application
+
+The application can also be built using "neutralino.js".
+
+To associate the file types with the application, install the mime type description:
+
+```
+cp lofi-mime-types.xml ~/.local/share/mime/packages
+update-mime-database ~/.local/share/mime/
+```
+
 ### Working with Pages
 
 The Pages panel allows you to structure your design into distinct sections or screens, making it easier to navigate and manage complex projects.
@@ -89,9 +100,11 @@ In Simple Mode, each line of the input string represents a row in the data grid.
 Example Simple Mode input:
 
 ```
-H1	H2
-R1C1	R1C2
-R2C1	R2C2
+
+H1 H2
+R1C1 R1C2
+R2C1 R2C2
+
 ```
 
 **Complex Mode:**
@@ -122,9 +135,11 @@ The remaining cells in a row line, separated by tabs, contain the cell content f
 Example Complex Mode input:
 
 ```
-!	1fr h	auto	100px
-h	R1C1	R1C2	R1C3
-auto	R2C1	R2C2	R2C3
+
+! 1fr h auto 100px
+h R1C1 R1C2 R1C3
+auto R2C1 R2C2 R2C3
+
 ```
 
 ## Architecture
@@ -140,3 +155,7 @@ Edge snapping means that each element generates snapping boxes at it's edges, go
 For margin snapping, each element creates snap boxes with a distance (margin) from it's edges. The snap references of the moving elements snaps are placed identical to the snap boxes.
 
 For middle snapping, elements provide a snap box through their middle, which expands outside of the element. The snap reference is contained within the element.
+
+```
+
+```

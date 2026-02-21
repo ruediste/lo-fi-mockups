@@ -26,28 +26,6 @@
         </configuration>
       </plugin>
 
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.6.2</version>
-        <executions>
-          <execution>
-            <id>my-exec</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-          </execution>
-        </executions>
-
-        <configuration>
-          <executable>npm</executable>
-          <commandlineArgs>run build-webjar</commandlineArgs>
-          <workingDirectory>${basedir}/../</workingDirectory>
-        </configuration>
-      </plugin>
-
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.4.0</version>
@@ -118,4 +96,108 @@
       <version>3.1.0</version>
     </dependency>
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>maven-central</id>
+      <name>Maven Central Repository</name>
+      <url>https://repo.maven.apache.org/maven2/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>xwiki-snapshots</id>
+      <name>XWiki Nexus Snapshot Repository</name>
+      <url>https://nexus-snapshots.xwiki.org/repository/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>xwiki-releases</id>
+      <name>XWiki Nexus Releases Repository Proxy</name>
+      <url>https://nexus-snapshots.xwiki.org/repository/public-proxy</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>maven-central</id>
+      <name>Maven Central Repository</name>
+      <url>https://repo.maven.apache.org/maven2/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>xwiki-snapshots</id>
+      <name>XWiki Nexus Plugin Snapshot Repository</name>
+      <url>https://nexus-snapshots.xwiki.org/repository/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>xwiki-releases</id>
+      <name>XWiki Nexus Plugin Releases Repository Proxy</name>
+      <url>https://nexus-snapshots.xwiki.org/repository/public-proxy</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <profiles>
+    <profile>
+      <id>local</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.6.2</version>
+            <executions>
+              <execution>
+                <id>my-exec</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+
+            <configuration>
+              <executable>npm</executable>
+              <commandlineArgs>run build-webjar</commandlineArgs>
+              <workingDirectory>${basedir}/../</workingDirectory>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
