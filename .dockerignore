@@ -1,0 +1,12 @@
+/node_modules
+/dist
+/native
+/bin/
+/neutralinojs.log
+/xwiki/target/
+/xwiki/docker/
+/.tmp/
+/Dockerfile
+/.github/
+/.git/
+/.dockerignore

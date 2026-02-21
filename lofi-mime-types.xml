@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+	<mime-type type="image/png+lofi">
+		<comment>PNG image with Embedded Lo-Fi Project</comment>
+		<glob pattern="*.lofi.png" />
+		<sub-class-of type="image/png" />
+	</mime-type>
+	<mime-type type="application/x-lofi-zip">
+		<comment>Lo-Fi Project</comment>
+		<glob pattern="*.lofi" />
+		<magic>
+			<match offset="0" type="string" value="PK\x03\x04" />
+		</magic>
+	</mime-type>
+</mime-info>
