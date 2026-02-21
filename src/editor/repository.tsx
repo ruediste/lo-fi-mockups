@@ -106,7 +106,7 @@ export class Repository {
     data: Blob,
     skipIfDataVersionMatches: boolean,
     pageNr?: number,
-  ) {
+  ): Promise<LofiFileType> {
     let type: LofiFileType = "lofi";
     const PNG_SIGNATURE = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
     const header = new Uint8Array(await data.slice(0, 8).arrayBuffer());

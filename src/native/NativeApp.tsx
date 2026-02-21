@@ -1,4 +1,5 @@
 import { editorState, useEditorState } from "@/editor/EditorState";
+import { LofiFileType } from "@/editor/repository";
 import { InnerApp } from "@/InnerApp";
 import { filesystem, os } from "@neutralinojs/lib";
 import { useEffect, useState } from "react";
@@ -10,15 +11,13 @@ function getFileNameFromPath(path: string): string {
 }
 
 function removeFileExtension(fileName: string): string {
-  return fileName.split(".").slice(0, -1).join(".");
-}
-
-function getBaseFileNameFromPath(path: string): string {
-  return removeFileExtension(getFileNameFromPath(path));
-}
-
-function changeFileExtension(path: string, newExt: string): string {
-  return removeFileExtension(path) + "." + newExt;
+  if (fileName.endsWith(".lofi.png")) {
+    return fileName.slice(0, -".lofi.png".length);
+  }
+  const parts = fileName.split(".");
+  // If there is only one part, return the original fileName
+  if (parts.length === 1) return fileName;
+  return parts.slice(0, -1).join(".");
 }
 
 function getDirectoryFromPath(path: string): string {
@@ -27,13 +26,25 @@ function getDirectoryFromPath(path: string): string {
 
 let initialized = false;
 
-async function loadInitialFile(name: string, loaded: () => void) {
+async function loadInitialFile(
+  name: string,
+  loaded: (fileType: LofiFileType) => void,
+) {
   try {
     const fileData = await filesystem.readBinaryFile(name);
     const state = await editorState;
-    await state.repository.loadProject(new Blob([fileData]), false);
-    loaded();
+    const fileType = await state.repository.loadProject(
+      new Blob([fileData]),
+      false,
+    );
+    loaded(fileType);
   } catch (e) {
+    toast.error(
+      "Error loading " +
+        getFileNameFromPath(name) +
+        ": " +
+        (e instanceof Error ? e.message : String(e)),
+    );
     console.error("Error loading initial file:", e);
   }
 }
@@ -45,7 +56,7 @@ export function NativeApp() {
     fullFilePath: string;
     fileName: string;
     baseFileName: string;
-    type: "zip" | "png";
+    type: LofiFileType;
   } | null>(null);
 
   useEffect(() => {
@@ -57,19 +68,23 @@ export function NativeApp() {
         (arg, idx) => idx > 0 && !arg.startsWith("-"),
       );
       if (fileArg) {
-        loadInitialFile(fileArg, () => setCurrentFile(toCurrentFile(fileArg)));
+        loadInitialFile(fileArg, (type) =>
+          setCurrentFile(toCurrentFile(fileArg, type)),
+        );
       }
     }
   }, []);
 
-  const toCurrentFile = (fullFilePath: string) =>
-    ({
+  const toCurrentFile = (fullFilePath: string, type: LofiFileType) => {
+    const fileName = getFileNameFromPath(fullFilePath);
+    return {
       fullFilePath,
       directory: getDirectoryFromPath(fullFilePath),
-      fileName: getFileNameFromPath(fullFilePath),
-      baseFileName: removeFileExtension(getFileNameFromPath(fullFilePath)),
-      type: fullFilePath.endsWith(".lofi.png") ? "png" : "zip",
-    }) as const;
+      fileName: fileName,
+      baseFileName: removeFileExtension(fileName),
+      type,
+    } as const;
+  };
 
   return (
     <InnerApp
@@ -107,13 +122,22 @@ export function NativeApp() {
                   const fullFilePath = result[0];
                   const fileData =
                     await filesystem.readBinaryFile(fullFilePath);
-                  state.repository.loadProject(new Blob([fileData]), false);
+                  try {
+                    const type = await state.repository.loadProject(
+                      new Blob([fileData]),
+                      false,
+                    );
 
-                  const fileName = getFileNameFromPath(fullFilePath);
-                  const type = fullFilePath.endsWith(".lofi.png")
-                    ? "png"
-                    : "zip";
-                  setCurrentFile(toCurrentFile(fullFilePath));
+                    setCurrentFile(toCurrentFile(fullFilePath, type));
+                  } catch (e) {
+                    toast.error(
+                      "Error loading " +
+                        getFileNameFromPath(fullFilePath) +
+                        ": " +
+                        (e instanceof Error ? e.message : String(e)),
+                    );
+                    console.error("Error loading file:", e);
+                  }
                 }
               }}
             >
@@ -124,7 +148,7 @@ export function NativeApp() {
                 onClick={async () => {
                   const data =
                     currentFile.type === "png"
-                      ? await args.createPng()
+                      ? await args.createLofiPng()
                       : await args.createZip(false);
                   await filesystem.writeBinaryFile(
                     currentFile.fullFilePath,
@@ -139,24 +163,23 @@ export function NativeApp() {
             <Button
               onClick={async () => {
                 const result = await os.showSaveDialog("Save LoFi Mockup", {
-                  filters: [{ name: "LoFi Mockup", extensions: ["lofi"] }],
+                  filters: [
+                    { name: "LoFi Mockup", extensions: ["lofi"] },
+                    { name: "LoFi Mockup PNG", extensions: ["lofi.png"] },
+                  ],
                   defaultPath: currentFile?.fullFilePath ?? "project.lofi",
                 });
                 if (result) {
-                  const data = await args.createZip(false);
+                  const type = result.endsWith(".lofi.png") ? "png" : "lofi";
+                  const data =
+                    type === "png"
+                      ? await args.createLofiPng()
+                      : await args.createZip(false);
                   await filesystem.writeBinaryFile(
                     result,
                     await data.arrayBuffer(),
                   );
-                  setCurrentFile({
-                    fullFilePath: result,
-                    directory: getDirectoryFromPath(result),
-                    fileName: getFileNameFromPath(result),
-                    baseFileName: removeFileExtension(
-                      getFileNameFromPath(result),
-                    ),
-                    type: "zip",
-                  });
+                  setCurrentFile(toCurrentFile(result, type));
                   toast.success(`File saved: ${getFileNameFromPath(result)}`);
                 }
               }}

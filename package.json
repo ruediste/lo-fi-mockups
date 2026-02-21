@@ -7,7 +7,7 @@
     "start-web": "VITE_VARIANT=web vite --open",
     "start-xwiki": "VITE_VARIANT=xwiki vite --open",
     "vscode-start-webview": "VITE_VARIANT=vscode vite --port=5177",
-    "start-native": "npx @neutralinojs/neu run -- --window-enable-inspector /home/ruedi/Downloads/UIoutside.lofi",
+    "start-native": "npx @neutralinojs/neu run -- --window-enable-inspector",
     "start-native-webapp": "VITE_VARIANT=native vite",
     "build": "tsc -b && VITE_VARIANT=web vite build",
     "build-pages": "tsc -b && VITE_VARIANT=web vite build --base=/lo-fi-mockups/",
