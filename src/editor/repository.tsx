@@ -42,28 +42,26 @@ interface MyDB extends DBSchema {
 export type LofiFileType = "lofi" | "png";
 
 export class Repository {
-  onChanged = new ModelEvent();
+  onProjectReplaced = new ModelEvent();
 
   constructor(
     public projectData: ProjectData,
-    private db: IDBPDatabase<MyDB>,
+    private db?: IDBPDatabase<MyDB>,
   ) {}
 
   static async create(): Promise<Repository> {
+    if (import.meta.env.VITE_VARIANT === "native") {
+      return new Repository(Repository.createEmptyData());
+    }
+
     const db = await openDB<MyDB>("lo-fi-current", 1, {
       upgrade(db) {
         db.createObjectStore("project");
         db.createObjectStore("images");
       },
     });
-    if (import.meta.env.VITE_VARIANT === "native") {
-      db.clear("project");
-      db.clear("images");
-    }
 
-    var result = new Repository(await this.loadFromDb(db), db);
-
-    return result;
+    return new Repository(await this.loadFromDb(db), db);
   }
 
   private static createEmptyData(): ProjectData {
@@ -84,18 +82,17 @@ export class Repository {
     };
   }
 
+  replace(data: ProjectData) {
+    this.projectData = data;
+    this.onProjectReplaced.notify();
+  }
+
   clear() {
-    this.projectData = Repository.createEmptyData();
-    this.onChanged.notify();
+    this.replace(Repository.createEmptyData());
   }
 
   async save() {
-    await this.db!.put("project", await this.projectData, "default");
-  }
-
-  async reload() {
-    this.projectData = await Repository.loadFromDb(this.db);
-    this.onChanged.notify();
+    await this.db?.put("project", await this.projectData, "default");
   }
 
   private static async loadFromDb(db: IDBPDatabase<MyDB>) {
@@ -104,8 +101,8 @@ export class Repository {
 
   async loadProject(
     data: Blob,
-    skipIfDataVersionMatches: boolean,
-    pageNr?: number,
+    projectIdentification?: string,
+    ignoreIdentification?: boolean,
   ): Promise<LofiFileType> {
     let type: LofiFileType = "lofi";
     const PNG_SIGNATURE = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -143,19 +140,34 @@ export class Repository {
     }
     loadedData.schemaVersion = migrators.length;
 
-    if (
-      !skipIfDataVersionMatches ||
-      loadedData.dataVersion != this.projectData.dataVersion
-    )
-      this.projectData = loadedData;
+    const savedProjectIdentification = this.getSavedProjectIdentification();
+    if (projectIdentification !== undefined)
+      this.saveProjectIdentification(projectIdentification);
+    else this.clearProjectIdentification();
 
-    if (pageNr !== undefined) {
-      if (pageNr < this.projectData.pages.length) {
-        this.projectData.currentPageId = this.projectData.pages[pageNr].id;
-      }
+    if (
+      ignoreIdentification ||
+      projectIdentification === undefined ||
+      projectIdentification !== savedProjectIdentification ||
+      loadedData.dataVersion != this.projectData.dataVersion
+    ) {
+      this.projectData = loadedData;
+      this.onProjectReplaced.notify();
     }
-    this.onChanged.notify();
+
     return type;
+  }
+
+  saveProjectIdentification(identification: string) {
+    localStorage.setItem("loFiProjectIdentification", identification);
+  }
+
+  clearProjectIdentification() {
+    localStorage.removeItem("loFiProjectIdentification");
+  }
+
+  getSavedProjectIdentification() {
+    return localStorage.getItem("loFiProjectIdentification");
   }
 
   async createZip(
@@ -180,7 +192,11 @@ export class Repository {
 
   async createPng() {
     const data = { ...this.projectData };
-    const project = new Project(data, () => {});
+    const project = new Project(
+      data,
+      () => {},
+      () => {},
+    );
     const [root, element] = this.renderPage(project.currentPage!, 2);
     const blob = await htmlToImage.toBlob(element);
     // const dataUrl = await htmlToImage.toPng(element);
@@ -252,7 +268,11 @@ export class Repository {
     }) => Promise<void>,
   ) {
     const data = { ...this.projectData };
-    const project = new Project(data, () => {});
+    const project = new Project(
+      data,
+      () => {},
+      () => {},
+    );
     let pageNr = 0;
 
     for (const pageData of data.pages) {

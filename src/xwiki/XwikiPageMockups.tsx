@@ -17,12 +17,7 @@ import { confirm } from "../util/confirm";
 import { fetchData, fetchDataRaw, useLoader } from "../util/fetchData";
 import { WithLoader, WithMultiData } from "../util/UseData";
 import { XwikiControls } from "./XwikiControls";
-import {
-  getSavedLoFiIdentification,
-  saveLoFiIdentification,
-  toXwikiLoFiIdentification,
-  xwiki,
-} from "./xwikiUtils";
+import { toXwikiLoFiIdentification, xwiki } from "./xwikiUtils";
 
 // http://localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.23-SNAPSHOT/index.html?page=wikis%2Fxwiki%2Fspaces%2Ftest2%2Fspaces%2FLoFiTest%2Fpages%2FWebHome
 // http: //localhost:8078/webjars/wiki%3Axwiki/lo-fi-mockups-webjar/1.0.1-SNAPSHOT/index.html
@@ -186,15 +181,11 @@ function OpenAttachment({
       repo.clear();
       return true;
     } else if (response.ok) {
-      const savedIdentification = getSavedLoFiIdentification();
       const currentIdentification = toXwikiLoFiIdentification(page, attachment);
 
-      await repo.loadProject(
-        await response.blob(),
-        savedIdentification === currentIdentification,
-        pageNr,
-      );
-      saveLoFiIdentification(page, attachment);
+      await repo.loadProject(await response.blob(), currentIdentification);
+      if (pageNr != null && pageNr < state.project.data.pages.length)
+        state.project.selectPage(state.project.data.pages[pageNr]);
       return true;
     } else return false;
   }, [page, attachment, pageNr]);

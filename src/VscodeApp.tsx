@@ -30,7 +30,7 @@ declare global {
 export function VscodeApp() {
   const editorState = useEditorState();
   const type = useRef<LofiFileType | undefined>(undefined);
-  useEvent(editorState.onProjectChanged, () => {
+  useEvent(editorState.onProjectDataChanged, () => {
     sendMessage({ type: "projectChanged" });
   });
   useEffect(() => {
@@ -52,7 +52,6 @@ export function VscodeApp() {
             const binaryData = (Uint8Array as any).fromBase64(data.value);
             type.current = await editorState.repository.loadProject(
               new Blob([binaryData]),
-              false,
             );
             console.log("Document loaded with type:", type.current);
           } catch (error) {

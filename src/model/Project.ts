@@ -29,6 +29,7 @@ export class Project {
   constructor(
     public data: ProjectData,
     public onDataChanged: () => void,
+    public keepSnapshot: () => void,
   ) {
     data.pages.forEach((page) => (this.pageDataMap[page.id] = page));
     this.updateMasterPages();

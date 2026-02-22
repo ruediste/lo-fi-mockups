@@ -84,6 +84,10 @@ export class Page {
     allItemList.forEach((x) => x.initializeItemReferences());
   }
 
+  get keepSnapshot() {
+    return this.project.keepSnapshot;
+  }
+
   setSelection(value: Selection) {
     this._selection = value;
     this.onChange.notify();

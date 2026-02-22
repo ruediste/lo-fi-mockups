@@ -310,6 +310,7 @@ function EditorCanvasInner({
   useDndMonitor({
     onDragEnd(event) {
       if (event.over && event.over.id === "editor") {
+        state.keepSnapshot();
         const droppableRect = event.over.rect!;
         const draggableRect = event.active!.rect;
         const dragOffset = state.dragOffset;
@@ -453,6 +454,11 @@ export function Editor({
       if (e.key === "p" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         play.onClick(undefined!);
+      }
+
+      if (e.key === "z" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        state.undo();
       }
     };
     const handleCopy = (e: ClipboardEvent) => {

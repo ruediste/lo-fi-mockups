@@ -1,6 +1,7 @@
 import { editorState, useEditorState } from "@/editor/EditorState";
 import { LofiFileType } from "@/editor/repository";
 import { InnerApp } from "@/InnerApp";
+import { useRerenderOnEvent } from "@/util/hooks";
 import { filesystem, os } from "@neutralinojs/lib";
 import { useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
@@ -35,7 +36,7 @@ async function loadInitialFile(
     const state = await editorState;
     const fileType = await state.repository.loadProject(
       new Blob([fileData]),
-      false,
+      await filesystem.getAbsolutePath(name),
     );
     loaded(fileType);
   } catch (e) {
@@ -51,6 +52,7 @@ async function loadInitialFile(
 
 export function NativeApp() {
   const state = useEditorState();
+  useRerenderOnEvent(state.onProjectDataChanged);
   const [currentFile, setCurrentFile] = useState<{
     directory: string;
     fullFilePath: string;
@@ -62,15 +64,23 @@ export function NativeApp() {
   useEffect(() => {
     if (initialized) return;
     initialized = true;
-    if (window.NL_ARGS) {
-      // find first argument not starting with -
-      const fileArg = window.NL_ARGS.find(
-        (arg, idx) => idx > 0 && !arg.startsWith("-"),
-      );
-      if (fileArg) {
-        loadInitialFile(fileArg, (type) =>
-          setCurrentFile(toCurrentFile(fileArg, type)),
+    let loaded = false;
+    try {
+      if (window.NL_ARGS) {
+        // find first argument not starting with -
+        const fileArg = window.NL_ARGS.find(
+          (arg, idx) => idx > 0 && !arg.startsWith("-"),
         );
+        if (fileArg) {
+          loadInitialFile(fileArg, (type) => {
+            setCurrentFile(toCurrentFile(fileArg, type));
+            loaded = true;
+          });
+        }
+      }
+    } finally {
+      if (!loaded) {
+        state.repository.clear();
       }
     }
   }, []);
@@ -113,6 +123,7 @@ export function NativeApp() {
             <Button
               onClick={async () => {
                 const result = await os.showOpenDialog("Open LoFi Mockup", {
+                  defaultPath: currentFile?.directory,
                   filters: [
                     { name: "LoFi Mockup", extensions: ["lofi", "lofi.png"] },
                   ],
@@ -125,7 +136,8 @@ export function NativeApp() {
                   try {
                     const type = await state.repository.loadProject(
                       new Blob([fileData]),
-                      false,
+                      await filesystem.getAbsolutePath(fullFilePath),
+                      true,
                     );
 
                     setCurrentFile(toCurrentFile(fullFilePath, type));
@@ -145,6 +157,7 @@ export function NativeApp() {
             </Button>
             {currentFile && (
               <Button
+                disabled={!state.dirty}
                 onClick={async () => {
                   const data =
                     currentFile.type === "png"
@@ -154,6 +167,7 @@ export function NativeApp() {
                     currentFile.fullFilePath,
                     await data.arrayBuffer(),
                   );
+                  state.clearDirtyFlag();
                   toast.success(`File saved: ${currentFile.fileName}`);
                 }}
               >
@@ -181,6 +195,7 @@ export function NativeApp() {
                   );
                   setCurrentFile(toCurrentFile(result, type));
                   toast.success(`File saved: ${getFileNameFromPath(result)}`);
+                  state.clearDirtyFlag();
                 }
               }}
             >
@@ -190,6 +205,31 @@ export function NativeApp() {
         ),
         hideExports: true,
         topMenuItems: (args) => [
+          currentFile != null && {
+            label: "Revert to " + currentFile.fileName,
+            onClick: async () => {
+              if (!currentFile) return;
+              try {
+                const fileData = await filesystem.readBinaryFile(
+                  currentFile.fullFilePath,
+                );
+                await state.repository.loadProject(
+                  new Blob([fileData]),
+                  currentFile.fullFilePath,
+                  true,
+                );
+                toast.success(`Reverted to ${currentFile.fileName}`);
+              } catch (e) {
+                toast.error(
+                  "Error reverting to " +
+                    currentFile.fileName +
+                    ": " +
+                    (e instanceof Error ? e.message : String(e)),
+                );
+                console.error("Error reverting file:", e);
+              }
+            },
+          },
           args.exportPdf(),
           currentFile != null && {
             label: "Export as " + currentFile.baseFileName + ".pdf",

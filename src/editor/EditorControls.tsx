@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { confirm } from "@/util/confirm";
 import { ThreeDotMenu, ThreeDotMenuItem } from "@/util/Inputs";
 import "rc-dock/dist/rc-dock.css";
+import { ArrowCounterclockwise } from "react-bootstrap-icons";
 import { useEditorState } from "./EditorState";
 
 export interface ControlsArgs {
@@ -115,6 +116,11 @@ export function EditorControls({
 
   return (
     <Stack direction="horizontal" style={{ marginLeft: "auto" }} gap={3}>
+      {state.hasUndo && (
+        <Button onClick={() => state.undo()}>
+          <ArrowCounterclockwise />
+        </Button>
+      )}
       <Button as="a" {...play}>
         Play
       </Button>
@@ -163,7 +169,7 @@ export function EditorControls({
                 return;
               }
               try {
-                await state.repository.loadProject(acceptedFiles[0], false);
+                await state.repository.loadProject(acceptedFiles[0]);
               } catch (e) {
                 console.log(e);
                 toast.error("Loading " + acceptedFiles[0].name + " failed");

@@ -3,7 +3,7 @@ import { useEditorState } from "@/editor/EditorState";
 import { fetchData } from "@/util/fetchData";
 import { Button } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { saveLoFiIdentification, xwiki } from "./xwikiUtils";
+import { toXwikiLoFiIdentification, xwiki } from "./xwikiUtils";
 
 export function XwikiControls({
   page,
@@ -28,7 +28,9 @@ export function XwikiControls({
           method: "PUT",
         }),
       );
-      saveLoFiIdentification(page, attachment);
+      state.repository.saveProjectIdentification(
+        toXwikiLoFiIdentification(page, attachment),
+      );
       toast.success("Project saved to XWiki");
     } catch (e) {
       toast.error(

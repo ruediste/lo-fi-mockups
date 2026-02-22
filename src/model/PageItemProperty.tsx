@@ -13,7 +13,10 @@ import { PropertyOverrideableInputGroupControls } from "./PageItemInteractionHel
 export abstract class PageItemProperty {
   valueChanged = new ModelEvent();
 
-  constructor(protected item: PageItem, public id: string) {
+  constructor(
+    protected item: PageItem,
+    public id: string,
+  ) {
     item.properties.push(this);
     item.propertyMap.set(id, this);
   }
@@ -45,7 +48,7 @@ A property is editable if either the containing item is defined in the current p
 if the direct master page defines the property as overrideable.
 */
 export abstract class PageItemPropertyBase<
-  T extends {} | null
+  T extends {} | null,
 > extends PageItemProperty {
   private masterValue?: T;
   private value: T;
@@ -57,7 +60,11 @@ export abstract class PageItemPropertyBase<
 
   isOverridden: boolean;
 
-  constructor(item: PageItem, id: string, private defaultValue: T) {
+  constructor(
+    item: PageItem,
+    id: string,
+    private defaultValue: T,
+  ) {
     super(item, id);
 
     // find the first master value
@@ -92,6 +99,7 @@ export abstract class PageItemPropertyBase<
   }
 
   set(value: T): void {
+    this.item.keepSnapshot();
     this.item.editablePropertyValues[this.id] = value;
     this.value = value;
     this.isOverridden = this.item.fromMasterPage;
@@ -166,7 +174,7 @@ export class MemoValue<T> {
 
   constructor(
     private factory: () => T,
-    events: (ModelEvent | PageItemPropertyBase<any> | MemoValue<any>)[] = []
+    events: (ModelEvent | PageItemPropertyBase<any> | MemoValue<any>)[] = [],
   ) {
     for (const e of events) {
       if (e instanceof ModelEvent) {
@@ -201,7 +209,7 @@ export class BackgroundColorProperty extends PageItemPropertyBase<BackgroundColo
     item: PageItem,
     id: string,
     private label: string,
-    defaultValue: BackgroundColor
+    defaultValue: BackgroundColor,
   ) {
     super(item, id, defaultValue);
   }
@@ -249,7 +257,7 @@ export class BackgroundColorProperty extends PageItemPropertyBase<BackgroundColo
 }
 
 export class ObjectProperty<
-  T extends {} | null
+  T extends {} | null,
 > extends PageItemPropertyBase<T> {
   constructor(item: PageItem, id: string, defaultValue: T) {
     super(item, id, defaultValue);
@@ -271,7 +279,7 @@ export class StringProperty extends PageItemPropertyBase<string> {
     id: string,
     private label: string,
     defaultValue: string,
-    private _rows = 5
+    private _rows = 5,
   ) {
     super(item, id, defaultValue);
   }
@@ -376,7 +384,7 @@ export class NumberProperty extends PageItemPropertyBase<number> {
     item: PageItem,
     id: string,
     private label: string,
-    defaultValue: number
+    defaultValue: number,
   ) {
     super(item, id, defaultValue);
   }
@@ -401,7 +409,7 @@ export class RangeProperty extends PageItemPropertyBase<number> {
     private label: string,
     defaultValue: number,
     private min: number,
-    private max: number
+    private max: number,
   ) {
     super(item, id, defaultValue);
   }
@@ -429,7 +437,7 @@ export class IconProperty extends PageItemPropertyBase<number | null> {
     item: PageItem,
     id: string,
     private label: string,
-    defaultValue: number | null
+    defaultValue: number | null,
   ) {
     super(item, id, defaultValue);
   }
@@ -479,7 +487,7 @@ export class CheckboxProperty extends PageItemPropertyBase<boolean> {
     item: PageItem,
     id: string,
     private label: string,
-    defaultValue: boolean
+    defaultValue: boolean,
   ) {
     super(item, id, defaultValue);
   }
@@ -505,14 +513,18 @@ export class CheckboxProperty extends PageItemPropertyBase<boolean> {
 export class PageReferenceProperty extends PageItemPropertyBase<{
   pageId?: number;
 }> {
-  constructor(item: PageItem, id: string, private label: string) {
+  constructor(
+    item: PageItem,
+    id: string,
+    private label: string,
+  ) {
     super(item, id, {});
   }
 
   _canReferenceMasterPage = false;
 
   override initializeDataAfterCopy(
-    mapId: (id: number) => number | undefined
+    mapId: (id: number) => number | undefined,
   ): void {
     const data = super.get();
     data.pageId = data.pageId === undefined ? undefined : mapId(data.pageId);
@@ -559,7 +571,7 @@ export interface SelectPropertyOption<T> {
 type SelectPropertyType = "select" | "radio" | "button-group";
 
 export class SelectProperty<
-  T extends string | number
+  T extends string | number,
 > extends PageItemPropertyBase<T | null> {
   private type: SelectPropertyType = "select";
   private _noLabel = false;
@@ -569,7 +581,7 @@ export class SelectProperty<
     id: string,
     private label: string,
     private getOptions: () => SelectPropertyOption<T>[],
-    defaultValue: T | null
+    defaultValue: T | null,
   ) {
     super(item, id, defaultValue);
   }
@@ -736,14 +748,14 @@ const LINE_STYLE_OPTIONS: SelectPropertyOption<LineStyle>[] = (
 }));
 export function lineStyleProperty(
   item: PageItem,
-  id: string
+  id: string,
 ): SelectProperty<LineStyle> {
   return new SelectProperty<LineStyle>(
     item,
     id,
     "Line Style",
     () => LINE_STYLE_OPTIONS,
-    "Normal"
+    "Normal",
   )
     .buttonGroup()
     .noLabel();

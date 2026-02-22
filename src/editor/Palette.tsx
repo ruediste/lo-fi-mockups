@@ -34,7 +34,7 @@ function PaletteEntry({
   const boundingBox = widget.boundingBox;
   const viewBox = calculateViewBox(
     paletteItemSize.width / paletteItemSize.height,
-    boundingBox
+    boundingBox,
   );
   const globalSvgContentId = useId();
 
@@ -95,7 +95,7 @@ export const Palette = memo(function Palette() {
     let nextId = 1;
 
     const items: PageItemData[] = pageItemTypeRegistry.palette.map((type) =>
-      createPageItemData(nextId++, type.key)
+      createPageItemData(nextId++, type.key),
     );
 
     const projectData: ProjectData = {
@@ -114,7 +114,11 @@ export const Palette = memo(function Palette() {
       nextId: nextId++,
     };
 
-    const project = new Project(projectData, () => {});
+    const project = new Project(
+      projectData,
+      () => {},
+      () => {},
+    );
     const page = project.currentPage!;
     const result = page.ownItems as Widget[];
     result.forEach((w) => w.initializeAfterAdd());

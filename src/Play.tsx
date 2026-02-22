@@ -20,7 +20,7 @@ function RenderItem({
 
 export function Play() {
   const state = use(editorState);
-  useRerenderOnEvent(state.onChanged);
+  useRerenderOnEvent(state.onProjectReplaced);
   useRerenderOnEvent(state.project.onChange);
   const project = state.project;
   const globalSvgContentId = useId();
@@ -52,8 +52,8 @@ export function Play() {
         isExport: false,
         isPlay: true,
         openPage: (pageId: number) => project.selectPageId(pageId),
-      } as const),
-    [project]
+      }) as const,
+    [project],
   );
 
   return (
