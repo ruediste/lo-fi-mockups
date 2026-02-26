@@ -90,7 +90,7 @@ export function globalSvgContent(globalContentId: string) {
         markerHeight="7"
         refX="9"
         refY="3.5"
-        orient="auto"
+        orient="auto-start-reverse"
       >
         <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
       </marker>
@@ -102,7 +102,7 @@ export function globalSvgContent(globalContentId: string) {
         markerHeight="8"
         refX="11"
         refY="4"
-        orient="auto"
+        orient="auto-start-reverse"
       >
         <polygon
           points="0 4, 6 0, 12 4, 6 8"
@@ -119,7 +119,7 @@ export function globalSvgContent(globalContentId: string) {
         markerHeight="10"
         refX="11"
         refY="5"
-        orient="auto"
+        orient="auto-start-reverse"
       >
         <polygon
           points="0 0, 12 5, 0 10"

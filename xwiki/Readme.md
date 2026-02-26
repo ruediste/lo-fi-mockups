@@ -4,7 +4,7 @@
 
 Use the `docker` folder to start an XWiki instance with a development setup. The instance will run on port 8078. Default credentials are `SuperAdmin` / `system`.
 
-Run the `Build XWiki extension` VS Code task. It will build the extension with a new version. Open the extension manager in xwiki, click on `More` and `Advanced Search`. Enter the extension id
+Run the `Build XWiki extension (with new version)` VS Code task. It will build the extension with a new version. Open the extension manager in xwiki, click on `More` and `Advanced Search`. Enter the extension id
 `com/github/ruediste/lo-fi-mockups:lo-fi-mockups-xwiki` and the latest version you built.
 
 Alternatively, you can use this URL and tweak it:

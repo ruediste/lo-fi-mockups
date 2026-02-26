@@ -7,7 +7,7 @@ import {
 import { parseUmlClassWidgetContents } from "./UmlClassWidgetHelper";
 import { BoxWidget } from "./Widget";
 import { PageLink, WidgetBounds } from "./WidgetHelpers";
-import { backgroundPaletteMap } from "./widgetTheme";
+import { backgroundPaletteMap, widgetTheme } from "./widgetTheme";
 
 export class UmlClassWidget extends BoxWidget {
   label = "UML Class";
@@ -19,7 +19,7 @@ export class UmlClassWidget extends BoxWidget {
     `Demo
 --
 id: long
-`
+`,
   )
     .textArea(10)
     .monoFont()
@@ -28,14 +28,14 @@ id: long
 
   contents = new MemoValue(
     () => parseUmlClassWidgetContents(this.contentsText.get()),
-    [this.contentsText]
+    [this.contentsText],
   );
 
   backgroundColor = new BackgroundColorProperty(
     this,
     "backgroundColor",
     "Background Color",
-    "White"
+    "White",
   );
 
   link = new PageReferenceProperty(this, "link", "Link");
@@ -56,7 +56,7 @@ id: long
                 marginLeft: 4,
               },
               ".classHeader": { display: "flex", justifyContent: "center" },
-              hr: { margin: 0 },
+              hr: { margin: 0, opacity: 1, color: widgetTheme.stroke },
             }}
             {...{ xmlns: "http://www.w3.org/1999/xhtml" }}
           >
