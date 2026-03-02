@@ -9,8 +9,9 @@ import {
 import { toSet } from "@/util/utils";
 import * as htmlToImage from "@ruediste/html-to-image";
 import {
-  parseBlobEntry,
-  toBlobChunk,
+  parseBlobChunk,
+  parseTextChunkBase64,
+  toTextChunkBase64,
   transformPng,
 } from "@ruediste/png-transformer";
 import { DBSchema, IDBPDatabase, openDB } from "idb";
@@ -109,12 +110,19 @@ export class Repository {
     const header = new Uint8Array(await data.slice(0, 8).arrayBuffer());
     if (header.every((byte, index) => byte === PNG_SIGNATURE[index])) {
       // this is a PNG file, try to extract the zip from the "lofi" chunk
-
-      let foundData: ArrayBuffer | undefined = undefined;
+      let foundData: ArrayBufferLike | undefined = undefined;
       await transformPng(data, async (args) => {
-        const blobEntry = parseBlobEntry(args.chunk);
-        if (blobEntry?.key === "lofi") {
-          foundData = blobEntry.data;
+        if (!foundData) {
+          const text = await parseTextChunkBase64(args.chunk, "lofi");
+          if (text) {
+            foundData = text.data;
+          }
+        }
+        if (!foundData) {
+          const blobEntry = parseBlobChunk(args.chunk);
+          if (blobEntry?.key === "lofi") {
+            foundData = blobEntry.data;
+          }
         }
       });
 
@@ -213,7 +221,7 @@ export class Repository {
       args.passThrough(); // keep existing chunks
 
       if (args.chunk.type === "IHDR") {
-        args.addChunk(toBlobChunk("lofi", await zip.arrayBuffer()));
+        args.addChunk(await toTextChunkBase64("lofi", await zip.arrayBuffer()));
       }
     })) as Blob;
   }
