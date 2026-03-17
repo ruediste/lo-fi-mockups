@@ -7,6 +7,7 @@ import Dropzone from "react-dropzone";
 import { toast } from "react-toastify";
 
 import { confirm } from "@/util/confirm";
+import { useRerenderOnEvent } from "@/util/hooks";
 import { ThreeDotMenu, ThreeDotMenuItem } from "@/util/Inputs";
 import "rc-dock/dist/rc-dock.css";
 import { ArrowCounterclockwise } from "react-bootstrap-icons";
@@ -47,6 +48,7 @@ export function EditorControls({
   rightControls,
 }: EditorControlsProps) {
   const state = useEditorState();
+  useRerenderOnEvent(state.onProjectDataChanged);
   const play = useSearchHref({ pathname: "./play" });
 
   const [zipProgress, setZipProgress] = useState<

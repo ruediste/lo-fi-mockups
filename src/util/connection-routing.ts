@@ -16,7 +16,7 @@ class Distance {
     public metricDistance: number,
     public numberOfCorners: number,
     public collisionLength: number,
-    public missingStemFraction: number
+    public missingStemFraction: number,
   ) {}
 
   public add(other: Distance) {
@@ -24,7 +24,7 @@ class Distance {
       this.metricDistance + other.metricDistance,
       this.numberOfCorners + other.numberOfCorners,
       this.collisionLength + other.collisionLength,
-      this.missingStemFraction + other.missingStemFraction
+      this.missingStemFraction + other.missingStemFraction,
     );
   }
 
@@ -60,7 +60,7 @@ class Line {
   constructor(
     public orientation: Orientation,
     public ordinate: number,
-    public role: LineOrRayRole
+    public role: LineOrRayRole,
   ) {}
 
   withWeightFactor(factor: number): this {
@@ -92,7 +92,7 @@ export class Ray {
   constructor(
     public origin: Vec2d,
     public direction: Direction,
-    public role: LineOrRayRole
+    public role: LineOrRayRole,
   ) {}
 
   withWeightFactor(factor: number): this {
@@ -157,7 +157,10 @@ function compare(first: number, second: number) {
 class SubVertex {
   previous?: SubVertex;
   minDistanceFromSource?: Distance;
-  constructor(public vertex: Vertex, public incomingDirection: Direction) {}
+  constructor(
+    public vertex: Vertex,
+    public incomingDirection: Direction,
+  ) {}
 }
 
 class Vertex {
@@ -184,13 +187,13 @@ class Edge {
   constructor(
     public length: Distance,
     public target: Vertex,
-    public direction: Direction
+    public direction: Direction,
   ) {}
 }
 
 export function getRoutePoints(
   source: ConnectionEndConfiguration,
-  target: ConnectionEndConfiguration
+  target: ConnectionEndConfiguration,
 ): Vec2d[] | null {
   // collect lines
   const lines = collectLines(source, target);
@@ -199,8 +202,8 @@ export function getRoutePoints(
   const { sourceVertex, targetVertex } = buildGraph(
     lines,
     [source, target].flatMap((x) =>
-      x.rectangle === undefined || x.inside ? [] : [x.rectangle]
-    )
+      x.rectangle === undefined || x.inside ? [] : [x.rectangle],
+    ),
   );
 
   if (sourceVertex === undefined || targetVertex === undefined) {
@@ -212,7 +215,7 @@ export function getRoutePoints(
 
 export function collectLines(
   source: ConnectionEndConfiguration,
-  target: ConnectionEndConfiguration
+  target: ConnectionEndConfiguration,
 ): (Line | Ray)[] {
   const lines: (Line | Ray)[] = [];
 
@@ -229,13 +232,13 @@ export function collectLines(
     // center lines
     lines.push(
       Line.vertical((source.pos.x + target.pos.x) / 2).withWeightFactor(
-        centerLineWeightFactor
-      )
+        centerLineWeightFactor,
+      ),
     );
     lines.push(
       Line.horizontal((source.pos.y + target.pos.y) / 2).withWeightFactor(
-        centerLineWeightFactor
-      )
+        centerLineWeightFactor,
+      ),
     );
   }
   return lines;
@@ -244,18 +247,18 @@ export function collectLines(
 function collectLinesEnd(
   lines: (Line | Ray)[],
   ep: ConnectionEndConfiguration,
-  role: "source" | "target"
+  role: "source" | "target",
 ) {
   if (ep.rectangle === undefined) {
     lines.push(
       Line.horizontal(ep.pos.y).withRole(role),
-      Line.vertical(ep.pos.x).withRole(role)
+      Line.vertical(ep.pos.x).withRole(role),
     );
   } else {
     if (ep.inside) {
       lines.push(new Ray(ep.pos, ep.direction, role));
       const point = ep.pos.add(
-        Vec2d.fromDirection(ep.direction).scale(lineOffset)
+        Vec2d.fromDirection(ep.direction).scale(lineOffset),
       );
       switch (getOrientation(ep.direction)) {
         case "horizontal":
@@ -292,7 +295,7 @@ function buildGraph(lines: (Line | Ray)[], obstacles: Rectangle[]) {
 
   const assignSourceOrTargetVertex = (
     vertex: Vertex,
-    role: "source" | "target"
+    role: "source" | "target",
   ) => {
     if (role === "source") {
       sourceVertex = vertex;
@@ -346,7 +349,7 @@ function buildGraph(lines: (Line | Ray)[], obstacles: Rectangle[]) {
     const collisionLength = obstacles
       .flatMap((obstacle) => {
         const length = obstacle.intersectionLength(
-          new LineSegment(a.point, b.point)
+          new LineSegment(a.point, b.point),
         );
         return length === undefined ? [] : [length];
       })
@@ -358,7 +361,7 @@ function buildGraph(lines: (Line | Ray)[], obstacles: Rectangle[]) {
       0,
       collisionLength,
       a.missingStemFraction[line.orientation] +
-        b.missingStemFraction[line.orientation]
+        b.missingStemFraction[line.orientation],
     );
   }
 
@@ -398,13 +401,14 @@ function buildGraph(lines: (Line | Ray)[], obstacles: Rectangle[]) {
     // We are at the bottom of the vertical line and the line was a ray upwards.
     // Add a vertex for the source/target role of the ray
     if (
+      v1 !== undefined &&
       line.role !== "none" &&
       line instanceof Ray &&
       line.direction === "up"
     ) {
       const v = new Vertex(line.origin);
-      const dist = calculateDistance(line, v, v1!);
-      v.outgoingEdges.push(new Edge(dist, v1!, "up"));
+      const dist = calculateDistance(line, v, v1);
+      v.outgoingEdges.push(new Edge(dist, v1, "up"));
       v1!.outgoingEdges.push(new Edge(dist, v, "down"));
       assignSourceOrTargetVertex(v, line.role);
     }
@@ -464,7 +468,7 @@ function shortestPath(sourceVertex: Vertex, targetVertex: Vertex) {
 
   while (border.size > 0) {
     const current = Array.from(border).sort((a, b) =>
-      a.minDistanceFromSource!.compare(b.minDistanceFromSource!)
+      a.minDistanceFromSource!.compare(b.minDistanceFromSource!),
     )[0];
     border.delete(current);
     processed.add(current);

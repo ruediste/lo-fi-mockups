@@ -4,7 +4,7 @@ import "./index.scss";
 
 // Import init function from "@neutralinojs/lib"
 import { init } from "@neutralinojs/lib";
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 import { Button, Card, Spinner } from "react-bootstrap";
 import { HashRouter } from "react-router";
 import { ToastContainer } from "react-toastify";
@@ -12,6 +12,7 @@ import App from "./App.tsx";
 import { editorLayoutKey } from "./editor/Editor.tsx";
 import { editorState } from "./editor/EditorState.ts";
 import { ErrorBoundary } from "./util/ErrorBoundary.tsx";
+import { useRerenderOnEvent } from "./util/hooks.ts";
 
 if ((window as any).APP_LOADED) {
   // reload the page if the app is already loaded
@@ -23,6 +24,8 @@ if ((window as any).APP_LOADED) {
 console.log("App starting...");
 
 export function RootError({ clear }: { clear: () => void }) {
+  const state = use(editorState);
+  useRerenderOnEvent(state.onProjectReplaced);
   return (
     <div
       style={{
@@ -32,7 +35,7 @@ export function RootError({ clear }: { clear: () => void }) {
         justifyContent: "center",
       }}
     >
-      <Card style={{ width: "18rem" }}>
+      <Card style={{}}>
         <Card.Body>
           <Card.Title>An Error Occurred</Card.Title>
           <div style={{ display: "flex", gap: "8px" }}>
@@ -43,6 +46,16 @@ export function RootError({ clear }: { clear: () => void }) {
               }}
             >
               Reload
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!state.hasUndo}
+              onClick={async () => {
+                (await editorState).undo();
+                clear();
+              }}
+            >
+              Undo
             </Button>
             <Button
               variant="secondary"
