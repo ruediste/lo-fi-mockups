@@ -41,14 +41,6 @@ export function RootError({ clear }: { clear: () => void }) {
           <div style={{ display: "flex", gap: "8px" }}>
             <Button
               variant="primary"
-              onClick={async () => {
-                location.reload();
-              }}
-            >
-              Reload
-            </Button>
-            <Button
-              variant="primary"
               disabled={!state.hasUndo}
               onClick={async () => {
                 (await editorState).undo();
