@@ -357,7 +357,15 @@ export class ConnectorWidget extends Widget {
               {routePoints.slice(0, -1).map((point, index) => (
                 <line
                   // This is required to update the marker when it changes in native mode. Otherwise, the html is updated but the effect is not drawn.
-                  key={index + "-" + sourceMarkerUrl + "-" + targetMarkerUrl}
+                  key={
+                    routePoints.length +
+                    "-" +
+                    index +
+                    "-" +
+                    sourceMarkerUrl +
+                    "-" +
+                    targetMarkerUrl
+                  }
                   x1={point.x}
                   y1={point.y}
                   x2={routePoints[index + 1].x}
