@@ -28,6 +28,7 @@ import { TextInputWidget } from "./TextInputWidget";
 import { TitleWidget } from "./TitleWidget";
 import { UmlActorWidget } from "./UmlActorWidget";
 import { UmlClassWidget } from "./UmlClassWidget";
+import { UmlComponentWidget } from "./UmlComponentWidget";
 import { UmlDatabaseWidget } from "./UmlDatabaseWidget";
 import { UmlNodeWidget } from "./UmlNodeWidget";
 import { VerticalScrollBarWidget } from "./VerticalScrollBarWidget";
@@ -36,10 +37,11 @@ import { Widget } from "./Widget";
 interface RegistryEntry {
   itemFactory: (args: PageItemsArgs) => PageItem;
   newDataFactory: (id: number, type: string) => PageItemData;
+  isUml: boolean;
   // there is always a JSON deep-clone between copy and paste
   mapDataAfterPaste: (
     existingData: PageItemData,
-    mapId: (id: number) => number | undefined
+    mapId: (id: number) => number | undefined,
   ) => PageItemData;
 }
 export class PageItemTypeRegistryImpl implements PageItemRegistry {
@@ -48,6 +50,7 @@ export class PageItemTypeRegistryImpl implements PageItemRegistry {
   palette: {
     key: string;
     ctor: new (data: PageItemData, page: Page, fromMaster: boolean) => Widget;
+    isUml: boolean;
   }[] = [];
 
   create(args: PageItemsArgs): PageItem {
@@ -63,7 +66,7 @@ export class PageItemTypeRegistryImpl implements PageItemRegistry {
 
   mapDataAfterPaste(
     existingData: PageItemData,
-    mapId: (id: number) => number | undefined
+    mapId: (id: number) => number | undefined,
   ) {
     return this.itemTypes
       .get(existingData.type)!
@@ -79,19 +82,26 @@ function register(
   ctor: new (
     data: PageItemData,
     page: Page,
-    fromMasterPage: boolean
+    fromMasterPage: boolean,
   ) => PageItem,
-  args?: Partial<Pick<RegistryEntry, "newDataFactory" | "mapDataAfterPaste">>
+  args?: Partial<
+    Pick<RegistryEntry, "isUml" | "newDataFactory" | "mapDataAfterPaste">
+  >,
 ) {
   pageItemTypeRegistry.itemTypes.set(key, {
     itemFactory: (args) => new ctor(args.data, args.page, args.fromMasterPage),
     newDataFactory: args?.newDataFactory ?? ((id, type) => ({ id, type })),
+    isUml: args?.isUml ?? false,
     mapDataAfterPaste:
       args?.mapDataAfterPaste ??
       ((data, mapId) => ({ ...data, id: mapId(data.id)! })),
   });
   if (ctor.prototype instanceof Widget) {
-    pageItemTypeRegistry.palette.push({ key, ctor: ctor as any });
+    pageItemTypeRegistry.palette.push({
+      key,
+      ctor: ctor as any,
+      isUml: args?.isUml ?? false,
+    });
   }
 }
 
@@ -119,13 +129,14 @@ register("group", GroupWidget);
 register("note", NoteWidget);
 register("buttonToggle", ButtonToggleWidget);
 register("connector", ConnectorWidget, {
+  isUml: true,
   newDataFactory: (id, type) =>
     ({
       id,
       type,
       source: { position: { x: 0, y: 0 } },
       target: { position: { x: 80, y: 0 } },
-    } satisfies ConnectorWidgetData),
+    }) satisfies ConnectorWidgetData,
   mapDataAfterPaste: (data, mapId) => {
     const d = data as ConnectorWidgetData;
 
@@ -169,7 +180,8 @@ register("connector", ConnectorWidget, {
     return result;
   },
 });
-register("umlClass", UmlClassWidget);
-register("umlDatabase", UmlDatabaseWidget);
-register("umlNode", UmlNodeWidget);
-register("umlActor", UmlActorWidget);
+register("umlClass", UmlClassWidget, { isUml: true });
+register("umlComponent", UmlComponentWidget, { isUml: true });
+register("umlDatabase", UmlDatabaseWidget, { isUml: true });
+register("umlNode", UmlNodeWidget, { isUml: true });
+register("umlActor", UmlActorWidget, { isUml: true });

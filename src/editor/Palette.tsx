@@ -12,11 +12,9 @@ const paletteItemSize = { width: 120, height: 90 };
 
 function PaletteEntry({
   widget,
-  idx,
   state,
 }: {
   widget: Widget;
-  idx: number;
   state: EditorState;
 }) {
   const {
@@ -27,7 +25,7 @@ function PaletteEntry({
     activatorEvent,
     node,
   } = useDraggable({
-    id: "palette-" + idx,
+    id: "palette-" + widget.data.type,
     data: { itemType: widget.data.type },
   });
 
@@ -89,14 +87,18 @@ function PaletteEntry({
   );
 }
 
-export const Palette = memo(function Palette() {
+export const Palette = memo(function Palette({
+  category,
+}: {
+  category: "mocks" | "uml";
+}) {
   const state = useEditorState();
   const widgets = useMemo(() => {
     let nextId = 1;
 
-    const items: PageItemData[] = pageItemTypeRegistry.palette.map((type) =>
-      createPageItemData(nextId++, type.key),
-    );
+    const items: PageItemData[] = pageItemTypeRegistry.palette
+      .filter((type) => type.isUml === (category === "uml"))
+      .map((type) => createPageItemData(nextId++, type.key));
 
     const projectData: ProjectData = {
       dataVersion: 0,
@@ -123,12 +125,12 @@ export const Palette = memo(function Palette() {
     const result = page.ownItems as Widget[];
     result.forEach((w) => w.initializeAfterAdd());
     return result;
-  }, []);
+  }, [category]);
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
-      {widgets.map((widget, idx) => (
-        <PaletteEntry key={idx} widget={widget} idx={idx} state={state} />
+      {widgets.map((widget) => (
+        <PaletteEntry key={widget.data.type} widget={widget} state={state} />
       ))}
     </div>
   );

@@ -166,6 +166,7 @@ class SelectBoxDragHandler {
     const pos = this.projection.pointToWorld(Vec2d.fromEvent(e));
     this.updateDragSelectionBox(Vec2d.boundingBox(pos, this.startPos));
   }
+
   onPointerUp(e: PointerEvent<SVGElement>) {
     const pos = this.projection.pointToWorld(Vec2d.fromEvent(e));
     const dragSelectionBox = Vec2d.boundingBox(pos, this.startPos);
@@ -406,9 +407,14 @@ const defaultLayout: LayoutData = {
       {
         tabs: [
           {
-            id: "palette",
-            title: "Palette",
-            content: <Palette />,
+            id: "mocks",
+            title: "Mocks",
+            content: <Palette category="mocks" />,
+          },
+          {
+            id: "uml",
+            title: "UML",
+            content: <Palette category="uml" />,
           },
           {
             id: "pages",
@@ -440,6 +446,8 @@ const defaultLayout: LayoutData = {
 };
 
 export const editorLayoutKey = "lo-fi-mockups-layout";
+const editorLayoutVersion = 1;
+
 export function Editor({
   controls,
 }: {
@@ -536,11 +544,24 @@ export function Editor({
         ref={(x) => {
           dockLayout.current = x;
           const layout = localStorage.getItem(editorLayoutKey);
-          if (layout !== null) x?.loadLayout(JSON.parse(layout));
+          if (layout !== null) {
+            const savedLayout = JSON.parse(layout) as LayoutData & {
+              version?: number;
+            };
+            if (savedLayout.version === undefined) {
+              localStorage.removeItem(editorLayoutKey);
+            } else {
+              delete savedLayout.version;
+              x?.loadLayout(savedLayout);
+            }
+          }
         }}
         defaultLayout={defaultLayout}
         onLayoutChange={(layout) =>
-          localStorage.setItem(editorLayoutKey, JSON.stringify(layout))
+          localStorage.setItem(
+            editorLayoutKey,
+            JSON.stringify({ ...layout, version: editorLayoutVersion }),
+          )
         }
         style={{ flexGrow: 1 }}
       />

@@ -8,8 +8,8 @@ describe("Class Element", () => {
       "Hello",
       <>
         <div className="classHeader">Hello</div>
-      </>
-    )
+      </>,
+    ),
   );
   it(
     "should parse simple class",
@@ -21,8 +21,18 @@ id: String`,
         <div className="classHeader">Entity</div>
         <hr />
         <div>id: String</div>
-      </>
-    )
+      </>,
+    ),
+  );
+  it(
+    "should mark stereotype class header lines",
+    testRender(
+      "<<entity>>\nEntity",
+      <>
+        <div className="classHeader stereotype">&lt;&lt;entity&gt;&gt;</div>
+        <div className="classHeader">Entity</div>
+      </>,
+    ),
   );
 });
 
@@ -30,7 +40,7 @@ function testRender(input: string, expected: ReactNode): () => void {
   return () => {
     const actual = render(parseUmlClassWidgetContents(input));
     expect(actual.container.innerHTML).toEqual(
-      render(expected).container.innerHTML
+      render(expected).container.innerHTML,
     );
   };
 }

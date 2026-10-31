@@ -13,12 +13,17 @@ export function parseUmlClassWidgetContents(text: string): React.ReactNode {
     const nonEmptyLine = line === "" ? " " : line;
     if (seenSeparator) {
       result.push(<pre key={idx}>{nonEmptyLine}</pre>);
-    } else
+    } else {
+      const isStereotype = /^<<.*>>$/.test(line.trim());
       result.push(
-        <div className="classHeader" key={idx}>
+        <div
+          className={isStereotype ? "classHeader stereotype" : "classHeader"}
+          key={idx}
+        >
           <pre>{nonEmptyLine}</pre>
-        </div>
+        </div>,
       );
+    }
   });
   return result;
 }

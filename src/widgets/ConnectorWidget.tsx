@@ -33,6 +33,36 @@ import { getTextWidth } from "./widgetUtils";
 
 type UmlMarkerType = "None" | "Association" | "Composition" | "Inheritance";
 
+function getPathMidpoint(routePoints: Vec2d[]): Vec2d {
+  if (routePoints.length < 2) return routePoints[0] ?? new Vec2d(0, 0);
+
+  const segmentLengths = routePoints.slice(0, -1).map((point, index) => {
+    const nextPoint = routePoints[index + 1];
+    return Math.sqrt(
+      (nextPoint.x - point.x) ** 2 + (nextPoint.y - point.y) ** 2,
+    );
+  });
+  const halfLength =
+    segmentLengths.reduce((sum, length) => sum + length, 0) / 2;
+  let accumulatedLength = 0;
+
+  for (let index = 0; index < segmentLengths.length; index++) {
+    const segmentLength = segmentLengths[index];
+    if (segmentLength > 0 && accumulatedLength + segmentLength >= halfLength) {
+      const point = routePoints[index];
+      const nextPoint = routePoints[index + 1];
+      const ratio = (halfLength - accumulatedLength) / segmentLength;
+      return new Vec2d(
+        point.x + (nextPoint.x - point.x) * ratio,
+        point.y + (nextPoint.y - point.y) * ratio,
+      );
+    }
+    accumulatedLength += segmentLength;
+  }
+
+  return routePoints[0];
+}
+
 const UML_MARKER_OPTIONS: SelectPropertyOption<UmlMarkerType>[] = (
   ["None", "Association", "Composition", "Inheritance"] as const
 ).map((x) => ({
@@ -237,39 +267,9 @@ export class ConnectorWidget extends Widget {
           );
           const routePoints = this.routePointsMemo.value;
 
-          // Find the center by segment length
-          let midX = 0;
-          let midY = 0;
-          if (routePoints.length >= 2) {
-            // Calculate total path length
-            let totalLength = 0;
-            const segmentLengths: number[] = [];
-            for (let i = 0; i < routePoints.length - 1; i++) {
-              const p1 = routePoints[i];
-              const p2 = routePoints[i + 1];
-              const length = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
-              segmentLengths.push(length);
-              totalLength += length;
-            }
-
-            // Find the point at half the total length
-            const halfLength = totalLength / 2;
-            let accumulatedLength = 0;
-            for (let i = 0; i < segmentLengths.length; i++) {
-              const p1 = routePoints[i];
-              const p2 = routePoints[i + 1];
-              const segmentLength = segmentLengths[i];
-              if (accumulatedLength + segmentLength >= halfLength) {
-                // Interpolate along this segment
-                const remaining = halfLength - accumulatedLength;
-                const ratio = remaining / segmentLength;
-                midX = p1.x + (p2.x - p1.x) * ratio;
-                midY = p1.y + (p2.y - p1.y) * ratio;
-                break;
-              }
-              accumulatedLength += segmentLength;
-            }
-          }
+          const midpoint = getPathMidpoint(routePoints);
+          const midX = midpoint.x;
+          const midY = midpoint.y;
 
           // Get marker URLs
           const sourceMarkerUrl = getMarkerUrl(
@@ -444,17 +444,36 @@ export class ConnectorWidget extends Widget {
   get boundingBox(): IRectangle {
     // For bounding box, use a simple fallback since routing is done in render
     const { source, target } = this;
+    const text = this.labelText.get();
+    const lines = text.trim().length === 0 ? [] : text.split("\n");
+    const margin = 10;
 
-    const minX = Math.min(source.position.x, target.position.x);
-    const minY = Math.min(source.position.y, target.position.y);
-    const maxX = Math.max(source.position.x, target.position.x);
-    const maxY = Math.max(source.position.y, target.position.y);
+    let minX = Math.min(source.position.x, target.position.x) - margin;
+    let minY = Math.min(source.position.y, target.position.y) - margin;
+    let maxX = Math.max(source.position.x, target.position.x) + margin;
+    let maxY = Math.max(source.position.y, target.position.y) + margin;
+
+    if (lines.length > 0) {
+      const routePoints = this.routePointsMemo.value;
+      const midpoint = getPathMidpoint(routePoints);
+      const textHeight =
+        lines.length * widgetTheme.fontSize + (lines.length - 1) * 2;
+      const textWidth = Math.max(
+        ...lines.map((line) => getTextWidth(line, widgetTheme.fontSize)),
+      );
+      const padding = 6;
+
+      minX = Math.min(minX, midpoint.x - textWidth / 2 - padding);
+      minY = Math.min(minY, midpoint.y - textHeight / 2 - padding);
+      maxX = Math.max(maxX, midpoint.x + textWidth / 2 + padding);
+      maxY = Math.max(maxY, midpoint.y + textHeight / 2 + padding);
+    }
 
     return {
-      x: minX - 10,
-      y: minY - 10,
-      width: maxX - minX + 20,
-      height: maxY - minY + 20,
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
     };
   }
 

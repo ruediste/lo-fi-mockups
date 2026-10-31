@@ -54,8 +54,14 @@ id: long
               pre: {
                 margin: 0,
                 marginLeft: 4,
+                minWidth: 0,
+                overflow: "hidden",
               },
               ".classHeader": { display: "flex", justifyContent: "center" },
+              ".classHeader pre": { fontWeight: "bold", color: "#222" },
+              ".classHeader.stereotype pre": {
+                fontWeight: "normal",
+              },
               hr: { margin: 0, opacity: 1, color: widgetTheme.stroke },
             }}
             {...{ xmlns: "http://www.w3.org/1999/xhtml" }}
